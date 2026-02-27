@@ -6,46 +6,47 @@ import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Card } from '../ui/Card';
 import { Avatar } from '../ui/Avatar';
+import { t } from '../../data/texts';
 
 const TESTIMONIALS = [
   {
     id: 1,
-    name: 'Elena R.',
-    city: 'Madrid',
-    text: 'Descubrí sabores que no sabía que existían en el café. Cada mes es una sorpresa deliciosa.',
-    coffee: 'Ethiopia Yirgacheffe',
+    nameKey: 'testimonials.elena.name' as const,
+    cityKey: 'testimonials.elena.city' as const,
+    textKey: 'testimonials.elena.text' as const,
+    coffeeKey: 'testimonials.elena.coffee' as const,
     avatar: 'https://i.pravatar.cc/150?u=elena',
   },
   {
     id: 2,
-    name: 'Marc S.',
-    city: 'Barcelona',
-    text: 'La flexibilidad de pausar cuando viajo es lo mejor. Y el café... simplemente otro nivel.',
-    coffee: 'Colombia Huila',
+    nameKey: 'testimonials.marc.name' as const,
+    cityKey: 'testimonials.marc.city' as const,
+    textKey: 'testimonials.marc.text' as const,
+    coffeeKey: 'testimonials.marc.coffee' as const,
     avatar: 'https://i.pravatar.cc/150?u=marc',
   },
   {
     id: 3,
-    name: 'Lucía M.',
-    city: 'Valencia',
-    text: 'Nunca pensé que haría café tan bueno en casa. Las guías de preparación ayudan muchísimo.',
-    coffee: 'Brasil Cerrado',
+    nameKey: 'testimonials.lucia.name' as const,
+    cityKey: 'testimonials.lucia.city' as const,
+    textKey: 'testimonials.lucia.text' as const,
+    coffeeKey: 'testimonials.lucia.coffee' as const,
     avatar: 'https://i.pravatar.cc/150?u=lucia',
   },
   {
     id: 4,
-    name: 'Javier P.',
-    city: 'Sevilla',
-    text: 'Calidad precio inmejorable para café de especialidad. El envío siempre llega a tiempo.',
-    coffee: 'Blend Misterio',
+    nameKey: 'testimonials.javier.name' as const,
+    cityKey: 'testimonials.javier.city' as const,
+    textKey: 'testimonials.javier.text' as const,
+    coffeeKey: 'testimonials.javier.coffee' as const,
     avatar: 'https://i.pravatar.cc/150?u=javier',
   },
   {
     id: 5,
-    name: 'Ana B.',
-    city: 'Bilbao',
-    text: 'Me encanta leer la historia detrás de cada productor. Te conecta con lo que bebes.',
-    coffee: 'Kenya AA',
+    nameKey: 'testimonials.ana.name' as const,
+    cityKey: 'testimonials.ana.city' as const,
+    textKey: 'testimonials.ana.text' as const,
+    coffeeKey: 'testimonials.ana.coffee' as const,
     avatar: 'https://i.pravatar.cc/150?u=ana',
   },
 ];
@@ -59,8 +60,8 @@ export const Testimonials: React.FC = () => {
     <Section size="lg" bg="page">
       <Container size="xl">
         <div className="text-center mb-12">
-          <span className="label-caps text-roast mb-2 block">LO QUE DICEN</span>
-          <h2 className="heading-section">La comunidad Origen</h2>
+          <span className="label-caps text-roast mb-2 block">{t('testimonials.badge')}</span>
+          <h2 className="heading-section">{t('testimonials.heading')}</h2>
         </div>
 
         <div className="overflow-hidden" ref={emblaRef}>
@@ -77,21 +78,21 @@ export const Testimonials: React.FC = () => {
                         <Star key={i} size={16} fill="currentColor" />
                       ))}
                     </div>
-                    <p className="body-lg italic mb-6">"{testimonial.text}"</p>
+                    <p className="body-lg italic mb-6">"{t(testimonial.textKey)}"</p>
                   </div>
                   
                   <div className="flex items-center gap-4 mt-auto">
                     <Avatar
                       src={testimonial.avatar}
-                      alt={testimonial.name}
+                      alt={t(testimonial.nameKey)}
                       className="w-12 h-12 border border-border-color"
                     />
                     <div>
                       <p className="font-display font-bold text-espresso leading-none">
-                        {testimonial.name}
+                        {t(testimonial.nameKey)}
                       </p>
                       <p className="text-xs text-muted mt-1 uppercase tracking-wide">
-                        {testimonial.city} · Suscriptor de {testimonial.coffee}
+                        {t(testimonial.cityKey)} · {t('testimonials.subscriberOf')} {t(testimonial.coffeeKey)}
                       </p>
                     </div>
                   </div>

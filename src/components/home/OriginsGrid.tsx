@@ -3,11 +3,12 @@ import { motion } from 'framer-motion';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
 import { Button } from '../ui/Button';
+import { t } from '../../data/texts';
 
 const ORIGINS = [
   {
     id: 1,
-    country: 'Etiopía',
+    countryKey: 'origins.ethiopia' as const,
     region: 'Yirgacheffe',
     altitude: '2000m',
     process: 'Natural',
@@ -15,7 +16,7 @@ const ORIGINS = [
   },
   {
     id: 2,
-    country: 'Colombia',
+    countryKey: 'origins.colombia' as const,
     region: 'Huila',
     altitude: '1750m',
     process: 'Honey',
@@ -23,7 +24,7 @@ const ORIGINS = [
   },
   {
     id: 3,
-    country: 'Brasil',
+    countryKey: 'origins.brazil' as const,
     region: 'Cerrado',
     altitude: '1200m',
     process: 'Pulped Natural',
@@ -31,7 +32,7 @@ const ORIGINS = [
   },
   {
     id: 4,
-    country: 'Kenya',
+    countryKey: 'origins.kenya' as const,
     region: 'Nyeri',
     altitude: '1800m',
     process: 'Washed',
@@ -44,8 +45,8 @@ export const OriginsGrid: React.FC = () => {
     <Section size="lg" bg="surface">
       <Container size="xl">
         <div className="text-center mb-16">
-          <span className="label-caps text-roast mb-2 block">NUESTROS ORÍGENES</span>
-          <h2 className="heading-section">Viaja en cada taza</h2>
+          <span className="label-caps text-roast mb-2 block">{t('origins.badge')}</span>
+          <h2 className="heading-section">{t('origins.heading')}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -58,7 +59,7 @@ export const OriginsGrid: React.FC = () => {
             >
               <img
                 src={origin.image}
-                alt={origin.country}
+                alt={t(origin.countryKey)}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-espresso/90 via-espresso/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
@@ -67,11 +68,11 @@ export const OriginsGrid: React.FC = () => {
                 <span className="font-mono text-xs uppercase tracking-widest text-caramel mb-2 block">
                   {origin.region} · {origin.altitude}
                 </span>
-                <h3 className="font-display text-4xl mb-4">{origin.country}</h3>
+                <h3 className="font-display text-4xl mb-4">{t(origin.countryKey)}</h3>
                 
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                   <Button variant="inverse" size="sm">
-                    Explorar Origen
+                    {t('origins.exploreOrigin')}
                   </Button>
                 </div>
               </div>

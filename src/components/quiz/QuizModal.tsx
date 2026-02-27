@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useQuizStore } from '../../stores/quizStore';
+import { useAuthStore } from '../../stores/authStore';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { ProgressBar } from '../ui/ProgressBar';
 import { Button } from '../ui/Button';
@@ -10,10 +11,12 @@ import { OptionCard } from '../ui/OptionCard';
 import { QuizResult } from './QuizResult';
 
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
+import { t } from '../../data/texts';
 
 export const QuizModal: React.FC = () => {
   const { isOpen, currentStep, answers, result, actions } = useQuizStore();
   const { closeQuiz, nextStep, prevStep, setAnswer, calculateResult } = actions;
+  const user = useAuthStore((s) => s.user);
 
   const currentQuestion = QUIZ_QUESTIONS[currentStep];
   const isLastStep = currentStep === QUIZ_QUESTIONS.length - 1;
@@ -37,14 +40,14 @@ export const QuizModal: React.FC = () => {
       if (!isLastStep) {
         setTimeout(nextStep, 300);
       } else {
-        calculateResult();
+        calculateResult(user?.uid);
       }
     }
   };
 
   const handleNext = () => {
     if (isLastStep) {
-      calculateResult();
+      calculateResult(user?.uid);
     } else {
       nextStep();
     }
@@ -75,9 +78,9 @@ export const QuizModal: React.FC = () => {
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 >
                   <VisuallyHidden.Root>
-                    <Dialog.Title>Quiz de Preferencias de Café</Dialog.Title>
+                    <Dialog.Title>{t('quiz.title')}</Dialog.Title>
                     <Dialog.Description>
-                      Responde unas preguntas para encontrar tu café ideal.
+                      {t('quiz.description')}
                     </Dialog.Description>
                   </VisuallyHidden.Root>
 
@@ -87,7 +90,7 @@ export const QuizModal: React.FC = () => {
                       <div className="flex-1 mr-4">
                         <ProgressBar
                           value={progress}
-                          label={`Pregunta ${currentStep + 1} de ${QUIZ_QUESTIONS.length}`}
+                          label={`${t('quiz.questionOf')} ${currentStep + 1} ${t('quiz.of')} ${QUIZ_QUESTIONS.length}`}
                         />
                       </div>
                     )}
@@ -156,7 +159,7 @@ export const QuizModal: React.FC = () => {
                         onClick={prevStep}
                         disabled={currentStep === 0}
                       >
-                        Atrás
+                        {t('quiz.back')}
                       </Button>
                       {currentQuestion.type === 'multi' && (
                         <Button
@@ -167,7 +170,7 @@ export const QuizModal: React.FC = () => {
                             (answers[currentQuestion.id] as string[]).length === 0
                           }
                         >
-                          {isLastStep ? 'Ver Resultado' : 'Siguiente'}
+                          {isLastStep ? t('quiz.seeResult') : t('quiz.next')}
                         </Button>
                       )}
                     </div>

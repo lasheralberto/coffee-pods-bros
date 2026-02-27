@@ -4,6 +4,7 @@ import { Stack } from '../ui/Stack';
 import { Grid } from '../ui/Grid';
 import { InlineInput } from '../ui/InlineInput';
 import { Instagram, Youtube, Twitter } from 'lucide-react';
+import { t } from '../../data/texts';
 
 export const Footer: React.FC = () => {
   return (
@@ -12,9 +13,9 @@ export const Footer: React.FC = () => {
         <Grid cols="auto-md" gap={8}>
           {/* Brand */}
           <Stack gap={4}>
-            <h2 className="font-display text-3xl font-bold tracking-tight">ORIGEN</h2>
+            <h2 className="font-display text-3xl font-bold tracking-tight">{t('footer.brand')}</h2>
             <p className="text-sm text-stone-400 max-w-xs">
-              Café de especialidad seleccionado a mano, tostado con precisión y entregado fresco a tu puerta.
+              {t('footer.brandDesc')}
             </p>
             <div className="flex gap-4 mt-4">
               <a href="#" className="hover:text-caramel transition-colors">
@@ -32,34 +33,34 @@ export const Footer: React.FC = () => {
           {/* Links */}
           <Grid cols={2} gap={8}>
             <Stack gap={4}>
-              <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">Tienda</h3>
+              <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">{t('footer.shopCol')}</h3>
               <ul className="space-y-2 text-sm text-stone-300">
-                <li><a href="#" className="hover:text-white transition-colors">Café en grano</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Suscripciones</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Accesorios</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Regalos</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.coffeeBeans')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.subscriptions')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.accessories')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.gifts')}</a></li>
               </ul>
             </Stack>
             <Stack gap={4}>
-              <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">Compañía</h3>
+              <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">{t('footer.companyCol')}</h3>
               <ul className="space-y-2 text-sm text-stone-300">
-                <li><a href="#" className="hover:text-white transition-colors">Nuestra historia</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Sostenibilidad</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contacto</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.ourStory')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.sustainability')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.blog')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('footer.contact')}</a></li>
               </ul>
             </Stack>
           </Grid>
 
           {/* Newsletter */}
           <Stack gap={4}>
-            <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">Newsletter</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">{t('footer.newsletter')}</h3>
             <p className="text-sm text-stone-400">
-              Suscríbete para recibir consejos de preparación y acceso anticipado a microlotes.
+              {t('footer.newsletterDesc')}
             </p>
             <InlineInput
-              placeholder="tu@email.com"
-              buttonLabel="Suscribirse"
+              placeholder={t('footer.emailPlaceholder')}
+              buttonLabel={t('footer.subscribe')}
               onSubmit={(val) => console.log(val)}
             />
           </Stack>
@@ -68,11 +69,11 @@ export const Footer: React.FC = () => {
         <div className="h-px bg-white/10 my-12" />
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-stone-500">
-          <p>© 2025 Origen Coffee Roasters. Todos los derechos reservados.</p>
+          <p>{t('footer.copyright')}</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-white transition-colors">Privacidad</a>
-            <a href="#" className="hover:text-white transition-colors">Términos</a>
-            <a href="#" className="hover:text-white transition-colors">Cookies</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.privacy')}</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.terms')}</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.cookies')}</a>
           </div>
         </div>
       </Container>

@@ -4,6 +4,7 @@ import { useQuizStore } from '../../stores/quizStore';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Check } from 'lucide-react';
+import { t } from '../../data/texts';
 
 export const QuizResult: React.FC = () => {
   const { result, actions } = useQuizStore();
@@ -30,7 +31,7 @@ export const QuizResult: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          Analizando tu perfil...
+          {t('quizResult.analyzing')}
         </motion.p>
       </div>
     );
@@ -71,7 +72,7 @@ export const QuizResult: React.FC = () => {
         <div className="flex-1 flex flex-col gap-6">
           <div>
             <span className="label-caps text-accent mb-2 block">
-              TU CAFÉ IDEAL
+              {t('quizResult.yourIdealCoffee')}
             </span>
             <h2 className="heading-display text-4xl mb-3">{result.name}</h2>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -82,7 +83,7 @@ export const QuizResult: React.FC = () => {
           </div>
 
           <div>
-            <p className="label-caps mb-2">Notas de cata</p>
+            <p className="label-caps mb-2">{t('quizResult.tastingNotes')}</p>
             <div className="flex flex-wrap gap-2">
               {result.notes.map((note) => (
                 <span
@@ -101,24 +102,24 @@ export const QuizResult: React.FC = () => {
             <span className="text-2xl font-display font-bold text-roast">
               {result.price}
             </span>
-            <span className="text-sm text-muted">/ mes · envío gratis</span>
+            <span className="text-sm text-muted">{t('quizResult.perMonth')}</span>
           </div>
 
           <div className="flex flex-col gap-3 mt-4">
             <Button variant="primary" size="lg" fullWidth>
-              SUSCRIBIRME A ESTE CAFÉ →
+              {t('quizResult.subscribeCta')}
             </Button>
             <Button variant="ghost" size="sm" onClick={actions.resetQuiz}>
-              Repetir quiz
+              {t('quizResult.retakeQuiz')}
             </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
             {[
-              'Sin permanencia mínima',
-              'Cancela con un click',
-              'Cambia de café cuando quieras',
-              'Envío gratis siempre',
+              t('quizResult.benefit1'),
+              t('quizResult.benefit2'),
+              t('quizResult.benefit3'),
+              t('quizResult.benefit4'),
             ].map((benefit, i) => (
               <motion.div
                 key={i}

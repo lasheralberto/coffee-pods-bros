@@ -5,26 +5,27 @@ import { Section } from '../ui/Section';
 import { Grid } from '../ui/Grid';
 import { Stack } from '../ui/Stack';
 import { Coffee, Package, Smile } from 'lucide-react';
+import { t } from '../../data/texts';
 
 export const HowItWorks: React.FC = () => {
   const steps = [
     {
       id: 1,
       icon: <Coffee size={32} className="text-roast" />,
-      title: 'Haz el Quiz',
-      description: 'Responde 6 preguntas rápidas para que conozcamos tus gustos y preferencias.',
+      title: t('howItWorks.step1Title'),
+      description: t('howItWorks.step1Desc'),
     },
     {
       id: 2,
       icon: <Package size={32} className="text-roast" />,
-      title: 'Recibe tu Café',
-      description: 'Te enviamos una selección personalizada de los mejores tostadores de España.',
+      title: t('howItWorks.step2Title'),
+      description: t('howItWorks.step2Desc'),
     },
     {
       id: 3,
       icon: <Smile size={32} className="text-roast" />,
-      title: 'Disfruta',
-      description: 'Prepara tu taza perfecta y descubre nuevos sabores cada mes. Sin permanencia.',
+      title: t('howItWorks.step3Title'),
+      description: t('howItWorks.step3Desc'),
     },
   ];
 
@@ -32,8 +33,8 @@ export const HowItWorks: React.FC = () => {
     <Section bg="mist" size="lg">
       <Container size="xl">
         <div className="text-center mb-16">
-          <span className="label-caps text-roast mb-2 block">CÓMO FUNCIONA</span>
-          <h2 className="heading-section">Tu café ideal en 3 pasos</h2>
+          <span className="label-caps text-roast mb-2 block">{t('howItWorks.badge')}</span>
+          <h2 className="heading-section">{t('howItWorks.heading')}</h2>
         </div>
 
         <Grid cols={3} gap={8} className="items-start">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Hero } from '../components/home/Hero';
 import { HowItWorks } from '../components/home/HowItWorks';
 import { Testimonials } from '../components/home/Testimonials';
@@ -7,32 +8,35 @@ import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { useQuizStore } from '../stores/quizStore';
+import { PageTransition, childVariants } from '../components/layout/PageTransition';
+import { t } from '../data/texts';
 
 export const HomePage: React.FC = () => {
   const { actions } = useQuizStore();
 
   return (
-    <>
-      <Hero />
-      <HowItWorks />
-      <OriginsGrid />
-      <Testimonials />
+    <PageTransition>
+      <motion.div variants={childVariants}><Hero /></motion.div>
+      <motion.div variants={childVariants}><HowItWorks /></motion.div>
+      <motion.div variants={childVariants}><OriginsGrid /></motion.div>
+      <motion.div variants={childVariants}><Testimonials /></motion.div>
       
       {/* Final CTA */}
-      <Section size="lg" bg="roast" className="text-center text-cream">
-        <Container size="md">
-          <h2 className="font-display text-4xl md:text-5xl mb-6">
-            ¿Listo para tu mejor café?
-          </h2>
-          <p className="body-lg text-cream/80 mb-8 max-w-2xl mx-auto">
-            Únete a más de 10.000 amantes del café que reciben granos frescos cada mes.
-            Sin permanencia, cancela cuando quieras.
-          </p>
-          <Button variant="inverse" size="xl" onClick={actions.openQuiz}>
-            EMPEZAR AHORA
-          </Button>
-        </Container>
-      </Section>
-    </>
+      <motion.div variants={childVariants}>
+        <Section size="lg" bg="roast" className="text-center text-cream">
+          <Container size="md">
+            <h2 className="font-display text-4xl md:text-5xl mb-6">
+              {t('homeCta.heading')}
+            </h2>
+            <p className="body-lg text-cream/80 mb-8 max-w-2xl mx-auto">
+              {t('homeCta.text')}
+            </p>
+            <Button variant="inverse" size="xl" onClick={actions.openQuiz}>
+              {t('homeCta.button')}
+            </Button>
+          </Container>
+        </Section>
+      </motion.div>
+    </PageTransition>
   );
 };

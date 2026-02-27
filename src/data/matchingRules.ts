@@ -1,4 +1,6 @@
 import { QuizQuestion } from './quizQuestions';
+import { t, getLocale } from './texts';
+import { TEXTS } from './texts';
 
 export interface CoffeeProfile {
   id: string;
@@ -13,54 +15,43 @@ export interface CoffeeProfile {
   tags: string[];
 }
 
+const locale = () => getLocale();
+
+const getProfileTexts = (key: 'explorerFruity' | 'balancedLover' | 'classicIntense' | 'adventurer'): Omit<CoffeeProfile, 'id' | 'image'> => {
+  const p = TEXTS.coffeeProfiles[key];
+  const l = locale();
+  return {
+    name: p.name[l],
+    origin: p.origin[l],
+    altitude: p.altitude[l],
+    process: p.process[l],
+    notes: [...p.notes[l]],
+    description: p.description[l],
+    price: p.price[l],
+    tags: [...p.tags[l]],
+  };
+};
+
 export const COFFEE_PROFILES: Record<string, CoffeeProfile> = {
   explorer_fruity: {
     id: 'explorer_fruity',
-    name: 'Ethiopia Yirgacheffe Natural',
-    origin: 'Etiopía',
-    altitude: '2.000m',
-    process: 'Natural',
-    notes: ['Arándanos', 'Jazmín', 'Limón'],
-    description: 'Un café vibrante y complejo, perfecto para quienes buscan una experiencia sensorial única. Sus notas florales y afrutadas te transportarán al lugar de origen del café.',
-    price: '€16,90',
+    ...getProfileTexts('explorerFruity'),
     image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&q=80',
-    tags: ['Afrutado', 'Floral', 'Complejo'],
   },
   balanced_lover: {
     id: 'balanced_lover',
-    name: 'Colombia Huila Honey',
-    origin: 'Colombia',
-    altitude: '1.750m',
-    process: 'Honey',
-    notes: ['Chocolate con leche', 'Avellana', 'Panela'],
-    description: 'El equilibrio perfecto entre dulzura y cuerpo. Un café versátil que brilla en cualquier método de preparación, con una suavidad que enamora.',
-    price: '€15,50',
+    ...getProfileTexts('balancedLover'),
     image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80',
-    tags: ['Equilibrado', 'Dulce', 'Versátil'],
   },
   classic_intense: {
     id: 'classic_intense',
-    name: 'Brasil Cerrado Pulped',
-    origin: 'Brasil',
-    altitude: '1.200m',
-    process: 'Pulped Natural',
-    notes: ['Chocolate negro', 'Nuez tostada', 'Caramelo'],
-    description: 'Para los amantes de un café con cuerpo y carácter. Notas profundas de chocolate y frutos secos con una baja acidez y un final persistente.',
-    price: '€14,90',
+    ...getProfileTexts('classicIntense'),
     image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&q=80',
-    tags: ['Intenso', 'Cuerpo', 'Clásico'],
   },
   adventurer: {
     id: 'adventurer',
-    name: 'Blend Misterio del Mes',
-    origin: 'Origen Sorpresa',
-    altitude: 'Variable',
-    process: 'Secreto',
-    notes: ['Cambia cada mes', 'Siempre excepcional'],
-    description: 'Déjate sorprender por nuestra selección mensual. Cada mes elegimos un microlote exclusivo que desafía las expectativas y expande tu paladar.',
-    price: '€17,90',
+    ...getProfileTexts('adventurer'),
     image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=80',
-    tags: ['Sorpresa', 'Exclusivo', 'Limitado'],
   },
 };
 
