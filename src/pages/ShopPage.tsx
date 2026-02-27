@@ -20,6 +20,7 @@ import {
   type TasteFilter,
 } from '../data/shopProducts';
 import { t } from '../data/texts';
+import { UsersPlanSuscription } from '../components/shop/UsersPlanSuscription';
 
 /* ── FilterPanel (shared mobile drawer + desktop sidebar) ── */
 
@@ -32,9 +33,8 @@ interface FilterPanelProps {
 }
 
 const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onChange, onClear, onClose, activeCount }) => (
-  <nav aria-label="Product filters" className="flex flex-col">
-    {/* Header */}
-    <div className="flex items-center justify-between pb-2 mb-1">
+  <nav aria-label="Product filters" className="flex flex-col gap-1.5">
+    <div className="flex items-center justify-between pb-3 mb-2">
       <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-primary">
         <SlidersHorizontal size={15} />
         <span>{t('shop.filters')}{activeCount > 0 ? ` (${activeCount})` : ''}</span>
@@ -58,7 +58,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onChange, onClear, o
       </div>
     </div>
 
-    {/* Filter groups — DRY: same component, different data */}
     <FilterGroup
       title={t('shop.roastLevel')}
       name="roast"
@@ -114,98 +113,92 @@ export const ShopPage: React.FC = () => {
     <PageTransition>
       <Section size="lg">
         <Container size="xl">
-          {/* Header */}
-          <motion.h1 variants={childVariants} className="heading-display text-4xl md:text-5xl lg:text-6xl mb-2">
+          {/* <motion.h1 variants={childVariants} className="heading-display text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4">
             {t('shop.heading')}
           </motion.h1>
-          <motion.p variants={childVariants} className="body-lg max-w-3xl mb-6 lg:mb-10">
+          <motion.p variants={childVariants} className="body-lg max-w-3xl mb-10 md:mb-12 lg:mb-14">
             {t('shop.description')}
-          </motion.p>
+          </motion.p> */}
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
-          {/* ── Desktop sidebar ── */}
-          <aside className="hidden lg:block w-[220px] shrink-0">
-            <FilterPanel {...panelProps} />
-          </aside>
+          <UsersPlanSuscription />
 
-          {/* ── Main ── */}
-          <div className="flex-1 min-w-0">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between mb-5">
-              {/* Mobile filter toggle */}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setDrawerOpen(true)}
-                className="lg:!hidden"
-              >
-                <SlidersHorizontal size={15} />
-                {t('shop.filters')}{activeCount > 0 ? ` (${activeCount})` : ''}
-              </Button>
-
-              <div className="hidden lg:block" />
-
-              {/* Sort */}
-              <div className="flex items-center gap-2.5">
-                <ArrowDownUp size={15} className="text-secondary" />
-                <span className="text-sm font-semibold text-primary">{t('shop.sort')}</span>
-                <Button variant="secondary" size="sm" className="!min-w-[130px] !justify-between !gap-2">
-                  {t('shop.featured')}
-                  <ChevronDown size={14} className="text-muted" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Product grid */}
-            {filtered.length === 0 ? (
-              <div className="py-16 text-center text-muted">
-                <p className="text-lg mb-3">{t('shop.noProducts')}</p>
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="!text-roast">
-                  {t('shop.clearAllFilters')}
-                </Button>
-              </div>
-            ) : (
-              <AnimatePresence mode="popLayout">
-                <motion.div
-                  key={JSON.stringify(filters)}
-                  className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5"
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={{
-                    hidden: {},
-                    visible: { transition: { staggerChildren: 0.06 } },
-                  }}
-                >
-                  {filtered.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </motion.div>
-              </AnimatePresence>
-            )}
-          </div>
-        </div>
-
-        {/* ── Mobile drawer ── */}
-        {drawerOpen && (
-          <div
-            className="fixed inset-0 z-50 lg:hidden"
-            onClick={() => setDrawerOpen(false)}
-            role="dialog"
-            aria-modal="true"
-            aria-label={t('shop.filters')}
-          >
-            <div className="absolute inset-0 bg-espresso/40 backdrop-blur-sm" />
-            <aside
-              className="absolute left-0 top-0 bottom-0 w-[280px] max-w-[80vw] bg-page px-5 py-6 overflow-y-auto shadow-xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <FilterPanel {...panelProps} onClose={() => setDrawerOpen(false)} />
+          <div className="flex flex-col lg:flex-row gap-9 lg:gap-14">
+            <aside className="hidden lg:block w-[232px] shrink-0">
+              <FilterPanel {...panelProps} />
             </aside>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-6 md:mb-7 pb-3 border-b border-border-color/70">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setDrawerOpen(true)}
+                  className="lg:!hidden"
+                >
+                  <SlidersHorizontal size={15} />
+                  {t('shop.filters')}{activeCount > 0 ? ` (${activeCount})` : ''}
+                </Button>
+
+                <div className="hidden lg:block" />
+
+                <div className="flex items-center gap-3">
+                  <ArrowDownUp size={15} className="text-secondary" />
+                  <span className="text-sm font-semibold text-primary">{t('shop.sort')}</span>
+                  <Button variant="secondary" size="sm" className="!min-w-[130px] !justify-between !gap-2">
+                    {t('shop.featured')}
+                    <ChevronDown size={14} className="text-muted" />
+                  </Button>
+                </div>
+              </div>
+
+              {filtered.length === 0 ? (
+                <div className="py-16 text-center text-muted">
+                  <p className="text-lg mb-3">{t('shop.noProducts')}</p>
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="!text-roast">
+                    {t('shop.clearAllFilters')}
+                  </Button>
+                </div>
+              ) : (
+                <AnimatePresence mode="popLayout">
+                  <motion.div
+                    key={JSON.stringify(filters)}
+                    className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6 lg:gap-7"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={{
+                      hidden: {},
+                      visible: { transition: { staggerChildren: 0.06 } },
+                    }}
+                  >
+                    {filtered.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </div>
           </div>
-        )}
-      </Container>
-    </Section>
+
+          {drawerOpen && (
+            <div
+              className="fixed inset-0 z-50 lg:hidden"
+              onClick={() => setDrawerOpen(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('shop.filters')}
+            >
+              <div className="absolute inset-0 bg-espresso/40 backdrop-blur-sm" />
+              <aside
+                className="absolute left-0 top-0 bottom-0 w-[288px] max-w-[82vw] bg-page px-6 py-7 overflow-y-auto shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FilterPanel {...panelProps} onClose={() => setDrawerOpen(false)} />
+              </aside>
+            </div>
+          )}
+        </Container>
+      </Section>
     </PageTransition>
   );
 };

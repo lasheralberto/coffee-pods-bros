@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ShopProduct } from '../data/shopProducts';
+import type { PackItem } from '../providers/firebaseProvider';
 
 /* ── Tipos ── */
 
@@ -9,8 +10,17 @@ export interface CartItem {
   quantity: number;
 }
 
+export type BundleMode = 'subscription' | 'oneTime';
+
+export interface CartBundle {
+  items: PackItem[];
+  totalPrice: number;
+  mode: BundleMode;
+}
+
 interface CartStore {
   items: CartItem[];
+  bundle: CartBundle | null;
   isOpen: boolean;
   actions: {
     addItem: (product: ShopProduct, quantity?: number) => void;
@@ -20,16 +30,20 @@ interface CartStore {
     openCart: () => void;
     closeCart: () => void;
     toggleCart: () => void;
+    addBundle: (items: PackItem[], totalPrice: number, mode: BundleMode) => void;
+    removeBundle: () => void;
   };
 }
 
 /* ── Selectores derivados ── */
 
 export const selectCartCount = (state: CartStore) =>
-  state.items.reduce((sum, item) => sum + item.quantity, 0);
+  state.items.reduce((sum, item) => sum + item.quantity, 0)
+  + (state.bundle ? state.bundle.items.reduce((s, i) => s + i.quantity, 0) : 0);
 
 export const selectCartTotal = (state: CartStore) =>
-  state.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  state.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  + (state.bundle?.totalPrice ?? 0);
 
 /* ── Store ── */
 
@@ -37,6 +51,7 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, _get) => ({
       items: [],
+      bundle: null,
       isOpen: false,
       actions: {
         addItem: (product, quantity = 1) =>
@@ -75,15 +90,24 @@ export const useCartStore = create<CartStore>()(
             };
           }),
 
-        clearCart: () => set({ items: [] }),
+        clearCart: () => set({ items: [], bundle: null }),
         openCart: () => set({ isOpen: true }),
         closeCart: () => set({ isOpen: false }),
         toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
+
+        addBundle: (items, totalPrice, mode) =>
+          set({
+            items: [],
+            bundle: { items, totalPrice, mode },
+            isOpen: true,
+          }),
+
+        removeBundle: () => set({ bundle: null }),
       },
     }),
     {
       name: 'coffee-bros-cart',
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({ items: state.items, bundle: state.bundle }),
     },
   ),
 );

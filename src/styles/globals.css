@@ -16,22 +16,48 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: var(--color-cream);
-  --color-espresso: var(--color-espresso);
-  --color-roast: var(--color-roast);
-  --color-caramel: var(--color-caramel);
-  --color-foam: var(--color-foam);
-  --color-accent: var(--color-accent);
-  --color-leaf: var(--color-leaf);
-  --color-mist: var(--color-mist);
-  --color-stone: var(--color-stone);
-  
-  --color-border-color: var(--border-color);
-  --color-border-color-strong: var(--border-color-strong);
-  
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
-  --font-mono: var(--font-mono);
+  /* ── Base palette (use literal values to avoid circular var refs) ── */
+  --color-cream:    #FAF7F2;
+  --color-espresso: #1A0F0A;
+  --color-roast:    #7B2D00;
+  --color-caramel:  #C4773B;
+  --color-foam:     #EDE8E0;
+  --color-accent:   #E8622A;
+  --color-leaf:     #4A5E3A;
+  --color-mist:     #F5F2ED;
+  --color-stone:    #8C8580;
+
+  /* ── Semantic colors (needed by Tailwind utilities like bg-page, text-primary…) ── */
+  --color-page:      #FAF7F2;
+  --color-primary:   #1A0F0A;
+  --color-secondary: #5C4F48;
+  --color-muted:     #8C8580;
+  --color-inverse:   #FAF7F2;
+  --color-surface:   #EDE8E0;
+
+  /* ── Borders ── */
+  --color-border-color:        #DDD8D0;
+  --color-border-color-strong: #C4BCB4;
+
+  /* ── Layout containers (override Tailwind defaults) ── */
+  --container-3xs: initial;
+  --container-2xs: initial;
+  --container-xs:  initial;
+  --container-sm:  640px;
+  --container-md:  768px;
+  --container-lg:  1024px;
+  --container-xl:  1280px;
+  --container-2xl: 1440px;
+  --container-3xl: initial;
+  --container-4xl: initial;
+  --container-5xl: initial;
+  --container-6xl: initial;
+  --container-7xl: initial;
+
+  /* ── Typography ── */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body:    "Cabinet Grotesk", system-ui, sans-serif;
+  --font-mono:    "Departure Mono", "Courier New", monospace;
 }
 
 *, *::before, *::after {

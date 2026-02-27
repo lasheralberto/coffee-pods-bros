@@ -208,6 +208,11 @@ export const TEXTS = {
     removeFromCart: { es: 'del carrito', en: 'from cart' },
     addToCart: { es: 'Añadir', en: 'Add' },
     toCart: { es: 'al carrito', en: 'to cart' },
+    bundleSubscription: { es: 'Suscripción', en: 'Subscription' },
+    bundleOneTime:      { es: 'Compra única', en: 'One-time purchase' },
+    bundleLabel:        { es: 'Mi Pack', en: 'My Pack' },
+    bundleTotal:        { es: 'Total del pack', en: 'Pack total' },
+    removeBundle:       { es: 'Quitar pack', en: 'Remove pack' },
   },
 
   /* ── Quiz Modal ── */
@@ -503,6 +508,52 @@ export const TEXTS = {
     },
   },
 
+  /* ── Subscription Plans (Shop) ── */
+  subs: {
+    /* Quiz CTA (no quiz done) */
+    quizBadge:        { es: 'PERSONALIZADO', en: 'PERSONALIZED' },
+    quizCtaTitle:     { es: 'Descubre tu suscripción ideal', en: 'Discover your ideal subscription' },
+    quizCtaText:      { es: 'Completa nuestro quiz de 2 minutos y te recomendaremos el plan de café perfecto para ti, basado en tus gustos y hábitos.', en: 'Complete our 2-minute quiz and we\'ll recommend the perfect coffee plan for you, based on your tastes and habits.' },
+    quizCtaButton:    { es: 'Hacer el Quiz', en: 'Take the Quiz' },
+
+    /* Section header (quiz done) */
+    recBadge:         { es: 'PARA TI', en: 'FOR YOU' },
+    recHeading:       { es: 'Tu plan de café recomendado', en: 'Your recommended coffee plan' },
+    recSubheading:    { es: 'Basado en tus respuestas del quiz, estos planes encajan con tu perfil de café.', en: 'Based on your quiz answers, these plans match your coffee profile.' },
+
+    /* Plan: Explorer */
+    explorerName:     { es: 'Explorador', en: 'Explorer' },
+    explorerDesc:     { es: 'Perfecto para iniciarse en el café de especialidad. Un origen diferente cada mes.', en: 'Perfect for getting started with specialty coffee. A different origin each month.' },
+    explorerBadge:    { es: 'BÁSICO', en: 'BASIC' },
+
+    /* Plan: Connoisseur */
+    connoisseurName:  { es: 'Conocedor', en: 'Connoisseur' },
+    connoisseurDesc:  { es: 'Para quienes quieren más café y más variedad. El favorito de la comunidad.', en: 'For those who want more coffee and more variety. The community favorite.' },
+    connoisseurBadge: { es: 'POPULAR', en: 'POPULAR' },
+
+    /* Plan: Roaster */
+    roasterName:      { es: 'Tostador', en: 'Roaster' },
+    roasterDesc:      { es: 'La experiencia completa. Acceso a microlotes exclusivos y catas privadas.', en: 'The complete experience. Access to exclusive micro-lots and private tastings.' },
+    roasterBadge:     { es: 'PREMIUM', en: 'PREMIUM' },
+
+    /* Shared */
+    perMonth:         { es: '/ mes', en: '/ month' },
+    subscribeCta:     { es: 'Suscribirme', en: 'Subscribe' },
+    popularRibbon:    { es: 'Popular', en: 'Popular' },
+
+    /* Features */
+    feat250g:         { es: '250g de café cada mes', en: '250g of coffee each month' },
+    feat500g:         { es: '500g de café por envío', en: '500g of coffee per shipment' },
+    feat1kg:          { es: '1kg de café por envío', en: '1kg of coffee per shipment' },
+    featMonthly:      { es: 'Envío mensual', en: 'Monthly delivery' },
+    featBiweekly:     { es: 'Envío cada 2 semanas', en: 'Biweekly delivery' },
+    featFreeShipping: { es: 'Envío gratis siempre', en: 'Free shipping always' },
+    featCancel:       { es: 'Cancela cuando quieras', en: 'Cancel anytime' },
+    featExclusive:    { es: 'Acceso a microlotes exclusivos', en: 'Access to exclusive micro-lots' },
+    featTasting:      { es: 'Catas privadas mensuales', en: 'Monthly private tastings' },
+    featPriority:     { es: 'Soporte prioritario', en: 'Priority support' },
+  },
+
   /* ── Auth ── */
   auth: {
     loginTitle:        { es: 'Bienvenido de vuelta', en: 'Welcome Back' },
@@ -552,5 +603,28 @@ export const TEXTS = {
     takeQuiz:          { es: 'Hacer el Quiz', en: 'Take the Quiz' },
     logout:            { es: 'Cerrar Sesión', en: 'Sign Out' },
     notLoggedIn:       { es: 'Inicia sesión para ver tu perfil', en: 'Sign in to see your profile' },
+    loading:           { es: 'Cargando...', en: 'Loading...' },
+    customizePack:     { es: 'Personalizar mi pack', en: 'Customize my pack' },
+    yourPack:          { es: 'Tu Pack', en: 'Your Pack' },
+    showAnswers:       { es: 'Ver respuestas del quiz', en: 'Show quiz answers' },
+    hideAnswers:       { es: 'Ocultar respuestas', en: 'Hide answers' },
+    subscriptionBtn:   { es: 'Suscripción', en: 'Subscription' },
+    oneTimePurchase:   { es: 'Compra única', en: 'One-time purchase' },
+  },
+
+  /* ── Pack Customizer Modal ── */
+  pack: {
+    title:             { es: 'Personaliza tu Pack', en: 'Customize your Pack' },
+    subtitle:          { es: 'Elige tus cafés y cantidades', en: 'Choose your coffees and quantities' },
+    add:               { es: 'Añadir', en: 'Add' },
+    remove:            { es: 'Quitar', en: 'Remove' },
+    emptyPack:         { es: 'Tu pack está vacío', en: 'Your pack is empty' },
+    total:             { es: 'Total', en: 'Total' },
+    perUnit:           { es: '/ 250g', en: '/ 250g' },
+    savePack:          { es: 'Guardar Pack', en: 'Save Pack' },
+    saving:            { es: 'Guardando...', en: 'Saving...' },
+    saved:             { es: 'Pack guardado', en: 'Pack saved!' },
+    loadingProfiles:   { es: 'Cargando perfiles...', en: 'Loading profiles...' },
+    quantity:          { es: 'Cantidad', en: 'Quantity' },
   },
 } as const;

@@ -99,22 +99,13 @@ export const Navbar: React.FC = () => {
               </Button>
             )}
 
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <button
-                  className="auth-avatar-btn"
-                  onClick={authActions.logout}
-                  aria-label={t('auth.navLogout')}
-                  title={t('auth.navLogout')}
-                >
-                  <LogOut size={16} />
-                </button>
-              </div>
-            ) : (
+            {!isAuthenticated ? (
               <Button variant="ghost" size="sm" onClick={() => authActions.openAuth('login')}>
                 <User size={16} />
                 {t('auth.navLogin')}
               </Button>
+            ) : (
+              <div></div>
             )}
           </div>
 

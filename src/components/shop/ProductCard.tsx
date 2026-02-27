@@ -30,11 +30,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <motion.article
-      className="group cursor-pointer"
+      className="group cursor-pointer px-0.5"
       variants={cardVariants}
       layout
     >
-      <div className="relative rounded-2xl bg-surface overflow-hidden mb-2.5">
+      <div className="relative rounded-2xl bg-surface overflow-hidden mb-3.5">
         {product.isNew && (
           <div className="absolute top-2.5 left-2.5 z-10">
             <Badge variant="default">{t('productCard.new')}</Badge>
@@ -66,9 +66,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
       </div>
 
-      <div className="px-0.5">
-        <p className="label-caps mb-0.5">{product.brand}</p>
-        <p className="text-sm text-primary leading-snug mb-0.5">{product.name}</p>
+      <div className="px-1">
+        <p className="label-caps mb-1">{product.brand}</p>
+        <p className="text-sm text-primary leading-snug mb-1">{product.name}</p>
         <p className="text-base font-semibold text-primary">{fmtPrice(product.price)}</p>
       </div>
     </motion.article>

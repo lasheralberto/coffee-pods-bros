@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { CoffeeProfile, calculateProfile } from '../data/matchingRules';
-import { saveQuizResults } from '../providers/firebaseProvider';
+import { CoffeeProfile, calculateProfile, calculateDefaultPack } from '../data/matchingRules';
+import { saveQuizResults, type PackItem } from '../providers/firebaseProvider';
 
 interface QuizStore {
   currentStep: number;
@@ -11,7 +11,7 @@ interface QuizStore {
     setAnswer: (step: number, value: string | string[]) => void;
     nextStep: () => void;
     prevStep: () => void;
-    calculateResult: (uid?: string | null) => void;
+    calculateResult: (uid?: string | null) => Promise<void>;
     openQuiz: () => void;
     closeQuiz: () => void;
     resetQuiz: () => void;
@@ -36,12 +36,14 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       set((state) => ({
         currentStep: Math.max(0, state.currentStep - 1),
       })),
-    calculateResult: (uid?: string | null) => {
+    calculateResult: async (uid?: string | null) => {
       const { answers } = get();
-      const result = calculateProfile(answers);
+      const result = await calculateProfile(answers);
       set({ result });
       if (uid && result) {
-        saveQuizResults(uid, answers, result.id);
+        // Generate default pack from quiz answers
+        const defaultPack: PackItem[] = await calculateDefaultPack(answers);
+        saveQuizResults(uid, answers, result.id, defaultPack);
       }
     },
     openQuiz: () => set({ isOpen: true, currentStep: 0, result: null, answers: {} }),

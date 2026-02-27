@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingBag, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { CartItem } from './CartItem';
+import { CartBundleCard } from './CartBundleCard';
 import { useCartStore, selectCartCount, selectCartTotal } from '../../stores/cartStore';
 import { fmtPrice } from '../../data/shopProducts';
 import { t } from '../../data/texts';
@@ -31,9 +32,10 @@ const drawerVariants = {
 };
 
 export const CartDrawer: React.FC = () => {
-  const { items, isOpen, actions } = useCartStore();
+  const { items, bundle, isOpen, actions } = useCartStore();
   const itemCount = useCartStore(selectCartCount);
   const total = useCartStore(selectCartTotal);
+  const hasContent = items.length > 0 || bundle !== null;
 
   return (
     <AnimatePresence>
@@ -77,23 +79,26 @@ export const CartDrawer: React.FC = () => {
 
             {/* Body */}
             <div className="cart-body">
-              {items.length === 0 ? (
+              {!hasContent ? (
                 <div className="cart-empty">
                   <ShoppingBag size={48} className="text-muted mb-4 opacity-40" />
                   <p className="text-muted text-sm mb-1">{t('cart.emptyTitle')}</p>
                   <p className="text-muted text-xs">{t('cart.emptySubtitle')}</p>
                 </div>
               ) : (
-                <AnimatePresence mode="popLayout">
-                  {items.map((item) => (
-                    <CartItem key={item.product.id} item={item} />
-                  ))}
-                </AnimatePresence>
+                <>
+                  {bundle && <CartBundleCard bundle={bundle} />}
+                  <AnimatePresence mode="popLayout">
+                    {items.map((item) => (
+                      <CartItem key={item.product.id} item={item} />
+                    ))}
+                  </AnimatePresence>
+                </>
               )}
             </div>
 
             {/* Footer */}
-            {items.length > 0 && (
+            {hasContent && (
               <div className="cart-footer">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-semibold text-primary">{t('cart.subtotal')}</span>

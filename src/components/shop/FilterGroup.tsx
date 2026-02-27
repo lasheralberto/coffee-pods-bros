@@ -38,7 +38,7 @@ export const FilterGroup: React.FC<FilterGroupProps> = ({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between py-3 min-h-[44px] text-left hover:opacity-80 transition-opacity"
+        className="w-full flex items-center justify-between py-4 min-h-[48px] text-left hover:opacity-80 transition-opacity"
         aria-expanded={open}
       >
         <span className={`text-sm ${isActive ? 'font-semibold' : ''} text-primary`}>
@@ -53,11 +53,11 @@ export const FilterGroup: React.FC<FilterGroupProps> = ({
 
       {/* Body — opciones radio */}
       {open && (
-        <fieldset className="flex flex-col gap-2 pb-3 animate-in fade-in slide-in-from-top-1 duration-200">
+        <fieldset className="flex flex-col gap-2.5 pb-4 animate-in fade-in slide-in-from-top-1 duration-200">
           {options.map(({ label, value }) => (
             <label
               key={value}
-              className="flex items-center gap-2.5 text-sm text-primary cursor-pointer group min-h-[32px]"
+              className="flex items-center gap-3 text-sm text-primary cursor-pointer group min-h-[36px] py-0.5"
             >
               <input
                 type="radio"

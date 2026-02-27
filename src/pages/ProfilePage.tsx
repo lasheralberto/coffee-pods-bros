@@ -178,7 +178,7 @@ export const ProfilePage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.16 }}
               >
-                <QuizUserCard quizData={quizData} onTakeQuiz={quizActions.openQuiz} />
+                <QuizUserCard quizData={quizData} onTakeQuiz={quizActions.openQuiz} uid={authUser!.uid} />
               </motion.div>
 
               {/* Logout */}
