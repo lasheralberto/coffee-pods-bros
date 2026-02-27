@@ -1,0 +1,159 @@
+/*
+ * DESIGN TOKENS — Fuente única de verdad para todo el sistema visual.
+ * Cambia cualquier valor aquí y se propagará a toda la app automáticamente.
+ * NO hardcodees colores, fuentes ni tamaños en ningún componente.
+ */
+
+:root {
+
+  /* ── COLORES BASE ─────────────────────────────────────── */
+  --color-cream:         #FAF7F2;
+  --color-espresso:      #1A0F0A;
+  --color-roast:         #7B2D00;
+  --color-caramel:       #C4773B;
+  --color-foam:          #EDE8E0;
+  --color-accent:        #E8622A;
+  --color-leaf:          #4A5E3A;
+  --color-mist:          #F5F2ED;
+  --color-stone:         #8C8580;
+
+  /* ── COLORES SEMÁNTICOS (los que usan los componentes) ── */
+  /* Fondo */
+  --bg-page:             var(--color-cream);
+  --bg-surface:          var(--color-foam);
+  --bg-surface-hover:    #E5E0D8;
+  --bg-inverse:          var(--color-espresso);
+  --bg-overlay:          rgba(26, 15, 10, 0.55);
+
+  /* Texto */
+  --text-primary:        var(--color-espresso);
+  --text-secondary:      #5C4F48;
+  --text-muted:          var(--color-stone);
+  --text-inverse:        var(--color-cream);
+  --text-accent:         var(--color-caramel);
+  --text-link:           var(--color-roast);
+  --text-link-hover:     var(--color-accent);
+
+  /* Bordes */
+  --border-color:        #DDD8D0;
+  --border-color-strong: #C4BCB4;
+  --border-focus:        var(--color-caramel);
+
+  /* Brand */
+  --brand-primary:       var(--color-roast);
+  --brand-secondary:     var(--color-caramel);
+  --brand-accent:        var(--color-accent);
+
+  /* Semáforo UI */
+  --color-success:       #3D6B44;
+  --color-error:         #B83232;
+  --color-warning:       #B87332;
+
+  /* ── TIPOGRAFÍA ───────────────────────────────────────── */
+  --font-display:        "Cormorant Garamond", Georgia, serif;
+  --font-body:           "Cabinet Grotesk", system-ui, sans-serif;
+  --font-mono:           "Departure Mono", "Courier New", monospace;
+
+  /* Escala tipográfica (modular scale 1.25) */
+  --text-2xs:            0.625rem;   /* 10px */
+  --text-xs:             0.75rem;    /* 12px */
+  --text-sm:             0.875rem;   /* 14px */
+  --text-base:           1rem;       /* 16px */
+  --text-md:             1.125rem;   /* 18px */
+  --text-lg:             1.25rem;    /* 20px */
+  --text-xl:             1.5rem;     /* 24px */
+  --text-2xl:            1.875rem;   /* 30px */
+  --text-3xl:            2.25rem;    /* 36px */
+  --text-4xl:            3rem;       /* 48px */
+  --text-5xl:            3.75rem;    /* 60px */
+  --text-6xl:            4.5rem;     /* 72px */
+  --text-hero:           clamp(3rem, 8vw, 6rem);  /* fluid hero */
+
+  /* Pesos */
+  --font-light:          300;
+  --font-regular:        400;
+  --font-medium:         500;
+  --font-semibold:       600;
+  --font-bold:           700;
+
+  /* Line heights */
+  --leading-tight:       0.95;
+  --leading-snug:        1.2;
+  --leading-normal:      1.5;
+  --leading-relaxed:     1.7;
+
+  /* Letter spacing */
+  --tracking-tight:      -0.02em;
+  --tracking-normal:     0;
+  --tracking-wide:       0.05em;
+  --tracking-widest:     0.12em;
+
+  /* ── ESPACIADO (base 4px) ─────────────────────────────── */
+  --space-1:   0.25rem;    /* 4px  */
+  --space-2:   0.5rem;     /* 8px  */
+  --space-3:   0.75rem;    /* 12px */
+  --space-4:   1rem;       /* 16px */
+  --space-5:   1.25rem;    /* 20px */
+  --space-6:   1.5rem;     /* 24px */
+  --space-8:   2rem;       /* 32px */
+  --space-10:  2.5rem;     /* 40px */
+  --space-12:  3rem;       /* 48px */
+  --space-16:  4rem;       /* 64px */
+  --space-20:  5rem;       /* 80px */
+  --space-24:  6rem;       /* 96px */
+  --space-32:  8rem;       /* 128px */
+
+  /* ── BORDES Y RADIOS ──────────────────────────────────── */
+  --radius-sm:     0.25rem;    /* 4px  */
+  --radius-md:     0.5rem;     /* 8px  */
+  --radius-lg:     0.75rem;    /* 12px */
+  --radius-xl:     1rem;       /* 16px */
+  --radius-2xl:    1.5rem;     /* 24px */
+  --radius-3xl:    2rem;       /* 32px */
+  --radius-pill:   999px;
+  --radius-circle: 50%;
+
+  --border-width:       1px;
+  --border-width-thick: 2px;
+  --border-style:       solid;
+
+  /* ── SOMBRAS ──────────────────────────────────────────── */
+  --shadow-xs:  0 1px 3px rgba(26, 15, 10, 0.08);
+  --shadow-sm:  0 2px 8px rgba(26, 15, 10, 0.10);
+  --shadow-md:  0 4px 16px rgba(26, 15, 10, 0.12);
+  --shadow-lg:  0 8px 32px rgba(26, 15, 10, 0.15);
+  --shadow-xl:  0 16px 56px rgba(26, 15, 10, 0.20);
+  --shadow-inner: inset 0 2px 4px rgba(26, 15, 10, 0.06);
+
+  /* ── TRANSICIONES ─────────────────────────────────────── */
+  --duration-fast:    150ms;
+  --duration-base:    250ms;
+  --duration-slow:    400ms;
+  --duration-slower:  600ms;
+  --ease-default:     cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out:         cubic-bezier(0, 0, 0.2, 1);
+  --ease-in:          cubic-bezier(0.4, 0, 1, 1);
+
+  /* ── LAYOUT ───────────────────────────────────────────── */
+  --container-sm:     640px;
+  --container-md:     768px;
+  --container-lg:     1024px;
+  --container-xl:     1280px;
+  --container-2xl:    1440px;
+
+  --navbar-height-mobile:  56px;
+  --navbar-height-desktop: 72px;
+  --announcementbar-height: 36px;
+
+  /* ── Z-INDEX ──────────────────────────────────────────── */
+  --z-below:      -1;
+  --z-base:        0;
+  --z-raised:     10;
+  --z-dropdown:   100;
+  --z-sticky:     200;
+  --z-navbar:     300;
+  --z-modal:      400;
+  --z-toast:      500;
+  --z-cursor:     9999;
+}

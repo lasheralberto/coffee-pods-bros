@@ -1,0 +1,46 @@
+/*
+ * ANIMACIONES GLOBALES CSS
+ * Las animaciones de Motion (Framer) van en los componentes,
+ * estas son para micro-animaciones y estados CSS puro.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  @keyframes fadeIn      { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp     { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideDown   { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes scaleIn     { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  @keyframes spinSlow    { to { transform: rotate(360deg); } }
+  @keyframes shimmer     {
+    0%   { background-position: -400px 0; }
+    100% { background-position:  400px 0; }
+  }
+
+  .animate-fade-in  { animation: fadeIn  var(--duration-base) var(--ease-out) both; }
+  .animate-slide-up { animation: slideUp var(--duration-slow) var(--ease-out) both; }
+  .animate-scale-in { animation: scaleIn var(--duration-slow) var(--ease-spring) both; }
+  .animate-spin-slow { animation: spinSlow 20s linear infinite; }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-foam) 25%, var(--color-mist) 50%, var(--color-foam) 75%);
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-md);
+  }
+
+  /* Stagger helpers */
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+}
+
+/* Respeta preferencias del sistema */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
