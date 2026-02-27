@@ -62,7 +62,7 @@ export const QuizResult: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-espresso/60 to-transparent" />
           <div className="absolute bottom-4 left-4 right-4 text-white">
             <p className="font-mono text-xs uppercase tracking-widest mb-1">
-              {result.origin}
+              {result.brand}
             </p>
             <p className="font-display text-2xl">{result.name}</p>
           </div>
@@ -76,16 +76,15 @@ export const QuizResult: React.FC = () => {
             </span>
             <h2 className="heading-display text-4xl mb-3">{result.name}</h2>
             <div className="flex flex-wrap gap-2 mb-4">
-              <Badge variant="leaf">{result.origin}</Badge>
-              <Badge variant="outline">{result.process}</Badge>
-              <Badge variant="outline">{result.altitude}</Badge>
+              <Badge variant="leaf">{result.brand}</Badge>
+              <Badge variant="outline">{result.roast}</Badge>
             </div>
           </div>
 
           <div>
             <p className="label-caps mb-2">{t('quizResult.tastingNotes')}</p>
             <div className="flex flex-wrap gap-2">
-              {result.notes.map((note) => (
+              {result.tastesLike.map((note) => (
                 <span
                   key={note}
                   className="px-3 py-1 bg-foam rounded-full text-xs font-mono text-espresso uppercase tracking-wide"
@@ -100,7 +99,7 @@ export const QuizResult: React.FC = () => {
 
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-display font-bold text-roast">
-              {result.price}
+              ${result.price.toFixed(2)}
             </span>
             <span className="text-sm text-muted">{t('quizResult.perMonth')}</span>
           </div>

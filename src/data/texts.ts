@@ -248,6 +248,45 @@ export const TEXTS = {
     new: { es: 'Nuevo', en: 'New' },
   },
 
+  /* ── Product Detail Modal ── */
+  productDetail: {
+    close: { es: 'Cerrar detalle', en: 'Close detail' },
+    roastLevel: { es: 'Tueste', en: 'Roast' },
+    tastesLike: { es: 'Sabor', en: 'Tastes like' },
+    addToCart: { es: 'Añadir al carrito', en: 'Add to cart' },
+    light: { es: 'Claro', en: 'Light' },
+    medium: { es: 'Medio', en: 'Medium' },
+    dark: { es: 'Oscuro', en: 'Dark' },
+  },
+
+  /* ── Shop Product Descriptions ── */
+  shopDescriptions: {
+    lunarNewYear: {
+      es: 'Celebra con este blend especial de tueste medio. Notas de chocolate con leche y frutos secos crean una taza equilibrada, cálida y reconfortante.',
+      en: 'Celebrate with this special medium roast blend. Notes of milk chocolate and nuts create a balanced, warm, and comforting cup.',
+    },
+    familiaPeixoto: {
+      es: 'Directo de las fincas de la familia Peixoto en Brasil. Notas envolventes de avellana y caramelo con un cuerpo sedoso que enamora en cada sorbo.',
+      en: 'Straight from the Peixoto family farms in Brazil. Enveloping notes of hazelnut and caramel with a silky body that captivates in every sip.',
+    },
+    alexanderVargas: {
+      es: 'Un microlote colombiano de tueste claro con notas vibrantes de frutas rojas y flores de jazmín. Acidez brillante y un final limpio y elegante.',
+      en: 'A Colombian micro-lot light roast with vibrant notes of red fruits and jasmine flowers. Bright acidity and a clean, elegant finish.',
+    },
+    monarchBlend: {
+      es: 'Un blend oscuro y majestuoso con notas profundas de chocolate amargo y humo de leña. Cuerpo intenso y un retrogusto largo y persistente.',
+      en: 'A dark and majestic blend with deep notes of dark chocolate and wood smoke. Intense body and a long, lingering aftertaste.',
+    },
+    stereoBlend: {
+      es: 'Tueste claro con notas cítricas brillantes y un toque afrutado. Perfecto para quienes buscan un café vivo, aromático y lleno de carácter.',
+      en: 'Light roast with bright citrus notes and a fruity touch. Perfect for those seeking a lively, aromatic coffee full of character.',
+    },
+    sermonBlend: {
+      es: 'Un blend premium de tueste oscuro con notas ahumadas y un dulzor de caramelo tostado. Ideal para los amantes del café con cuerpo y personalidad.',
+      en: 'A premium dark roast blend with smoky notes and toasted caramel sweetness. Ideal for lovers of coffee with body and personality.',
+    },
+  },
+
   /* ── About Page ── */
   about: {
     heading: { es: 'Nosotros', en: 'About Us' },
@@ -428,86 +467,6 @@ export const TEXTS = {
     },
   },
 
-  /* ── Coffee Profiles (matchingRules) ── */
-  coffeeProfiles: {
-    explorerFruity: {
-      name: { es: 'Ethiopia Yirgacheffe Natural', en: 'Ethiopia Yirgacheffe Natural' },
-      origin: { es: 'Etiopía', en: 'Ethiopia' },
-      altitude: { es: '2.000m', en: '2,000m' },
-      process: { es: 'Natural', en: 'Natural' },
-      notes: {
-        es: ['Arándanos', 'Jazmín', 'Limón'],
-        en: ['Blueberries', 'Jasmine', 'Lemon'],
-      },
-      description: {
-        es: 'Un café vibrante y complejo, perfecto para quienes buscan una experiencia sensorial única. Sus notas florales y afrutadas te transportarán al lugar de origen del café.',
-        en: 'A vibrant and complex coffee, perfect for those seeking a unique sensory experience. Its floral and fruity notes will transport you to the origin of the coffee.',
-      },
-      price: { es: '€16,90', en: '€16.90' },
-      tags: {
-        es: ['Afrutado', 'Floral', 'Complejo'],
-        en: ['Fruity', 'Floral', 'Complex'],
-      },
-    },
-    balancedLover: {
-      name: { es: 'Colombia Huila Honey', en: 'Colombia Huila Honey' },
-      origin: { es: 'Colombia', en: 'Colombia' },
-      altitude: { es: '1.750m', en: '1,750m' },
-      process: { es: 'Honey', en: 'Honey' },
-      notes: {
-        es: ['Chocolate con leche', 'Avellana', 'Panela'],
-        en: ['Milk Chocolate', 'Hazelnut', 'Panela'],
-      },
-      description: {
-        es: 'El equilibrio perfecto entre dulzura y cuerpo. Un café versátil que brilla en cualquier método de preparación, con una suavidad que enamora.',
-        en: 'The perfect balance between sweetness and body. A versatile coffee that shines in any brew method, with a smoothness that captivates.',
-      },
-      price: { es: '€15,50', en: '€15.50' },
-      tags: {
-        es: ['Equilibrado', 'Dulce', 'Versátil'],
-        en: ['Balanced', 'Sweet', 'Versatile'],
-      },
-    },
-    classicIntense: {
-      name: { es: 'Brasil Cerrado Pulped', en: 'Brasil Cerrado Pulped' },
-      origin: { es: 'Brasil', en: 'Brazil' },
-      altitude: { es: '1.200m', en: '1,200m' },
-      process: { es: 'Pulped Natural', en: 'Pulped Natural' },
-      notes: {
-        es: ['Chocolate negro', 'Nuez tostada', 'Caramelo'],
-        en: ['Dark Chocolate', 'Toasted Nut', 'Caramel'],
-      },
-      description: {
-        es: 'Para los amantes de un café con cuerpo y carácter. Notas profundas de chocolate y frutos secos con una baja acidez y un final persistente.',
-        en: 'For lovers of a coffee with body and character. Deep notes of chocolate and nuts with low acidity and a lingering finish.',
-      },
-      price: { es: '€14,90', en: '€14.90' },
-      tags: {
-        es: ['Intenso', 'Cuerpo', 'Clásico'],
-        en: ['Intense', 'Body', 'Classic'],
-      },
-    },
-    adventurer: {
-      name: { es: 'Blend Misterio del Mes', en: 'Mystery Blend of the Month' },
-      origin: { es: 'Origen Sorpresa', en: 'Surprise Origin' },
-      altitude: { es: 'Variable', en: 'Variable' },
-      process: { es: 'Secreto', en: 'Secret' },
-      notes: {
-        es: ['Cambia cada mes', 'Siempre excepcional'],
-        en: ['Changes every month', 'Always exceptional'],
-      },
-      description: {
-        es: 'Déjate sorprender por nuestra selección mensual. Cada mes elegimos un microlote exclusivo que desafía las expectativas y expande tu paladar.',
-        en: 'Let yourself be surprised by our monthly selection. Each month we choose an exclusive micro-lot that defies expectations and expands your palate.',
-      },
-      price: { es: '€17,90', en: '€17.90' },
-      tags: {
-        es: ['Sorpresa', 'Exclusivo', 'Limitado'],
-        en: ['Surprise', 'Exclusive', 'Limited'],
-      },
-    },
-  },
-
   /* ── Subscription Plans (Shop) ── */
   subs: {
     /* Quiz CTA (no quiz done) */
@@ -519,7 +478,7 @@ export const TEXTS = {
     /* Section header (quiz done) */
     recBadge:         { es: 'PARA TI', en: 'FOR YOU' },
     recHeading:       { es: 'Tu plan de café recomendado', en: 'Your recommended coffee plan' },
-    recSubheading:    { es: 'Basado en tus respuestas del quiz, estos planes encajan con tu perfil de café.', en: 'Based on your quiz answers, these plans match your coffee profile.' },
+    recSubheading:    { es: 'Basado en tus respuestas del quiz, estos planes encajan con tus gustos.', en: 'Based on your quiz answers, these plans match your tastes.' },
 
     /* Plan: Explorer */
     explorerName:     { es: 'Explorador', en: 'Explorer' },
@@ -591,10 +550,9 @@ export const TEXTS = {
     email:             { es: 'Email', en: 'Email' },
     provider:          { es: 'Cuenta', en: 'Account' },
     subscription:      { es: 'Suscripción', en: 'Subscription' },
-    coffeeProfile:     { es: 'Perfil de café', en: 'Coffee profile' },
     quizNotCompleted:  { es: 'Aún no has completado el quiz', en: 'You haven\'t completed the quiz yet' },
     quizCompleted:     { es: 'Quiz completado', en: 'Quiz completed' },
-    quizHeading:       { es: 'Tus respuestas del Quiz', en: 'Your Quiz Answers' },
+    quizHeading:       { es: 'Tu pack personalizado', en: 'Your Custom Pack' },
     quizNoAnswers:     { es: 'No hay respuestas registradas', en: 'No answers recorded' },
     completedAt:       { es: 'Completado el', en: 'Completed on' },
     yourResult:        { es: 'Tu resultado', en: 'Your result' },
@@ -612,6 +570,25 @@ export const TEXTS = {
     oneTimePurchase:   { es: 'Compra única', en: 'One-time purchase' },
   },
 
+  /* ── Purchase / Checkout ── */
+  purchase: {
+    processing:      { es: 'Procesando...', en: 'Processing...' },
+    success:         { es: 'Compra completada', en: 'Purchase completed' },
+    error:           { es: 'Error al procesar la compra', en: 'Error processing purchase' },
+    historyHeading:  { es: 'Historial de compras', en: 'Purchase history' },
+    noHistory:       { es: 'Aún no has realizado ninguna compra', en: 'You haven\'t made any purchases yet' },
+    orderDate:       { es: 'Fecha', en: 'Date' },
+    orderTotal:      { es: 'Total', en: 'Total' },
+    orderStatus:     { es: 'Estado', en: 'Status' },
+    statusCompleted: { es: 'Completado', en: 'Completed' },
+    statusPending:   { es: 'Pendiente', en: 'Pending' },
+    statusCancelled: { es: 'Cancelado', en: 'Cancelled' },
+    items:           { es: 'artículos', en: 'items' },
+    bundleLabel:     { es: 'Pack incluido', en: 'Pack included' },
+    goToShop:        { es: 'Ir a la tienda', en: 'Go to shop' },
+    loginToCheckout: { es: 'Inicia sesión para pagar', en: 'Sign in to checkout' },
+  },
+
   /* ── Pack Customizer Modal ── */
   pack: {
     title:             { es: 'Personaliza tu Pack', en: 'Customize your Pack' },
@@ -624,7 +601,21 @@ export const TEXTS = {
     savePack:          { es: 'Guardar Pack', en: 'Save Pack' },
     saving:            { es: 'Guardando...', en: 'Saving...' },
     saved:             { es: 'Pack guardado', en: 'Pack saved!' },
-    loadingProfiles:   { es: 'Cargando perfiles...', en: 'Loading profiles...' },
+    loadingProfiles:   { es: 'Cargando productos...', en: 'Loading products...' },
     quantity:          { es: 'Cantidad', en: 'Quantity' },
+  },
+
+  /* ── Personalized Pack Section (Shop) ── */
+  personalPack: {
+    heading:           { es: 'Tu Pack Personalizado', en: 'Your Personalized Pack' },
+    subtitle:          { es: 'Basado en tu quiz de café', en: 'Based on your coffee quiz' },
+    whyThisPack:       { es: 'Por qué este pack es para ti', en: 'Why this pack is for you' },
+    loadingAi:         { es: 'Generando tu recomendación...', en: 'Generating your recommendation...' },
+    customize:         { es: 'Personalizar', en: 'Customize' },
+    subscribeBtn:      { es: 'Suscribirme', en: 'Subscribe' },
+    buyOnce:           { es: 'Compra única', en: 'Buy once' },
+    retakeQuiz:        { es: 'Repetir quiz', en: 'Retake quiz' },
+    noPackYet:         { es: 'Completa el quiz para descubrir tu pack ideal', en: 'Complete the quiz to discover your ideal pack' },
+    takeQuizCta:       { es: 'Descubre tu pack', en: 'Discover your pack' },
   },
 } as const;

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { Badge } from '../ui/Badge';
+import { ProductDetail } from './ProductDetail';
 import type { ShopProduct } from '../../data/shopProducts';
 import { fmtPrice } from '../../data/shopProducts';
 import { useCartStore } from '../../stores/cartStore';
@@ -27,12 +28,18 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { actions } = useCartStore();
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const openDetail = useCallback(() => setDetailOpen(true), []);
+  const closeDetail = useCallback(() => setDetailOpen(false), []);
 
   return (
+    <>
     <motion.article
       className="group cursor-pointer px-0.5"
       variants={cardVariants}
       layout
+      onClick={openDetail}
     >
       <div className="relative rounded-2xl bg-surface overflow-hidden mb-3.5">
         {product.isNew && (
@@ -55,8 +62,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="aspect-[4/5] p-2.5 md:p-3.5">
           <img
             src={product.image}
-            srcSet={`${product.image}&w=400 400w, ${product.image}&w=700 700w`}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             alt={product.name}
             width={700}
             height={875}
@@ -72,5 +77,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <p className="text-base font-semibold text-primary">{fmtPrice(product.price)}</p>
       </div>
     </motion.article>
+
+    <ProductDetail product={detailOpen ? product : null} onClose={closeDetail} />
+    </>
   );
 };

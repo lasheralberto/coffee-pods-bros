@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { CoffeeProfile, calculateProfile, calculateDefaultPack } from '../data/matchingRules';
+import { QuizResultProduct, calculateProfile, calculateDefaultPack } from '../data/matchingRules';
 import { saveQuizResults, type PackItem } from '../providers/firebaseProvider';
+import { generatePackDescription } from '../services/genaiService';
 
 interface QuizStore {
   currentStep: number;
   answers: Record<number, string | string[]>;
-  result: CoffeeProfile | null;
+  result: QuizResultProduct | null;
   isOpen: boolean;
   actions: {
     setAnswer: (step: number, value: string | string[]) => void;
@@ -43,7 +44,9 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       if (uid && result) {
         // Generate default pack from quiz answers
         const defaultPack: PackItem[] = await calculateDefaultPack(answers);
-        saveQuizResults(uid, answers, result.id, defaultPack);
+        // Generate AI description explaining why this pack fits
+        const genaiDescription = await generatePackDescription(answers, defaultPack);
+        saveQuizResults(uid, answers, defaultPack, genaiDescription);
       }
     },
     openQuiz: () => set({ isOpen: true, currentStep: 0, result: null, answers: {} }),

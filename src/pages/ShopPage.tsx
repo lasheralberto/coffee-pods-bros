@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDownUp, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 import { Section } from '../components/ui/Section';
@@ -8,19 +8,21 @@ import { FilterGroup } from '../components/shop/FilterGroup';
 import { ProductCard } from '../components/shop/ProductCard';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
 import {
-  SHOP_PRODUCTS,
   PRICE_OPTIONS,
   ROAST_OPTIONS,
   TASTE_OPTIONS,
   INITIAL_FILTERS,
   filterProducts,
+  type ShopProduct,
   type ShopFilters,
   type PriceFilter,
   type RoastFilter,
   type TasteFilter,
 } from '../data/shopProducts';
-import { t } from '../data/texts';
+import { t, getLocale } from '../data/texts';
 import { UsersPlanSuscription } from '../components/shop/UsersPlanSuscription';
+import { PersonalizedPackSection } from '../components/shop/PersonalizedPackSection';
+import { getProductsCatalog, type ProductCatalogFirestore } from '../providers/firebaseProvider';
 
 /* ── FilterPanel (shared mobile drawer + desktop sidebar) ── */
 
@@ -85,9 +87,39 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onChange, onClear, o
 
 /* ── Página ── */
 
+/** Maps a Firestore product doc to the local ShopProduct shape used by filters & cards. */
+function toShopProduct(doc: ProductCatalogFirestore, locale: string): ShopProduct {
+  return {
+    id:          doc.order ?? 0,
+    brand:       doc.brand,
+    name:        doc.name[locale] ?? doc.name['en'] ?? '',
+    description: doc.description[locale] ?? doc.description['en'] ?? '',
+    price:       doc.price,
+    image:       doc.image,
+    isNew:       doc.isNew,
+    roast:       doc.roast,
+    tastesLike:  doc.tastesLike,
+  };
+}
+
 export const ShopPage: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<ShopFilters>(INITIAL_FILTERS);
+  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getProductsCatalog()
+      .then((docs) => {
+        if (cancelled) return;
+        const locale = getLocale();
+        setProducts(docs.map((d) => toShopProduct(d, locale)));
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   const activeCount = Object.values(filters).filter((v) => v !== 'any').length;
 
@@ -100,7 +132,7 @@ export const ShopPage: React.FC = () => {
 
   const clearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
 
-  const filtered = useMemo(() => filterProducts(SHOP_PRODUCTS, filters), [filters]);
+  const filtered = useMemo(() => filterProducts(products, filters), [products, filters]);
 
   const panelProps: FilterPanelProps = {
     filters,
@@ -113,14 +145,19 @@ export const ShopPage: React.FC = () => {
     <PageTransition>
       <Section size="lg">
         <Container size="xl">
-          {/* <motion.h1 variants={childVariants} className="heading-display text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4">
+          <motion.h1 variants={childVariants} className="heading-display text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4">
             {t('shop.heading')}
           </motion.h1>
+          
           <motion.p variants={childVariants} className="body-lg max-w-3xl mb-10 md:mb-12 lg:mb-14">
             {t('shop.description')}
-          </motion.p> */}
+          </motion.p>
+      <div className="h-[var(--space-6)]" />
 
-          <UsersPlanSuscription />
+          {/* <UsersPlanSuscription /> */}
+
+          {/* Personalized pack recommendation */}
+          <PersonalizedPackSection />
 
           <div className="flex flex-col lg:flex-row gap-9 lg:gap-14">
             <aside className="hidden lg:block w-[232px] shrink-0">
@@ -151,7 +188,11 @@ export const ShopPage: React.FC = () => {
                 </div>
               </div>
 
-              {filtered.length === 0 ? (
+              {loading ? (
+                <div className="py-16 text-center text-muted">
+                  <p className="text-lg">{t('shop.loading') || 'Loading…'}</p>
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="py-16 text-center text-muted">
                   <p className="text-lg mb-3">{t('shop.noProducts')}</p>
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="!text-roast">

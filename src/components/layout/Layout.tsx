@@ -5,6 +5,7 @@ import { QuizModal } from '../quiz/QuizModal';
 import { CartDrawer } from '../cart/CartDrawer';
 import { AuthModal } from '../auth/AuthModal';
 import { StickyCtaMobile } from '../ui/StickyCtaMobile';
+import { GlobalLoadingBar } from '../ui/GlobalLoadingBar';
 import { Button } from '../ui/Button';
 import { useQuizStore } from '../../stores/quizStore';
 import { t } from '../../data/texts';
@@ -18,6 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <GlobalLoadingBar />
       <Navbar />
       <main className="flex-1 pt-navbar-desktop">
         {children}

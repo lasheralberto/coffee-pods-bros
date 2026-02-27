@@ -56,7 +56,7 @@ export const CartBundleCard: React.FC<CartBundleCardProps> = ({ bundle }) => {
       {/* Items inside bundle */}
       <div className="cart-bundle__items">
         {bundle.items.map((item) => (
-          <div key={item.profileId} className="cart-bundle__item">
+          <div key={item.productId} className="cart-bundle__item">
             <img
               src={item.image}
               alt={item.name}

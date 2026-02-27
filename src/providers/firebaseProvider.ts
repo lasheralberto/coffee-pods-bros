@@ -15,10 +15,15 @@ import {
   getDoc,
   updateDoc,
   getDocs,
+  addDoc,
   collection,
+  query,
+  where,
+  orderBy,
   serverTimestamp,
 } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { ref, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '../config/firebase';
 
 /* ── Types ───────────────────────────────────────────────── */
 
@@ -50,7 +55,6 @@ export interface UserDoc {
   role:               'customer';
   subscriptionStatus: 'none';
   quizCompleted:      boolean;
-  coffeeProfileId:    string | null;
   packId:             string | null;
 }
 
@@ -88,7 +92,6 @@ async function createUserDoc(
     role:               'customer',
     subscriptionStatus: 'none',
     quizCompleted:      false,
-    coffeeProfileId:    null,
     packId:             null,
   };
   await setDoc(ref, userData);
@@ -224,33 +227,30 @@ const SUBSCRIPTION_PLANS: SubscriptionPlanDoc[] = [
 export async function saveQuizResults(
   uid: string,
   answers: Record<number, string | string[]>,
-  coffeeProfileId: string,
   defaultPackItems?: PackItem[],
+  genaiDescription?: string | null,
 ): Promise<void> {
   const quizRef = doc(db, 'usersToQuiz', uid);
   await setDoc(quizRef, {
     uid,
     answers,
-    coffeeProfileId,
     completedAt: serverTimestamp(),
   }, { merge: true });
 
   const userRef = doc(db, 'users', uid);
   await updateDoc(userRef, {
     quizCompleted: true,
-    coffeeProfileId,
   });
 
   // Save default pack if provided
   if (defaultPackItems && defaultPackItems.length > 0) {
     const totalPrice = defaultPackItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    await saveUserPack(uid, defaultPackItems, totalPrice);
+    await saveUserPack(uid, defaultPackItems, totalPrice, genaiDescription);
   }
 
   const quizSubsRef = doc(db, 'quizToSuscription', uid);
   await setDoc(quizSubsRef, {
     quizId: uid,
-    coffeeProfileId,
     plans: SUBSCRIPTION_PLANS,
     recommendedPlanId: 'connoisseur',
     updatedAt: serverTimestamp(),
@@ -272,7 +272,6 @@ export async function getUserDoc(uid: string): Promise<UserDoc | null> {
 export interface QuizDoc {
   uid: string;
   answers: Record<number, string | string[]>;
-  coffeeProfileId: string;
   completedAt: unknown;
 }
 
@@ -318,67 +317,10 @@ export async function getSubscriptionPlans(): Promise<SubscriptionPlanFirestore[
   return plans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
-/* ── Coffee Profiles from Firestore ──────────────────────── */
-
-/**
- * Firestore document model for `coffeeProfiles` collection.
- * Each doc represents one coffee profile recommendation.
- */
-export interface CoffeeProfileFirestore {
-  id: string;
-  name: Record<string, string>;
-  origin: Record<string, string>;
-  altitude: Record<string, string>;
-  process: Record<string, string>;
-  notes: Record<string, string[]>;
-  description: Record<string, string>;
-  price: Record<string, string>;
-  image: string;
-  tags: Record<string, string[]>;
-  /** Matching rules: which roast values map to this profile */
-  matchRoast?: string[];
-  /** Matching rules: which flavor values map to this profile */
-  matchFlavors?: string[];
-  /** Matching rules: which personality values map to this profile */
-  matchPersonality?: string[];
-  /** Matching rules: which method values map to this profile */
-  matchMethod?: string[];
-  /** If true, this is the default/fallback profile */
-  isDefault?: boolean;
-  /** Sort priority for matching (lower = higher priority) */
-  matchPriority?: number;
-}
-
-/**
- * Fetches all coffee profiles from `coffeeProfiles` collection.
- * Returns them sorted by `matchPriority` (ascending).
- */
-export async function getCoffeeProfiles(): Promise<CoffeeProfileFirestore[]> {
-  const colRef = collection(db, 'coffeeProfiles');
-  const snap = await getDocs(colRef);
-  const profiles = snap.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  })) as CoffeeProfileFirestore[];
-  return profiles.sort((a, b) => (a.matchPriority ?? 99) - (b.matchPriority ?? 99));
-}
-
-/**
- * Fetches a single coffee profile by ID from `coffeeProfiles/{id}`.
- */
-export async function getCoffeeProfileById(
-  profileId: string,
-): Promise<CoffeeProfileFirestore | null> {
-  const ref = doc(db, 'coffeeProfiles', profileId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as CoffeeProfileFirestore;
-}
-
 /* ── User Packs ──────────────────────────────────────────── */
 
 export interface PackItem {
-  profileId: string;
+  productId: string;
   name: string;
   image: string;
   price: number;
@@ -389,6 +331,7 @@ export interface UserPack {
   uid: string;
   items: PackItem[];
   totalPrice: number;
+  genaiDescription?: string | null;
   createdAt: unknown;
   updatedAt: unknown;
 }
@@ -400,15 +343,20 @@ export async function saveUserPack(
   uid: string,
   items: PackItem[],
   totalPrice: number,
+  genaiDescription?: string | null,
 ): Promise<void> {
   const packRef = doc(db, 'userPacks', uid);
-  await setDoc(packRef, {
+  const data: Record<string, unknown> = {
     uid,
     items,
     totalPrice,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  }, { merge: true });
+  };
+  if (genaiDescription !== undefined) {
+    data.genaiDescription = genaiDescription;
+  }
+  await setDoc(packRef, data, { merge: true });
 
   const userRef = doc(db, 'users', uid);
   await updateDoc(userRef, {
@@ -424,6 +372,123 @@ export async function getUserPack(uid: string): Promise<UserPack | null> {
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   return snap.data() as UserPack;
+}
+
+/* ── Products Catalog from Firestore ─────────────────────── */
+
+/**
+ * Firestore document model for `productsCatalog` collection.
+ */
+export interface ProductCatalogFirestore {
+  id:          string;
+  brand:       string;
+  name:        Record<string, string>;
+  description: Record<string, string>;
+  price:       number;
+  image:       string;
+  isNew:       boolean;
+  roast:       'light' | 'medium' | 'dark';
+  tastesLike:  string[];
+  order?:      number;
+}
+
+/**
+ * Resolves a Storage path to a download URL.
+ * If the value already starts with "http", returns it as-is.
+ * Returns `null` when the reference cannot be resolved.
+ */
+async function resolveStorageUrl(path: string): Promise<string | null> {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  try {
+    return await getDownloadURL(ref(storage, path));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetches all products from `productsCatalog` collection.
+ * Each doc's `image` field can be:
+ *   • A full URL (https://…) — used directly.
+ *   • A Storage path (e.g. "productCatalog/my-coffee.jpg") — resolved to a download URL.
+ * Returns them sorted by `order` field (ascending).
+ */
+export async function getProductsCatalog(): Promise<ProductCatalogFirestore[]> {
+  const snap = await getDocs(collection(db, 'productsCatalog'));
+
+  const products = await Promise.all(
+    snap.docs.map(async (d) => {
+      const data = d.data();
+      const resolvedImage = await resolveStorageUrl(data.image ?? '');
+      return {
+        id: d.id,
+        ...data,
+        image: resolvedImage ?? '',
+      } as ProductCatalogFirestore;
+    }),
+  );
+
+  return products.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+/* ── User Purchases ──────────────────────────────────────── */
+
+export interface PurchaseItem {
+  productId: number;
+  name: string;
+  brand: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
+
+export interface PurchaseDoc {
+  id?: string;
+  uid: string;
+  items: PurchaseItem[];
+  bundleItems?: PackItem[];
+  bundleMode?: 'subscription' | 'oneTime';
+  bundleTotal?: number;
+  totalPrice: number;
+  status: 'completed' | 'pending' | 'cancelled';
+  createdAt: unknown;
+}
+
+/**
+ * Saves a purchase to `userPurchasesPacks` collection.
+ */
+export async function savePurchase(
+  uid: string,
+  items: PurchaseItem[],
+  totalPrice: number,
+  bundleItems?: PackItem[],
+  bundleMode?: 'subscription' | 'oneTime',
+  bundleTotal?: number,
+): Promise<string> {
+  const colRef = collection(db, 'userPurchasesPacks');
+  const docRef = await addDoc(colRef, {
+    uid,
+    items,
+    bundleItems: bundleItems ?? null,
+    bundleMode: bundleMode ?? null,
+    bundleTotal: bundleTotal ?? null,
+    totalPrice,
+    status: 'completed',
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+/**
+ * Fetches all purchases for a user from `userPurchasesPacks`.
+ * Returns them sorted by `createdAt` descending.
+ */
+export async function getUserPurchases(uid: string): Promise<PurchaseDoc[]> {
+  const colRef = collection(db, 'userPurchasesPacks');
+  const q = query(colRef, where('uid', '==', uid), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as PurchaseDoc));
 }
 
 /**

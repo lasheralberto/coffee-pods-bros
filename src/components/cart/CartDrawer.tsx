@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingBag, X } from 'lucide-react';
+import { ShoppingBag, X, Check } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { CartItem } from './CartItem';
 import { CartBundleCard } from './CartBundleCard';
 import { useCartStore, selectCartCount, selectCartTotal } from '../../stores/cartStore';
+import { useAuthStore, selectAuthUser, selectIsAuthenticated } from '../../stores/authStore';
+import { savePurchase, type PurchaseItem } from '../../providers/firebaseProvider';
 import { fmtPrice } from '../../data/shopProducts';
 import { t } from '../../data/texts';
 
@@ -36,6 +38,50 @@ export const CartDrawer: React.FC = () => {
   const itemCount = useCartStore(selectCartCount);
   const total = useCartStore(selectCartTotal);
   const hasContent = items.length > 0 || bundle !== null;
+
+  const authUser = useAuthStore(selectAuthUser);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const authActions = useAuthStore((s) => s.actions);
+
+  const [checkoutState, setCheckoutState] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+
+  const handleCheckout = useCallback(async () => {
+    if (!isAuthenticated || !authUser) {
+      authActions.openAuth('login');
+      return;
+    }
+
+    setCheckoutState('processing');
+    try {
+      const purchaseItems: PurchaseItem[] = items.map((i) => ({
+        productId: i.product.id,
+        name: i.product.name,
+        brand: i.product.brand,
+        price: i.product.price,
+        quantity: i.quantity,
+        image: i.product.image,
+      }));
+
+      await savePurchase(
+        authUser.uid,
+        purchaseItems,
+        total,
+        bundle?.items,
+        bundle?.mode,
+        bundle?.totalPrice,
+      );
+
+      setCheckoutState('success');
+      setTimeout(() => {
+        actions.clearCart();
+        actions.closeCart();
+        setCheckoutState('idle');
+      }, 1800);
+    } catch {
+      setCheckoutState('error');
+      setTimeout(() => setCheckoutState('idle'), 2500);
+    }
+  }, [isAuthenticated, authUser, authActions, items, bundle, total, actions]);
 
   return (
     <AnimatePresence>
@@ -105,8 +151,27 @@ export const CartDrawer: React.FC = () => {
                   <span className="text-lg font-bold text-primary">{fmtPrice(total)}</span>
                 </div>
                 <p className="text-xs text-muted mb-4">{t('cart.shippingNote')}</p>
-                <Button variant="primary" fullWidth size="lg">
-                  {t('cart.checkout')}
+                <Button
+                  variant="primary"
+                  fullWidth
+                  size="lg"
+                  onClick={handleCheckout}
+                  loading={checkoutState === 'processing'}
+                  disabled={checkoutState === 'processing' || checkoutState === 'success'}
+                >
+                  {checkoutState === 'processing' && t('purchase.processing')}
+                  {checkoutState === 'success' && (
+                    <span className="flex items-center gap-2">
+                      <Check size={18} />
+                      {t('purchase.success')}
+                    </span>
+                  )}
+                  {checkoutState === 'error' && t('purchase.error')}
+                  {checkoutState === 'idle' && (
+                    !isAuthenticated
+                      ? t('purchase.loginToCheckout')
+                      : t('cart.checkout')
+                  )}
                 </Button>
                 <Button
                   variant="ghost"

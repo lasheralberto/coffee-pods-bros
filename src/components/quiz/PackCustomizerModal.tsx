@@ -6,10 +6,10 @@ import { X, Plus, Minus } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
 import {
-  getCoffeeProfiles,
+  getProductsCatalog,
   getUserPack,
   saveUserPack,
-  type CoffeeProfileFirestore,
+  type ProductCatalogFirestore,
   type PackItem,
 } from '../../providers/firebaseProvider';
 
@@ -18,8 +18,8 @@ interface LocalProfile {
   name: string;
   image: string;
   price: number;
-  origin: string;
-  tags: string[];
+  brand: string;
+  tastesLike: string[];
 }
 
 interface PackCustomizerModalProps {
@@ -28,17 +28,15 @@ interface PackCustomizerModalProps {
   uid: string;
 }
 
-function firestoreToLocal(doc: CoffeeProfileFirestore): LocalProfile {
+function catalogToLocal(doc: ProductCatalogFirestore): LocalProfile {
   const l = getLocale();
-  const rawPrice = doc.price[l] ?? doc.price['es'] ?? '0';
-  const numericPrice = parseFloat(rawPrice.replace(/[^0-9.,]/g, '').replace(',', '.')) || 0;
   return {
-    id:     doc.id,
-    name:   doc.name[l]   ?? doc.name['es']   ?? '',
-    image:  doc.image      ?? '',
-    price:  numericPrice,
-    origin: doc.origin[l]  ?? doc.origin['es'] ?? '',
-    tags:   doc.tags[l]    ?? doc.tags['es']    ?? [],
+    id:         doc.id,
+    name:       doc.name[l]   ?? doc.name['en']   ?? '',
+    image:      doc.image      ?? '',
+    price:      doc.price,
+    brand:      doc.brand,
+    tastesLike: doc.tastesLike ?? [],
   };
 }
 
@@ -49,19 +47,19 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  /* Fetch all coffee profiles + existing pack on open */
+  /* Fetch all products + existing pack on open */
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoadingProfiles(true);
     setSaved(false);
-    Promise.all([getCoffeeProfiles(), getUserPack(uid)])
+    Promise.all([getProductsCatalog(), getUserPack(uid)])
       .then(([docs, existingPack]) => {
         if (cancelled) return;
-        setProfiles(docs.map(firestoreToLocal));
+        setProfiles(docs.map(catalogToLocal));
         if (existingPack && existingPack.items.length > 0) {
           const initial: Record<string, number> = {};
-          existingPack.items.forEach((item) => { initial[item.profileId] = item.quantity; });
+          existingPack.items.forEach((item) => { initial[item.productId] = item.quantity; });
           setPack(initial);
         } else {
           setPack({});
@@ -97,7 +95,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
     const items: PackItem[] = profiles
       .filter((p) => (pack[p.id] ?? 0) > 0)
       .map((p) => ({
-        profileId: p.id,
+        productId: p.id,
         name:      p.name,
         image:     p.image,
         price:     p.price,
@@ -170,7 +168,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
                           />
                           <div className="pack-item__info">
                             <span className="pack-item__name">{p.name}</span>
-                            <span className="pack-item__origin">{p.origin}</span>
+                            <span className="pack-item__origin">{p.brand}</span>
                             <span className="pack-item__price">
                               {p.price.toFixed(2)}€ {t('pack.perUnit')}
                             </span>

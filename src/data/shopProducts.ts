@@ -6,6 +6,7 @@ export interface ShopProduct {
   id: number;
   brand: string;
   name: string;
+  description: string;
   price: number;
   image: string;
   isNew: boolean;
@@ -18,6 +19,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     id: 1,
     brand: 'GREATER GOODS',
     name: 'Lunar New Year Blend',
+    description: t('shopDescriptions.lunarNewYear'),
     price: 16.99,
     image: 'https://images.unsplash.com/photo-1559526324-593bc073d938?w=700&q=80',
     isNew: true,
@@ -28,6 +30,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     id: 2,
     brand: 'PEIXOTO',
     name: 'Familia Peixoto',
+    description: t('shopDescriptions.familiaPeixoto'),
     price: 21.99,
     image: 'https://images.unsplash.com/photo-1442550528053-c431ecb55509?w=700&q=80',
     isNew: false,
@@ -38,6 +41,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     id: 3,
     brand: 'DUNE',
     name: 'Alexander Vargas Colombia',
+    description: t('shopDescriptions.alexanderVargas'),
     price: 29.99,
     image: 'https://images.unsplash.com/photo-1498804103079-a6351b050096?w=700&q=80',
     isNew: true,
@@ -48,6 +52,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     id: 4,
     brand: 'ONYX',
     name: 'Monarch Blend',
+    description: t('shopDescriptions.monarchBlend'),
     price: 18.50,
     image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=700&q=80',
     isNew: false,
@@ -58,6 +63,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     id: 5,
     brand: 'HEART',
     name: 'Stereo Blend',
+    description: t('shopDescriptions.stereoBlend'),
     price: 22.00,
     image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=700&q=80',
     isNew: true,
@@ -68,6 +74,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     id: 6,
     brand: 'VERVE',
     name: 'Sermon Blend',
+    description: t('shopDescriptions.sermonBlend'),
     price: 34.00,
     image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=700&q=80',
     isNew: false,

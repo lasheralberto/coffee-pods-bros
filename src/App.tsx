@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AnimatePresence } from 'framer-motion';
 import { Layout } from './components/layout/Layout';
 import { HomePage } from './pages/HomePage';
-import { ShopPage } from './pages/ShopPage';
+import { ShopPage } from './pages/ShopPage.tsx';
 import { ProfilePage } from './pages/ProfilePage';
 import { AboutPage } from './pages/AboutPage';
 

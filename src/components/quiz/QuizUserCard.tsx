@@ -104,7 +104,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
             </span>
             <div className="quiz-user-card__pack-list">
               {pack.items.map((item: PackItem) => (
-                <div key={item.profileId} className="pack-item pack-item--active">
+                <div key={item.productId} className="pack-item pack-item--active">
                   <img src={item.image} alt={item.name} className="pack-item__img" />
                   <div className="pack-item__info">
                     <span className="pack-item__name">{item.name}</span>

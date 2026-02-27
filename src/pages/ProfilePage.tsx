@@ -8,18 +8,22 @@ import { QuizUserCard } from '../components/quiz/QuizUserCard';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../stores/authStore';
 import { useQuizStore } from '../stores/quizStore';
-import { getUserDoc, getUserQuizData, type UserDoc, type QuizDoc } from '../providers/firebaseProvider';
+import { getUserDoc, getUserQuizData, getUserPurchases, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
+import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { t } from '../data/texts';
-import { LogOut } from 'lucide-react';
+import { LogOut, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const ProfilePage: React.FC = () => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const authUser = useAuthStore(selectAuthUser);
   const authActions = useAuthStore((s) => s.actions);
   const quizActions = useQuizStore((s) => s.actions);
+  const navigate = useNavigate();
 
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
   const [quizData, setQuizData] = useState<QuizDoc | null>(null);
+  const [purchases, setPurchases] = useState<PurchaseDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,14 +42,16 @@ export const ProfilePage: React.FC = () => {
       setError(null);
       try {
      
-        const [uDoc, qDoc] = await Promise.all([
+        const [uDoc, qDoc, pDocs] = await Promise.all([
           getUserDoc(authUser.uid),
           getUserQuizData(authUser.uid),
+          getUserPurchases(authUser.uid),
         ]);
   
         if (!cancelled) {
           setUserDoc(uDoc);
           setQuizData(qDoc);
+          setPurchases(pDocs);
         }
       } catch (err) {
    
@@ -172,13 +178,51 @@ export const ProfilePage: React.FC = () => {
                 </Card>
               </motion.div>
 
-              {/* Quiz Card */}
+              {/* Quiz Card — pack moved to ShopPage */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.16 }}
               >
-                <QuizUserCard quizData={quizData} onTakeQuiz={quizActions.openQuiz} uid={authUser!.uid} />
+                {quizData ? (
+                  <Card variant="outline" padding="lg" className="quiz-user-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-medium)' }}>
+                        {t('profile.quizCompleted')}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-muted mb-4">
+                      {t('personalPack.subtitle')}
+                    </p>
+                    <div className="flex gap-3">
+                      <Button variant="primary" size="sm" onClick={() => navigate('/shop')}>
+                        <ShoppingBag size={14} />
+                        {t('profile.yourPack')}
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={quizActions.openQuiz}>
+                        {t('personalPack.retakeQuiz')}
+                      </Button>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card variant="outline" padding="lg" className="quiz-user-card quiz-user-card--empty">
+                    <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
+                      {t('profile.quizNotCompleted')}
+                    </p>
+                    <Button variant="primary" size="md" onClick={quizActions.openQuiz}>
+                      {t('profile.takeQuiz')}
+                    </Button>
+                  </Card>
+                )}
+              </motion.div>
+
+              {/* Purchase History */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.20 }}
+              >
+                <UserPurchasingHistory purchases={purchases} />
               </motion.div>
 
               {/* Logout */}
