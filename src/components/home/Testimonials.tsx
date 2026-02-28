@@ -1,105 +1,68 @@
-import React, { useCallback } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
-import { Star } from 'lucide-react';
+import React from 'react';
 import { Container } from '../ui/Container';
 import { Section } from '../ui/Section';
-import { Card } from '../ui/Card';
-import { Avatar } from '../ui/Avatar';
 import { t } from '../../data/texts';
 
-const TESTIMONIALS = [
+const PILLARS = [
   {
     id: 1,
-    nameKey: 'testimonials.elena.name' as const,
-    cityKey: 'testimonials.elena.city' as const,
-    textKey: 'testimonials.elena.text' as const,
-    coffeeKey: 'testimonials.elena.coffee' as const,
-    avatar: 'https://i.pravatar.cc/150?u=elena',
+    titleKey: 'difference.pillar1.title',
+    textKey: 'difference.pillar1.text',
+    image: 'https://images.unsplash.com/photo-1522992319-0365e5f11656?w=400&h=400&fit=crop&crop=faces',
   },
   {
     id: 2,
-    nameKey: 'testimonials.marc.name' as const,
-    cityKey: 'testimonials.marc.city' as const,
-    textKey: 'testimonials.marc.text' as const,
-    coffeeKey: 'testimonials.marc.coffee' as const,
-    avatar: 'https://i.pravatar.cc/150?u=marc',
+    titleKey: 'difference.pillar2.title',
+    textKey: 'difference.pillar2.text',
+    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop&crop=center',
   },
   {
     id: 3,
-    nameKey: 'testimonials.lucia.name' as const,
-    cityKey: 'testimonials.lucia.city' as const,
-    textKey: 'testimonials.lucia.text' as const,
-    coffeeKey: 'testimonials.lucia.coffee' as const,
-    avatar: 'https://i.pravatar.cc/150?u=lucia',
-  },
-  {
-    id: 4,
-    nameKey: 'testimonials.javier.name' as const,
-    cityKey: 'testimonials.javier.city' as const,
-    textKey: 'testimonials.javier.text' as const,
-    coffeeKey: 'testimonials.javier.coffee' as const,
-    avatar: 'https://i.pravatar.cc/150?u=javier',
-  },
-  {
-    id: 5,
-    nameKey: 'testimonials.ana.name' as const,
-    cityKey: 'testimonials.ana.city' as const,
-    textKey: 'testimonials.ana.text' as const,
-    coffeeKey: 'testimonials.ana.coffee' as const,
-    avatar: 'https://i.pravatar.cc/150?u=ana',
+    titleKey: 'difference.pillar3.title',
+    textKey: 'difference.pillar3.text',
+    image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop&crop=faces',
   },
 ];
 
 export const Testimonials: React.FC = () => {
-  const [emblaRef] = useEmblaCarousel({ loop: true, align: 'start' }, [
-    Autoplay({ delay: 4000, stopOnInteraction: true }),
-  ]);
-
   return (
     <Section size="lg" bg="page">
       <Container size="xl">
-        <div className="text-center mb-12">
-          <span className="label-caps text-roast mb-2 block">{t('testimonials.badge')}</span>
-          <h2 className="heading-section">{t('testimonials.heading')}</h2>
+        {/* Header */}
+        <div className="text-center mb-16">
+          <span className="label-caps text-roast mb-3 block tracking-[0.25em]">
+            {t('difference.badge')}
+          </span>
+          <h2 className="font-display text-4xl md:text-5xl lg:text-[3.5rem] text-espresso leading-tight max-w-3xl mx-auto">
+            {t('difference.heading')}
+          </h2>
         </div>
 
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex -ml-4">
-            {TESTIMONIALS.map((testimonial) => (
-              <div
-                key={testimonial.id}
-                className="flex-[0_0_85%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0 pl-4"
-              >
-                <Card variant="flat" className="h-full flex flex-col justify-between p-6">
-                  <div>
-                    <div className="flex gap-1 mb-4 text-warning">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={16} fill="currentColor" />
-                      ))}
-                    </div>
-                    <p className="body-lg italic mb-6">"{t(testimonial.textKey)}"</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 mt-auto">
-                    <Avatar
-                      src={testimonial.avatar}
-                      alt={t(testimonial.nameKey)}
-                      className="w-12 h-12 border border-border-color"
-                    />
-                    <div>
-                      <p className="font-display font-bold text-espresso leading-none">
-                        {t(testimonial.nameKey)}
-                      </p>
-                      <p className="text-xs text-muted mt-1 uppercase tracking-wide">
-                        {t(testimonial.cityKey)} · {t('testimonials.subscriberOf')} {t(testimonial.coffeeKey)}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
+        {/* Three pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 lg:gap-14">
+          {PILLARS.map((pillar) => (
+            <div key={pillar.id} className="flex flex-col items-center text-center">
+              {/* Circular image */}
+              <div className="w-48 h-48 md:w-40 md:h-40 lg:w-52 lg:h-52 rounded-full overflow-hidden mb-8 shadow-lg">
+                <img
+                  src={pillar.image}
+                  alt={t(pillar.titleKey)}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
-            ))}
-          </div>
+
+              {/* Title */}
+              <h3 className="font-display text-xl md:text-lg lg:text-2xl font-bold text-espresso mb-4 leading-snug max-w-[260px]">
+                {t(pillar.titleKey)}
+              </h3>
+
+              {/* Description */}
+              <p className="body-base text-muted leading-relaxed max-w-xs">
+                {t(pillar.textKey)}
+              </p>
+            </div>
+          ))}
         </div>
       </Container>
     </Section>

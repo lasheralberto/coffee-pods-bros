@@ -3,7 +3,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t } from '../../data/texts';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
-import { getUserPack } from '../../providers/firebaseProvider';
+import { onUserPack } from '../../providers/firebaseProvider';
 import type { QuizDoc, UserPack, PackItem } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from './PackCustomizerModal';
 import { ChevronDown, RefreshCw, ShoppingCart } from 'lucide-react';
@@ -42,17 +42,15 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const [packModalOpen, setPackModalOpen] = useState(false);
   const [answersOpen, setAnswersOpen] = useState(false);
 
-  const fetchPack = () => {
+  useEffect(() => {
     if (!uid) return;
-    let cancelled = false;
     setLoading(true);
-    getUserPack(uid)
-      .then((data) => { if (!cancelled) setPack(data); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  };
-
-  useEffect(fetchPack, [uid, quizData]);
+    const unsub = onUserPack(uid, (data) => {
+      setPack(data);
+      setLoading(false);
+    });
+    return unsub;
+  }, [uid, quizData]);
 
   if (!quizData) {
     return (
@@ -127,7 +125,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'subscription')}
+                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'subscription', uid)}
               >
                 <RefreshCw size={14} />
                 {t('profile.subscriptionBtn')}
@@ -135,7 +133,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'oneTime')}
+                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'oneTime', uid)}
               >
                 <ShoppingCart size={14} />
                 {t('profile.oneTimePurchase')}
@@ -205,7 +203,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
       {/* Pack Customizer Modal */}
       <PackCustomizerModal
         open={packModalOpen}
-        onClose={() => { setPackModalOpen(false); fetchPack(); }}
+        onClose={() => { setPackModalOpen(false); }}
         uid={uid}
       />
     </div>

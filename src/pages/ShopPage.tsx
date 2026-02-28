@@ -22,7 +22,7 @@ import {
 import { t, getLocale } from '../data/texts';
 import { UsersPlanSuscription } from '../components/shop/UsersPlanSuscription';
 import { PersonalizedPackSection } from '../components/shop/PersonalizedPackSection';
-import { getProductsCatalog, type ProductCatalogFirestore } from '../providers/firebaseProvider';
+import { onProductsCatalog, type ProductCatalogFirestore } from '../providers/firebaseProvider';
 
 /* ── FilterPanel (shared mobile drawer + desktop sidebar) ── */
 
@@ -109,16 +109,13 @@ export const ShopPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
     setLoading(true);
-    getProductsCatalog()
-      .then((docs) => {
-        if (cancelled) return;
-        const locale = getLocale();
-        setProducts(docs.map((d) => toShopProduct(d, locale)));
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+    const locale = getLocale();
+    const unsub = onProductsCatalog((docs) => {
+      setProducts(docs.map((d) => toShopProduct(d, locale)));
+      setLoading(false);
+    });
+    return unsub;
   }, []);
 
   const activeCount = Object.values(filters).filter((v) => v !== 'any').length;

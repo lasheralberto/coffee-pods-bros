@@ -4,7 +4,7 @@ import { Check, Sparkles, ArrowRight, Zap } from 'lucide-react';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
 import { useQuizStore } from '../../stores/quizStore';
 import { t } from '../../data/texts';
-import { getSubscriptionPlans, type SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
+import { onSubscriptionPlans, type SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
 import { getLocale } from '../../data/texts';
 
 /* ═══════════════════════════════════════════════════════════
@@ -619,10 +619,9 @@ export const UsersPlanSuscription: React.FC = () => {
 
   /* Fetch plans from Firestore `suscriptionPlans`, fallback to DEFAULT_PLANS */
   useEffect(() => {
-    let cancelled = false;
     const l = getLocale();
-    getSubscriptionPlans().then((remote) => {
-      if (cancelled || remote.length === 0) return;
+    const unsub = onSubscriptionPlans((remote) => {
+      if (remote.length === 0) return;
       const mapped: Plan[] = remote.map((p: SubscriptionPlanFirestore) => ({
         id:           p.id,
         name:         p.name[l]         ?? p.name['es']         ?? '',
@@ -639,7 +638,7 @@ export const UsersPlanSuscription: React.FC = () => {
       }));
       setPlans(mapped);
     });
-    return () => { cancelled = true; };
+    return unsub;
   }, []);
 
   const quizDone = isAuthenticated && authUser?.quizCompleted;

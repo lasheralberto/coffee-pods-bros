@@ -1369,6 +1369,88 @@
 }
 
 
+/* ── USER SUBSCRIPTION ────────────────────────────────────── */
+
+.user-subscription {
+  margin-top:    var(--space-6);
+  margin-bottom: var(--space-2);
+}
+.user-subscription--empty {
+  padding: var(--space-6);
+}
+.user-subscription__header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             var(--space-3);
+  padding:         var(--space-5) var(--space-6);
+  border-bottom:   var(--border-width) var(--border-style) rgba(221, 216, 208, 0.4);
+}
+.user-subscription__description {
+  padding:    var(--space-4) var(--space-6);
+  background: var(--bg-surface);
+  border-bottom: var(--border-width) var(--border-style) rgba(221, 216, 208, 0.25);
+}
+.user-subscription__items-label {
+  padding: var(--space-3) var(--space-6) 0;
+}
+.user-subscription__items {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--space-3);
+  padding:        var(--space-3) var(--space-6);
+}
+.user-subscription__item {
+  display:     flex;
+  align-items: center;
+  gap:         var(--space-3);
+}
+.user-subscription__item-img {
+  width:         44px;
+  height:        44px;
+  border-radius: var(--radius-md);
+  object-fit:    cover;
+  flex-shrink:   0;
+}
+.user-subscription__item-info {
+  flex:           1;
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+.user-subscription__item-name {
+  font-size:   var(--text-sm);
+  font-weight: var(--font-medium);
+  color:       var(--text-primary);
+}
+.user-subscription__item-detail {
+  font-size: var(--text-xs);
+  color:     var(--text-muted);
+}
+.user-subscription__item-subtotal {
+  font-size:   var(--text-sm);
+  font-weight: var(--font-semibold);
+  color:       var(--text-primary);
+  white-space: nowrap;
+}
+.user-subscription__footer {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         var(--space-4) var(--space-6);
+  border-top:      var(--border-width) var(--border-style) rgba(221, 216, 208, 0.4);
+}
+.user-subscription__meta {
+  display:        flex;
+  flex-direction: column;
+}
+.user-subscription__total {
+  display:     flex;
+  align-items: center;
+  gap:         var(--space-3);
+}
+
+
 /* ── PURCHASE HISTORY ─────────────────────────────────────── */
 
 .purchase-history {

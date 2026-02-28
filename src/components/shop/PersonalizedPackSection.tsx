@@ -4,7 +4,7 @@ import { RefreshCw, ShoppingCart, Sparkles, ChevronRight } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t } from '../../data/texts';
-import { getUserPack } from '../../providers/firebaseProvider';
+import { onUserPack } from '../../providers/firebaseProvider';
 import type { UserPack, PackItem } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from '../quiz/PackCustomizerModal';
 import { useCartStore } from '../../stores/cartStore';
@@ -15,28 +15,27 @@ export const PersonalizedPackSection: React.FC = () => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const authUser = useAuthStore(selectAuthUser);
   const quizActions = useQuizStore((s) => s.actions);
+  const packSaving = useQuizStore((s) => s.packSaving);
 
   const [pack, setPack] = useState<UserPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [packModalOpen, setPackModalOpen] = useState(false);
 
-  const fetchPack = () => {
+  useEffect(() => {
     if (!authUser?.uid) return;
-    let cancelled = false;
     setLoading(true);
-    getUserPack(authUser.uid)
-      .then((data) => { if (!cancelled) setPack(data); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  };
-
-  useEffect(fetchPack, [authUser?.uid]);
+    const unsub = onUserPack(authUser.uid, (data) => {
+      setPack(data);
+      setLoading(false);
+    });
+    return unsub;
+  }, [authUser?.uid]);
 
   /* Not authenticated → don't render */
   if (!isAuthenticated || !authUser) return null;
 
-  /* Loading */
-  if (loading) {
+  /* Loading — initial fetch OR quiz pack is being regenerated */
+  if (loading || packSaving) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -45,7 +44,9 @@ export const PersonalizedPackSection: React.FC = () => {
         <Card variant="elevated" padding="lg" className="personalized-pack-section">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 rounded-full border-2 border-roast border-t-transparent animate-spin" />
-            <span className="text-sm text-muted">{t('profile.loading')}</span>
+            <span className="text-sm text-muted">
+              {packSaving ? t('personalPack.generating') : t('profile.loading')}
+            </span>
           </div>
         </Card>
       </motion.div>
@@ -143,7 +144,7 @@ export const PersonalizedPackSection: React.FC = () => {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'subscription')}
+                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'subscription', authUser.uid)}
               >
                 <RefreshCw size={14} />
                 {t('personalPack.subscribeBtn')}
@@ -151,7 +152,7 @@ export const PersonalizedPackSection: React.FC = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'oneTime')}
+                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'oneTime', authUser.uid)}
               >
                 <ShoppingCart size={14} />
                 {t('personalPack.buyOnce')}
@@ -171,7 +172,7 @@ export const PersonalizedPackSection: React.FC = () => {
 
       <PackCustomizerModal
         open={packModalOpen}
-        onClose={() => { setPackModalOpen(false); fetchPack(); }}
+        onClose={() => { setPackModalOpen(false); }}
         uid={authUser.uid}
       />
     </>

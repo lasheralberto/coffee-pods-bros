@@ -1,28 +1,48 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../stores/quizStore';
 import { useAuthStore } from '../../stores/authStore';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { ProgressBar } from '../ui/ProgressBar';
 import { Button } from '../ui/Button';
 import { OptionCard } from '../ui/OptionCard';
-import { QuizResult } from './QuizResult';
+import { QuizAuthGate } from './QuizAuthGate';
 
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { t } from '../../data/texts';
 
 export const QuizModal: React.FC = () => {
-  const { isOpen, currentStep, answers, result, actions } = useQuizStore();
-  const { closeQuiz, nextStep, prevStep, setAnswer, calculateResult } = actions;
+  const { isOpen, currentStep, answers, result, packSaving, actions } = useQuizStore();
+  const { closeQuiz, nextStep, prevStep, setAnswer, calculateResult, saveResultsForUser } = actions;
   const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
+  const savedForUid = useRef<string | null>(null);
 
-  const currentQuestion = QUIZ_QUESTIONS[currentStep];
+  // When user registers/logs in after completing quiz, save results and redirect to shop
+  useEffect(() => {
+    if (user && result && !packSaving && savedForUid.current !== user.uid) {
+      savedForUid.current = user.uid;
+      saveResultsForUser(user.uid);
+    }
+  }, [user, result, packSaving, saveResultsForUser]);
+
+  // When result is ready, user is logged in, and pack has been saved → redirect
+  useEffect(() => {
+    if (result && user && isOpen && !packSaving) {
+      closeQuiz();
+      navigate('/shop');
+    }
+  }, [result, user, isOpen, packSaving, closeQuiz, navigate]);
+
+  const currentQuestion = QUIZ_QUESTIONS[currentStep] ?? null;
   const isLastStep = currentStep === QUIZ_QUESTIONS.length - 1;
   const hasResult = !!result;
 
   const handleOptionClick = (optionId: string) => {
+    if (!currentQuestion) return;
     if (currentQuestion.type === 'multi') {
       const currentAnswers = (answers[currentQuestion.id] as string[]) || [];
       if (currentAnswers.includes(optionId)) {
@@ -103,9 +123,9 @@ export const QuizModal: React.FC = () => {
 
                   {/* Content */}
                   <div className="flex-1 overflow-y-auto px-1">
-                    {hasResult ? (
-                      <QuizResult />
-                    ) : (
+                    {hasResult && !user ? (
+                      <QuizAuthGate />
+                    ) : currentQuestion ? (
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={currentStep}
@@ -148,11 +168,11 @@ export const QuizModal: React.FC = () => {
                           </div>
                         </motion.div>
                       </AnimatePresence>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Footer Actions */}
-                  {!hasResult && (
+                  {!hasResult && currentQuestion && (
                     <div className="mt-8 flex justify-between items-center pt-4 border-t border-border-color">
                       <Button
                         variant="ghost"

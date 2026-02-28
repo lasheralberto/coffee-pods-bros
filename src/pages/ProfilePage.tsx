@@ -8,8 +8,9 @@ import { QuizUserCard } from '../components/quiz/QuizUserCard';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../stores/authStore';
 import { useQuizStore } from '../stores/quizStore';
-import { getUserDoc, getUserQuizData, getUserPurchases, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
+import { onUserDoc, onUserQuizData, onUserPurchases, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
 import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
+import { UserSubscription } from '../components/shop/UserSubscription';
 import { t } from '../data/texts';
 import { LogOut, ShoppingBag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -28,46 +29,30 @@ export const ProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('[ProfilePage] authUser:', authUser);
-    console.log('[ProfilePage] isAuthenticated:', isAuthenticated);
     if (!authUser?.uid) {
-      console.log('[ProfilePage] No uid, skipping fetch');
       setLoading(false);
       return;
     }
-    let cancelled = false;
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-     
-        const [uDoc, qDoc, pDocs] = await Promise.all([
-          getUserDoc(authUser.uid),
-          getUserQuizData(authUser.uid),
-          getUserPurchases(authUser.uid),
-        ]);
-  
-        if (!cancelled) {
-          setUserDoc(uDoc);
-          setQuizData(qDoc);
-          setPurchases(pDocs);
-        }
-      } catch (err) {
-   
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Error loading profile');
-        }
-      } finally {
-        if (!cancelled) {
-       
-          setLoading(false);
-        }
-      }
-    };
-    fetchData();
+    setLoading(true);
+    setError(null);
+    let loadCount = 0;
+    const checkDone = () => { loadCount++; if (loadCount >= 3) setLoading(false); };
 
-    return () => { cancelled = true; };
+    const unsub1 = onUserDoc(authUser.uid, (uDoc) => {
+      setUserDoc(uDoc);
+      checkDone();
+    });
+    const unsub2 = onUserQuizData(authUser.uid, (qDoc) => {
+      setQuizData(qDoc);
+      checkDone();
+    });
+    const unsub3 = onUserPurchases(authUser.uid, (pDocs) => {
+      setPurchases(pDocs);
+      checkDone();
+    });
+
+    return () => { unsub1(); unsub2(); unsub3(); };
   }, [authUser?.uid]);
 
   /* Not authenticated */
@@ -216,11 +201,20 @@ export const ProfilePage: React.FC = () => {
                 )}
               </motion.div>
 
-              {/* Purchase History */}
+              {/* User Subscription */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.20 }}
+              >
+                <UserSubscription uid={authUser!.uid} />
+              </motion.div>
+
+              {/* Purchase History */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.24 }}
               >
                 <UserPurchasingHistory purchases={purchases} />
               </motion.div>
@@ -229,7 +223,7 @@ export const ProfilePage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.24 }}
+                transition={{ duration: 0.35, delay: 0.28 }}
                 className="profile-logout"
               >
                 <Button variant="ghost" size="sm" onClick={authActions.logout}>

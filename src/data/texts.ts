@@ -52,11 +52,11 @@ export const TEXTS = {
 
   /* ── Hero ── */
   hero: {
-    subtitle: { es: 'Selección Artesanal · 2025', en: 'Artisan Selection · 2025' },
-    headingLine1: { es: 'Descubre tu café', en: 'Discover your coffee' },
-    headingLine2: { es: 'favorito,', en: 'favorite,' },
-    headingLine3: { es: 'una y otra vez.', en: 'again and again.' },
-    cta: { es: 'ENCONTRAR MI CAFÉ →', en: 'FIND MY COFFEE →' },
+    subtitle: { es: 'Suscripción Personalizada', en: 'Personalized Subscription' },
+    headingLine1: { es: 'Tu café.', en: 'Your coffee.' },
+    headingLine2: { es: 'Hecho a tu medida.', en: 'Made to measure.' },
+    headingLine3: { es: 'Cada mes.', en: 'Every month.' },
+    cta: { es: 'CREAR MI PERFIL →', en: 'CREATE MY PROFILE →' },
     statRoasters: { es: 'Tostadores', en: 'Roasters' },
     statSubscribers: { es: 'Suscriptores', en: 'Subscribers' },
     statRating: { es: 'Valoración', en: 'Rating' },
@@ -71,21 +71,17 @@ export const TEXTS = {
   /* ── How It Works ── */
   howItWorks: {
     badge: { es: 'CÓMO FUNCIONA', en: 'HOW IT WORKS' },
-    heading: { es: 'Tu café ideal en 3 pasos', en: 'Your ideal coffee in 3 steps' },
-    step1Title: { es: 'Haz el Quiz', en: 'Take the Quiz' },
-    step1Desc: {
-      es: 'Responde 6 preguntas rápidas para que conozcamos tus gustos y preferencias.',
-      en: 'Answer 6 quick questions so we can learn your tastes and preferences.',
+    step1: {
+      es: 'Completa tu perfil para que conozcamos tus gustos perfectos',
+      en: 'Complete your profile so we know your perfect taste',
     },
-    step2Title: { es: 'Recibe tu Café', en: 'Get Your Coffee' },
-    step2Desc: {
-      es: 'Te enviamos una selección personalizada de los mejores tostadores de España.',
-      en: 'We send you a personalized selection from the best roasters in Spain.',
+    step2: {
+      es: 'Comparamos tu perfil con los mejores cafés de España y creamos cajas variadas exclusivas',
+      en: 'We match your profile with the best coffees in Spain and create exclusive varied boxes',
     },
-    step3Title: { es: 'Disfruta', en: 'Enjoy' },
-    step3Desc: {
-      es: 'Prepara tu taza perfecta y descubre nuevos sabores cada mes. Sin permanencia.',
-      en: 'Brew your perfect cup and discover new flavors every month. No commitment.',
+    step3: {
+      es: 'Recibe una selección única y recién tostada cada mes',
+      en: 'Receive a unique and freshly roasted selection every month',
     },
   },
 
@@ -100,55 +96,42 @@ export const TEXTS = {
     kenya: { es: 'Kenya', en: 'Kenya' },
   },
 
-  /* ── Testimonials ── */
-  testimonials: {
-    badge: { es: 'LO QUE DICEN', en: 'WHAT THEY SAY' },
-    heading: { es: 'La comunidad Origen', en: 'The Origen community' },
-    subscriberOf: { es: 'Suscriptor de', en: 'Subscriber of' },
-    elena: {
-      name: { es: 'Elena R.', en: 'Elena R.' },
-      city: { es: 'Madrid', en: 'Madrid' },
-      text: {
-        es: 'Descubrí sabores que no sabía que existían en el café. Cada mes es una sorpresa deliciosa.',
-        en: 'I discovered flavors I didn\'t know existed in coffee. Every month is a delicious surprise.',
-      },
-      coffee: { es: 'Ethiopia Yirgacheffe', en: 'Ethiopia Yirgacheffe' },
+  /* ── Difference / Why Us ── */
+  difference: {
+    badge: { es: 'LA DIFERENCIA ORIGEN', en: 'THE ORIGEN DIFFERENCE' },
+    heading: {
+      es: 'Somos cafeteros obsesivos, para que tú no tengas que serlo',
+      en: 'We\'re coffee nerds, so you don\'t have to be',
     },
-    marc: {
-      name: { es: 'Marc S.', en: 'Marc S.' },
-      city: { es: 'Barcelona', en: 'Barcelona' },
-      text: {
-        es: 'La flexibilidad de pausar cuando viajo es lo mejor. Y el café... simplemente otro nivel.',
-        en: 'The flexibility to pause when I travel is the best. And the coffee... simply another level.',
+    pillar1: {
+      title: {
+        es: 'Un equipo apasionado por el café',
+        en: 'A passionate team of coffee people',
       },
-      coffee: { es: 'Colombia Huila', en: 'Colombia Huila' },
+      text: {
+        es: 'Somos baristas formados, ex-tostadores y catadores aventureros. Piensa en nosotros como tus guías hacia un café increíble.',
+        en: 'We\'re trained baristas, former roasters, and adventurous sippers. Think of us as your guides to incredible coffee.',
+      },
     },
-    lucia: {
-      name: { es: 'Lucía M.', en: 'Lucía M.' },
-      city: { es: 'Valencia', en: 'Valencia' },
-      text: {
-        es: 'Nunca pensé que haría café tan bueno en casa. Las guías de preparación ayudan muchísimo.',
-        en: 'I never thought I would make such good coffee at home. The brewing guides help a lot.',
+    pillar2: {
+      title: {
+        es: 'Descubriendo los mejores tostadores locales',
+        en: 'Uncovering the best local roasters',
       },
-      coffee: { es: 'Brasil Cerrado', en: 'Brasil Cerrado' },
+      text: {
+        es: 'Buscamos tostadores independientes, probamos todo su café y elegimos los que son demasiado buenos para quedárnoslos.',
+        en: 'We seek out independent roasters, taste all of their coffee, and pick the ones too good to keep to ourselves.',
+      },
     },
-    javier: {
-      name: { es: 'Javier P.', en: 'Javier P.' },
-      city: { es: 'Sevilla', en: 'Seville' },
-      text: {
-        es: 'Calidad precio inmejorable para café de especialidad. El envío siempre llega a tiempo.',
-        en: 'Unbeatable value for specialty coffee. Shipping always arrives on time.',
+    pillar3: {
+      title: {
+        es: 'Para conectarte con cafés que amarás',
+        en: 'To match you with coffees you\'ll love',
       },
-      coffee: { es: 'Blend Misterio', en: 'Mystery Blend' },
-    },
-    ana: {
-      name: { es: 'Ana B.', en: 'Ana B.' },
-      city: { es: 'Bilbao', en: 'Bilbao' },
       text: {
-        es: 'Me encanta leer la historia detrás de cada productor. Te conecta con lo que bebes.',
-        en: 'I love reading the story behind each producer. It connects you with what you drink.',
+        es: 'Aprendemos lo que te gusta para que cada bolsa se sienta hecha para ti. ¿No te encanta tu primer envío? Lo reemplazamos.',
+        en: 'We learn what you like so every bag feels like it\'s picked just for you. Don\'t love your first bag? We\'ll replace it.',
       },
-      coffee: { es: 'Kenya AA', en: 'Kenya AA' },
     },
   },
 
@@ -538,6 +521,12 @@ export const TEXTS = {
     navLogout:         { es: 'Salir', en: 'Sign Out' },
   },
 
+  /* ── Quiz Auth Gate ── */
+  quizAuthGate: {
+    title:    { es: 'Tu café ideal está listo', en: 'Your ideal coffee is ready' },
+    subtitle: { es: 'Regístrate para descubrir tu pack personalizado y guardarlo en tu perfil', en: 'Sign up to discover your personalized pack and save it to your profile' },
+  },
+
   /* ── Navbar Profile ── */
   navProfile: {
     myProfile: { es: 'Mi Perfil', en: 'My Profile' },
@@ -617,5 +606,20 @@ export const TEXTS = {
     retakeQuiz:        { es: 'Repetir quiz', en: 'Retake quiz' },
     noPackYet:         { es: 'Completa el quiz para descubrir tu pack ideal', en: 'Complete the quiz to discover your ideal pack' },
     takeQuizCta:       { es: 'Descubre tu pack', en: 'Discover your pack' },
+    generating:        { es: 'Generando tu nuevo pack...', en: 'Generating your new pack...' },
+  },
+
+  /* ── User Subscription (Profile) ── */
+  userSubscription: {
+    heading:           { es: 'Tu Suscripción', en: 'Your Subscription' },
+    noSubscription:    { es: 'No tienes una suscripción activa', en: 'You don\'t have an active subscription' },
+    subscribeCta:      { es: 'Suscribirse', en: 'Subscribe' },
+    mode:              { es: 'Modalidad', en: 'Mode' },
+    modeSubscription:  { es: 'Suscripción recurrente', en: 'Recurring subscription' },
+    modeOneTime:       { es: 'Compra única', en: 'One-time purchase' },
+    subscribedAt:      { es: 'Suscrito el', en: 'Subscribed on' },
+    total:             { es: 'Total', en: 'Total' },
+    items:             { es: 'Productos incluidos', en: 'Items included' },
+    manageBtn:         { es: 'Gestionar suscripción', en: 'Manage subscription' },
   },
 } as const;

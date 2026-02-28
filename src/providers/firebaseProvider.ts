@@ -21,6 +21,9 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  onSnapshot,
+  writeBatch,
+  type Unsubscribe as FirestoreUnsubscribe,
 } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../config/firebase';
@@ -220,9 +223,14 @@ const SUBSCRIPTION_PLANS: SubscriptionPlanDoc[] = [
 ];
 
 /**
- * Saves quiz results to `usersToQuiz/{uid}`, marks `quizCompleted` on `users/{uid}`,
- * writes the 3 recommended subscription plans to `usersToSuscription/{uid}`,
- * and links the quiz to its subscriptions in `quizToSuscription/{uid}`.
+ * Saves quiz results atomically using a Firestore batch:
+ *   - `usersToQuiz/{uid}` with answers
+ *   - `users/{uid}` marked as quizCompleted
+ *   - `userPacks/{uid}` with the recommended pack
+ *   - `quizToSuscription/{uid}` with subscription plans
+ *
+ * All writes commit together — the real-time listener on `userPacks`
+ * will never see a partial/stale state.
  */
 export async function saveQuizResults(
   uid: string,
@@ -230,31 +238,51 @@ export async function saveQuizResults(
   defaultPackItems?: PackItem[],
   genaiDescription?: string | null,
 ): Promise<void> {
+  const batch = writeBatch(db);
+
+  // 1. Quiz answers
   const quizRef = doc(db, 'usersToQuiz', uid);
-  await setDoc(quizRef, {
+  batch.set(quizRef, {
     uid,
     answers,
     completedAt: serverTimestamp(),
   }, { merge: true });
 
+  // 2. Mark user as quiz-completed
   const userRef = doc(db, 'users', uid);
-  await updateDoc(userRef, {
+  batch.update(userRef, {
     quizCompleted: true,
   });
 
-  // Save default pack if provided
+  // 3. Default recommended pack
   if (defaultPackItems && defaultPackItems.length > 0) {
     const totalPrice = defaultPackItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    await saveUserPack(uid, defaultPackItems, totalPrice, genaiDescription);
+    const packRef = doc(db, 'userPacks', uid);
+    const packData: Record<string, unknown> = {
+      uid,
+      items: defaultPackItems,
+      totalPrice,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    if (genaiDescription !== undefined) {
+      packData.genaiDescription = genaiDescription;
+    }
+    batch.set(packRef, packData);  // full overwrite — no stale items
+
+    batch.update(userRef, { packId: uid });
   }
 
+  // 4. Subscription plans
   const quizSubsRef = doc(db, 'quizToSuscription', uid);
-  await setDoc(quizSubsRef, {
+  batch.set(quizSubsRef, {
     quizId: uid,
     plans: SUBSCRIPTION_PLANS,
     recommendedPlanId: 'connoisseur',
     updatedAt: serverTimestamp(),
   }, { merge: true });
+
+  await batch.commit();
 }
 
 /**
@@ -450,6 +478,7 @@ export interface PurchaseDoc {
   bundleItems?: PackItem[];
   bundleMode?: 'subscription' | 'oneTime';
   bundleTotal?: number;
+  bundleId?: string;
   totalPrice: number;
   status: 'completed' | 'pending' | 'cancelled';
   createdAt: unknown;
@@ -457,6 +486,7 @@ export interface PurchaseDoc {
 
 /**
  * Saves a purchase to `userPurchasesPacks` collection.
+ * If bundleId is provided, also saves the user's subscription to `usersToSuscription/{uid}`.
  */
 export async function savePurchase(
   uid: string,
@@ -465,6 +495,7 @@ export async function savePurchase(
   bundleItems?: PackItem[],
   bundleMode?: 'subscription' | 'oneTime',
   bundleTotal?: number,
+  bundleId?: string,
 ): Promise<string> {
   const colRef = collection(db, 'userPurchasesPacks');
   const docRef = await addDoc(colRef, {
@@ -473,11 +504,82 @@ export async function savePurchase(
     bundleItems: bundleItems ?? null,
     bundleMode: bundleMode ?? null,
     bundleTotal: bundleTotal ?? null,
+    bundleId: bundleId ?? null,
     totalPrice,
     status: 'completed',
     createdAt: serverTimestamp(),
   });
+
+  // If this purchase includes a bundle, save subscription data from userPacks
+  if (bundleId) {
+    await saveUserSubscription(uid, bundleId, bundleMode ?? 'oneTime');
+  }
+
   return docRef.id;
+}
+
+/* ── User Subscription ───────────────────────────────────── */
+
+export interface UserSubscriptionDoc {
+  uid: string;
+  bundleId: string;
+  mode: 'subscription' | 'oneTime';
+  items: PackItem[];
+  totalPrice: number;
+  genaiDescription?: string | null;
+  subscribedAt: unknown;
+  updatedAt: unknown;
+}
+
+/**
+ * Reads `userPacks/{bundleId}` and writes subscription data to `usersToSuscription/{uid}`.
+ * Overwrites previous subscription.
+ */
+export async function saveUserSubscription(
+  uid: string,
+  bundleId: string,
+  mode: 'subscription' | 'oneTime',
+): Promise<void> {
+  const packSnap = await getDoc(doc(db, 'userPacks', bundleId));
+  if (!packSnap.exists()) return;
+
+  const pack = packSnap.data() as UserPack;
+  const subRef = doc(db, 'usersToSuscription', uid);
+  await setDoc(subRef, {
+    uid,
+    bundleId,
+    mode,
+    items: pack.items,
+    totalPrice: pack.totalPrice,
+    genaiDescription: pack.genaiDescription ?? null,
+    subscribedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Subscribes to `usersToSuscription/{uid}` in real time.
+ */
+export function onUserSubscription(
+  uid: string,
+  callback: (sub: UserSubscriptionDoc | null) => void,
+): FirestoreUnsubscribe {
+  const subRef = doc(db, 'usersToSuscription', uid);
+  return onSnapshot(subRef, async (snap) => {
+    if (!snap.exists()) {
+      callback(null);
+      return;
+    }
+    const data = snap.data() as UserSubscriptionDoc;
+    // Resolve Storage paths
+    const resolvedItems = await Promise.all(
+      data.items.map(async (item) => {
+        const resolvedImage = await resolveStorageUrl(item.image);
+        return { ...item, image: resolvedImage ?? '' };
+      }),
+    );
+    callback({ ...data, items: resolvedItems });
+  });
 }
 
 /**
@@ -505,5 +607,109 @@ export function onAuthChange(
     } else {
       callback(null);
     }
+  });
+}
+
+/* ── Real-time Listeners ─────────────────────────────────── */
+
+/**
+ * Subscribes to `productsCatalog` collection in real time.
+ * Resolves Storage paths on each snapshot.
+ */
+export function onProductsCatalog(
+  callback: (products: ProductCatalogFirestore[]) => void,
+): FirestoreUnsubscribe {
+  const colRef = collection(db, 'productsCatalog');
+  return onSnapshot(colRef, async (snap) => {
+    const products = await Promise.all(
+      snap.docs.map(async (d) => {
+        const data = d.data();
+        const resolvedImage = await resolveStorageUrl(data.image ?? '');
+        return { id: d.id, ...data, image: resolvedImage ?? '' } as ProductCatalogFirestore;
+      }),
+    );
+    callback(products.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+  });
+}
+
+/**
+ * Subscribes to `userPacks/{uid}` in real time.
+ * Resolves Storage paths in each item's `image` to download URLs.
+ */
+export function onUserPack(
+  uid: string,
+  callback: (pack: UserPack | null) => void,
+): FirestoreUnsubscribe {
+  const ref = doc(db, 'userPacks', uid);
+  return onSnapshot(ref, async (snap) => {
+    if (!snap.exists()) {
+      callback(null);
+      return;
+    }
+    const pack = snap.data() as UserPack;
+    // Resolve Storage paths to download URLs for each item's image
+    const resolvedItems = await Promise.all(
+      pack.items.map(async (item) => {
+        const resolvedImage = await resolveStorageUrl(item.image);
+        return { ...item, image: resolvedImage ?? '' };
+      }),
+    );
+    callback({ ...pack, items: resolvedItems });
+  });
+}
+
+/**
+ * Subscribes to `users/{uid}` in real time.
+ */
+export function onUserDoc(
+  uid: string,
+  callback: (userDoc: UserDoc | null) => void,
+): FirestoreUnsubscribe {
+  const ref = doc(db, 'users', uid);
+  return onSnapshot(ref, (snap) => {
+    callback(snap.exists() ? (snap.data() as UserDoc) : null);
+  });
+}
+
+/**
+ * Subscribes to `usersToQuiz/{uid}` in real time.
+ */
+export function onUserQuizData(
+  uid: string,
+  callback: (quizDoc: QuizDoc | null) => void,
+): FirestoreUnsubscribe {
+  const ref = doc(db, 'usersToQuiz', uid);
+  return onSnapshot(ref, (snap) => {
+    callback(snap.exists() ? (snap.data() as QuizDoc) : null);
+  });
+}
+
+/**
+ * Subscribes to `userPurchasesPacks` for a user in real time.
+ */
+export function onUserPurchases(
+  uid: string,
+  callback: (purchases: PurchaseDoc[]) => void,
+): FirestoreUnsubscribe {
+  const colRef = collection(db, 'userPurchasesPacks');
+  const q = query(colRef, where('uid', '==', uid), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as PurchaseDoc)));
+  });
+}
+
+/**
+ * Subscribes to `suscriptionPlans` collection in real time.
+ */
+export function onSubscriptionPlans(
+  callback: (plans: SubscriptionPlanFirestore[]) => void,
+): FirestoreUnsubscribe {
+  const colRef = collection(db, 'suscriptionPlans');
+  return onSnapshot(colRef, (snap) => {
+    const plans = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    })) as SubscriptionPlanFirestore[];
+    callback(plans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
   });
 }

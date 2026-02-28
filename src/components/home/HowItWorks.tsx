@@ -1,70 +1,73 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Container } from '../ui/Container';
-import { Section } from '../ui/Section';
-import { Grid } from '../ui/Grid';
-import { Stack } from '../ui/Stack';
-import { Coffee, Package, Smile } from 'lucide-react';
+import { ClipboardCheck, CalendarSync, PackageOpen } from 'lucide-react';
 import { t } from '../../data/texts';
 
+const STEPS = [
+  { id: 1, icon: ClipboardCheck, textKey: 'howItWorks.step1' },
+  { id: 2, icon: CalendarSync,   textKey: 'howItWorks.step2' },
+  { id: 3, icon: PackageOpen,    textKey: 'howItWorks.step3' },
+];
+
 export const HowItWorks: React.FC = () => {
-  const steps = [
-    {
-      id: 1,
-      icon: <Coffee size={32} className="text-roast" />,
-      title: t('howItWorks.step1Title'),
-      description: t('howItWorks.step1Desc'),
-    },
-    {
-      id: 2,
-      icon: <Package size={32} className="text-roast" />,
-      title: t('howItWorks.step2Title'),
-      description: t('howItWorks.step2Desc'),
-    },
-    {
-      id: 3,
-      icon: <Smile size={32} className="text-roast" />,
-      title: t('howItWorks.step3Title'),
-      description: t('howItWorks.step3Desc'),
-    },
-  ];
-
   return (
-    <Section bg="mist" size="lg">
-      <Container size="xl">
-        <div className="text-center mb-16">
-          <span className="label-caps text-roast mb-2 block">{t('howItWorks.badge')}</span>
-          <h2 className="heading-section">{t('howItWorks.heading')}</h2>
-        </div>
+    <div
+      style={{
+        width: '100%',
+        backgroundColor: '#e4f54a',
+        paddingTop: '2.5rem',
+        paddingBottom: '2.5rem',
+      }}
+    >
+      {/* Badge */}
+      <p
+        style={{
+          textAlign: 'center',
+          fontSize: '0.7rem',
+          fontWeight: 600,
+          letterSpacing: '0.3em',
+          textTransform: 'uppercase',
+          color: 'rgba(26,15,10,0.55)',
+          marginBottom: '1.5rem',
+        }}
+      >
+        {t('howItWorks.badge')}
+      </p>
 
-        <Grid cols={3} gap={8} className="items-start">
-          {steps.map((step, index) => (
-            <motion.div
+      {/* Steps row */}
+      <div
+        style={{
+          maxWidth: '72rem',
+          marginInline: 'auto',
+          paddingInline: '1rem',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
+      >
+        {STEPS.map((step, idx) => {
+          const Icon = step.icon;
+          return (
+            <div
               key={step.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.2 }}
-              className="relative p-8 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow"
+              style={{
+                flex: '1 1 0%',
+                minWidth: '250px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                paddingInline: '1.5rem',
+                paddingBlock: '0.75rem',
+                borderLeft: idx > 0 ? '1px solid rgba(26,15,10,0.15)' : 'none',
+              }}
             >
-              <div className="absolute -top-6 -left-6 font-display italic text-8xl text-foam -z-10 select-none">
-                {step.id}
-              </div>
-              <Stack gap={4} align="center" className="text-center">
-                <div className="w-16 h-16 rounded-full bg-cream flex items-center justify-center mb-2">
-                  {step.icon}
-                </div>
-                <h3 className="font-display text-2xl font-bold text-espresso">
-                  {step.title}
-                </h3>
-                <p className="body-lg text-stone-600">
-                  {step.description}
-                </p>
-              </Stack>
-            </motion.div>
-          ))}
-        </Grid>
-      </Container>
-    </Section>
+              <Icon size={34} strokeWidth={1.2} style={{ color: 'rgba(26,15,10,0.65)', flexShrink: 0 }} />
+              <p style={{ fontSize: '0.95rem', fontWeight: 500, color: '#1A0F0A', lineHeight: 1.4 }}>
+                {t(step.textKey)}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };

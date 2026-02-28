@@ -10,6 +10,7 @@ React Router v6
 Motion (Framer Motion v11)
 Zustand (estado del quiz)
 TanStack Query v5
+Tailwind CSS v4 (sin Preflight)
 React Hook Form + Zod
 Radix UI (Dialog, Progress, Tooltip)
 Lucide React

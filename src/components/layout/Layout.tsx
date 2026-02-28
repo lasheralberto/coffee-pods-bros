@@ -28,11 +28,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <QuizModal />
       <CartDrawer />
       <AuthModal />
-      <StickyCtaMobile>
-        <Button variant="primary" fullWidth size="lg" onClick={actions.openQuiz}>
-          {t('layout.findMyCoffee')}
-        </Button>
-      </StickyCtaMobile>
     </div>
   );
 };

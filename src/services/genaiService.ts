@@ -82,7 +82,7 @@ Write a short, warm, and engaging explanation (2-3 sentences max) of why this sp
 IMPORTANT: Write the response in ${lang}. Do not use markdown formatting. Keep it conversational and concise.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
     });
 

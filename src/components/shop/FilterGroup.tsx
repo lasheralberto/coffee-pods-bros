@@ -53,22 +53,30 @@ export const FilterGroup: React.FC<FilterGroupProps> = ({
 
       {/* Body — opciones radio */}
       {open && (
-        <fieldset className="flex flex-col gap-2.5 pb-4 animate-in fade-in slide-in-from-top-1 duration-200">
-          {options.map(({ label, value }) => (
-            <label
-              key={value}
-              className="flex items-center gap-3 text-sm text-primary cursor-pointer group min-h-[36px] py-0.5"
-            >
-              <input
-                type="radio"
-                name={name}
-                checked={selected === value}
-                onChange={() => onChange(value)}
-                className="h-4 w-4 accent-[var(--color-roast)] cursor-pointer shrink-0"
-              />
-              <span className="group-hover:text-roast transition-colors">{label}</span>
-            </label>
-          ))}
+        <fieldset className="flex flex-col gap-1 pb-4 animate-in fade-in slide-in-from-top-1 duration-200">
+          {options.map(({ label, value }) => {
+            const isSelected = selected === value;
+            return (
+              <label
+                key={value}
+                className={`flex items-center gap-3 text-sm cursor-pointer group py-2 px-2 -mx-2 rounded-lg transition-colors ${isSelected ? 'bg-surface/50' : 'hover:bg-surface/50'}`}
+              >
+                <div className={`flex items-center justify-center shrink-0 w-[18px] h-[18px] rounded-full border transition-colors ${isSelected ? 'border-roast' : 'border-border-color-strong group-hover:border-roast'}`}>
+                  {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-roast animate-in zoom-in duration-200" />}
+                </div>
+                <input
+                  type="radio"
+                  name={name}
+                  checked={isSelected}
+                  onChange={() => onChange(value)}
+                  className="absolute opacity-0 w-0 h-0"
+                />
+                <span className={`transition-colors leading-none ${isSelected ? 'font-medium text-roast' : 'text-primary group-hover:text-roast'}`}>
+                  {label}
+                </span>
+              </label>
+            );
+          })}
         </fieldset>
       )}
     </div>

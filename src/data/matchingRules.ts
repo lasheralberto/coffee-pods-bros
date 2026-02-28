@@ -49,8 +49,9 @@ function matchesProduct(
 }
 
 /**
- * Calculates the recommended product based on quiz answers.
- * Fetches products from Firestore `productsCatalog` collection.
+ * @deprecated Use `queryTopProduct()` from `pineconeService.ts` instead.
+ * Kept as fallback. Calculates the recommended product based on quiz answers
+ * using simple rule-based matching against Firestore `productsCatalog`.
  */
 export async function calculateProfile(
   answers: Record<number, string | string[]>,
@@ -79,8 +80,9 @@ export interface DefaultPackItem {
 }
 
 /**
- * Calculates a default pack based on quiz answers.
- * Returns all matching products (qty 1 each) from `productsCatalog`.
+ * @deprecated Use `queryProducts()` from `pineconeService.ts` instead.
+ * Kept as fallback. Calculates a default pack using simple rule-based matching
+ * against Firestore `productsCatalog`.
  */
 export async function calculateDefaultPack(
   answers: Record<number, string | string[]>,

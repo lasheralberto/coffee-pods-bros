@@ -69,6 +69,7 @@ export const CartDrawer: React.FC = () => {
         bundle?.items,
         bundle?.mode,
         bundle?.totalPrice,
+        bundle?.bundleId,
       );
 
       setCheckoutState('success');
