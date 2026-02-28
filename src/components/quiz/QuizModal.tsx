@@ -29,11 +29,11 @@ export const QuizModal: React.FC = () => {
     }
   }, [user, result, packSaving, saveResultsForUser]);
 
-  // When result is ready, user is logged in, and pack has been saved → redirect
+  // When result is ready, user is logged in, and pack has been saved → redirect to profile
   useEffect(() => {
     if (result && user && isOpen && !packSaving) {
       closeQuiz();
-      navigate('/shop');
+      navigate('/profile');
     }
   }, [result, user, isOpen, packSaving, closeQuiz, navigate]);
 
@@ -123,7 +123,18 @@ export const QuizModal: React.FC = () => {
 
                   {/* Content */}
                   <div className="flex-1 overflow-y-auto px-1">
-                    {hasResult && !user ? (
+                    {packSaving ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex flex-col items-center justify-center gap-4 py-16"
+                      >
+                        <div className="w-10 h-10 rounded-full border-3 border-roast border-t-transparent animate-spin" />
+                        <p className="text-sm text-muted text-center">
+                          {t('personalPack.generating')}
+                        </p>
+                      </motion.div>
+                    ) : hasResult && !user ? (
                       <QuizAuthGate />
                     ) : currentQuestion ? (
                       <AnimatePresence mode="wait">
@@ -172,7 +183,7 @@ export const QuizModal: React.FC = () => {
                   </div>
 
                   {/* Footer Actions */}
-                  {!hasResult && currentQuestion && (
+                  {!hasResult && !packSaving && currentQuestion && (
                     <div className="mt-8 flex justify-between items-center pt-4 border-t border-border-color">
                       <Button
                         variant="ghost"

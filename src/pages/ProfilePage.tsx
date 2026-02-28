@@ -8,11 +8,11 @@ import { QuizUserCard } from '../components/quiz/QuizUserCard';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../stores/authStore';
 import { useQuizStore } from '../stores/quizStore';
-import { onUserDoc, onUserQuizData, onUserPurchases, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
+import { onUserDoc, onUserQuizData, onUserPurchases, onUserSubscription, type UserDoc, type QuizDoc, type PurchaseDoc, type UserSubscriptionDoc } from '../providers/firebaseProvider';
 import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { t } from '../data/texts';
-import { LogOut, ShoppingBag } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const ProfilePage: React.FC = () => {
@@ -25,6 +25,7 @@ export const ProfilePage: React.FC = () => {
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
   const [quizData, setQuizData] = useState<QuizDoc | null>(null);
   const [purchases, setPurchases] = useState<PurchaseDoc[]>([]);
+  const [subscription, setSubscription] = useState<UserSubscriptionDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +38,7 @@ export const ProfilePage: React.FC = () => {
     setLoading(true);
     setError(null);
     let loadCount = 0;
-    const checkDone = () => { loadCount++; if (loadCount >= 3) setLoading(false); };
+    const checkDone = () => { loadCount++; if (loadCount >= 4) setLoading(false); };
 
     const unsub1 = onUserDoc(authUser.uid, (uDoc) => {
       setUserDoc(uDoc);
@@ -51,8 +52,12 @@ export const ProfilePage: React.FC = () => {
       setPurchases(pDocs);
       checkDone();
     });
+    const unsub4 = onUserSubscription(authUser.uid, (sub) => {
+      setSubscription(sub);
+      checkDone();
+    });
 
-    return () => { unsub1(); unsub2(); unsub3(); };
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); };
   }, [authUser?.uid]);
 
   /* Not authenticated */
@@ -163,42 +168,18 @@ export const ProfilePage: React.FC = () => {
                 </Card>
               </motion.div>
 
-              {/* Quiz Card — pack moved to ShopPage */}
+              {/* Quiz Card — shows draft pack until user subscribes */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.16 }}
               >
-                {quizData ? (
-                  <Card variant="outline" padding="lg" className="quiz-user-card">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-medium)' }}>
-                        {t('profile.quizCompleted')}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-muted mb-4">
-                      {t('personalPack.subtitle')}
-                    </p>
-                    <div className="flex gap-3">
-                      <Button variant="primary" size="sm" onClick={() => navigate('/shop')}>
-                        <ShoppingBag size={14} />
-                        {t('profile.yourPack')}
-                      </Button>
-                      <Button variant="secondary" size="sm" onClick={quizActions.openQuiz}>
-                        {t('personalPack.retakeQuiz')}
-                      </Button>
-                    </div>
-                  </Card>
-                ) : (
-                  <Card variant="outline" padding="lg" className="quiz-user-card quiz-user-card--empty">
-                    <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
-                      {t('profile.quizNotCompleted')}
-                    </p>
-                    <Button variant="primary" size="md" onClick={quizActions.openQuiz}>
-                      {t('profile.takeQuiz')}
-                    </Button>
-                  </Card>
-                )}
+                <QuizUserCard
+                  quizData={quizData}
+                  onTakeQuiz={quizActions.openQuiz}
+                  uid={authUser!.uid}
+                  hasSubscription={!!subscription}
+                />
               </motion.div>
 
               {/* User Subscription */}

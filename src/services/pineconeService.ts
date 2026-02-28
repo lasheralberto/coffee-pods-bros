@@ -143,11 +143,16 @@ async function queryPinecone(
  * Semantic search for the best matching products based on quiz answers.
  * Returns a pack of `DefaultPackItem[]` (same shape as the legacy function).
  *
+ * @param answers   Quiz answers
+ * @param topK      How many results to ask Pinecone for (default 6)
+ * @param maxItems  If provided, truncates the final result to exactly this count
+ *
  * Falls back to first product from Firestore if Pinecone is unavailable.
  */
 export async function queryProducts(
   answers: Record<number, string | string[]>,
   topK = 6,
+  maxItems?: number,
 ): Promise<DefaultPackItem[]> {
   const locale = getLocale();
 
@@ -160,14 +165,17 @@ export async function queryProducts(
     const vector    = await generateQueryEmbedding(queryText);
     const matches   = await queryPinecone(vector, topK);
 
-    // Filter by minimum score
-    const relevant = matches.filter((m) => m.score >= MIN_SCORE);
-
-    if (relevant.length === 0) {
-      throw new Error('No relevant matches from Pinecone');
+    if (matches.length === 0) {
+      throw new Error('No matches from Pinecone');
     }
 
-    return relevant.map((m) => ({
+    // Sort by score descending (Pinecone already does, but ensure order)
+    matches.sort((a, b) => b.score - a.score);
+
+    // Take exactly maxItems (or all if not specified)
+    const final = maxItems != null && maxItems > 0 ? matches.slice(0, maxItems) : matches;
+
+    return final.map((m) => ({
       productId: (m.metadata.productId as string) ?? m.id,
       name:      (locale === 'es'
         ? (m.metadata.name_es as string)

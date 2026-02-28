@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, ShoppingCart, Sparkles, ChevronRight } from 'lucide-react';
+import { RefreshCw, ShoppingCart, Sparkles, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { t } from '../../data/texts';
-import { onUserPack } from '../../providers/firebaseProvider';
-import type { UserPack, PackItem } from '../../providers/firebaseProvider';
+import { t, getLocale } from '../../data/texts';
+import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack } from '../../providers/firebaseProvider';
+import type { UserPack, PackItem, SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from '../quiz/PackCustomizerModal';
+import { TypewriterText } from '../ui/TypewriterText';
 import { useCartStore } from '../../stores/cartStore';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
 import { useQuizStore } from '../../stores/quizStore';
@@ -20,6 +21,11 @@ export const PersonalizedPackSection: React.FC = () => {
   const [pack, setPack] = useState<UserPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [packModalOpen, setPackModalOpen] = useState(false);
+  const [plans, setPlans] = useState<SubscriptionPlanFirestore[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+
+  const locale = getLocale();
 
   useEffect(() => {
     if (!authUser?.uid) return;
@@ -31,11 +37,53 @@ export const PersonalizedPackSection: React.FC = () => {
     return unsub;
   }, [authUser?.uid]);
 
+  /* Listen to subscription plans */
+  useEffect(() => {
+    setPlansLoading(true);
+    const unsub = onSubscriptionPlans((data) => {
+      setPlans(data);
+      setPlansLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  /* Derived state */
+  const selectedPlan = pack?.planId
+    ? plans.find((p) => p.id === pack.planId) ?? null
+    : null;
+  const hasPlan = !!selectedPlan;
+
+  /** Resolve plan price as number */
+  const getPlanPrice = (plan: SubscriptionPlanFirestore): number =>
+    parseFloat(`${plan.price}.${plan.priceCents}`);
+
+  /** Format plan price for display */
+  const fmtPlanPrice = (plan: SubscriptionPlanFirestore): string =>
+    `${plan.price},${plan.priceCents}€`;
+
+  /** Handle plan selection — regenerate pack items based on plan's numberOfProducts */
+  const handleSelectPlan = async (plan: SubscriptionPlanFirestore) => {
+    if (!authUser?.uid) return;
+    setSavingPlan(true);
+    try {
+      const numProducts = plan.numberOfProducts ?? 6;
+      await selectPlanAndRegeneratePack(authUser.uid, plan.id, getPlanPrice(plan), numProducts);
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
+  /** Reset plan to go back to selection */
+  const handleChangePlan = () => {
+    if (!authUser?.uid) return;
+    updateUserPackPlan(authUser.uid, '', 0);
+  };
+
   /* Not authenticated → don't render */
   if (!isAuthenticated || !authUser) return null;
 
-  /* Loading — initial fetch OR quiz pack is being regenerated */
-  if (loading || packSaving) {
+  /* Loading — initial fetch, quiz pack regeneration, or plan selection */
+  if (loading || packSaving || plansLoading || savingPlan) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -45,7 +93,7 @@ export const PersonalizedPackSection: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 rounded-full border-2 border-roast border-t-transparent animate-spin" />
             <span className="text-sm text-muted">
-              {packSaving ? t('personalPack.generating') : t('profile.loading')}
+              {(packSaving || savingPlan) ? t('personalPack.generating') : t('profile.loading')}
             </span>
           </div>
         </Card>
@@ -70,7 +118,7 @@ export const PersonalizedPackSection: React.FC = () => {
                 {t('personalPack.noPackYet')}
               </p>
             </div>
-            <Button variant="primary" size="md" onClick={quizActions.openQuiz}>
+            <Button variant="primary" size="md" onClick={quizActions.openQuiz} style={{ width: 'fit-content' }}>
               <Sparkles size={16} />
               {t('personalPack.takeQuizCta')}
             </Button>
@@ -80,7 +128,71 @@ export const PersonalizedPackSection: React.FC = () => {
     );
   }
 
-  /* Has pack → show personalized recommendation */
+  /* Has pack but no plan selected → show plan selection */
+  if (pack && pack.items.length > 0 && !hasPlan) {
+    return (
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card variant="elevated" padding="none" className="personalized-pack-section">
+            {/* Header */}
+            <div className="personalized-pack-section__header">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-accent" />
+                <h3 className="text-lg font-semibold text-primary">
+                  {t('personalPack.choosePlan')}
+                </h3>
+              </div>
+              <span className="text-xs text-muted">
+                {t('personalPack.choosePlanDesc')}
+              </span>
+            </div>
+
+            {/* Plan selection grid */}
+            <div className="personalized-pack-section__items" style={{ padding: 'var(--space-4)' }}>
+              <div className="quiz-user-card__plan-grid">
+                {plans.map((plan) => {
+                  const planName = plan.name[locale] ?? plan.name['es'] ?? '';
+                  const planBadge = plan.badge[locale] ?? plan.badge['es'] ?? '';
+                  const planDesc = plan.description[locale] ?? plan.description['es'] ?? '';
+                  const planInterval = plan.interval[locale] ?? plan.interval['es'] ?? '';
+                  const isHighlighted = !!plan.highlighted;
+
+                  return (
+                    <motion.div
+                      key={plan.id}
+                      className={`quiz-plan-card ${isHighlighted ? 'quiz-plan-card--highlighted' : ''}`}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => !savingPlan && handleSelectPlan(plan)}
+                      style={{ cursor: savingPlan ? 'wait' : 'pointer' }}
+                    >
+                      <span className="quiz-plan-card__badge">{planBadge}</span>
+                      <h4 className="quiz-plan-card__name">{planName}</h4>
+                      <p className="quiz-plan-card__desc">{planDesc}</p>
+                      <div className="quiz-plan-card__price">
+                        <span className="quiz-plan-card__price-value">{plan.price},{plan.priceCents}€</span>
+                        <span className="quiz-plan-card__price-interval">{planInterval}</span>
+                      </div>
+                      <span className="quiz-plan-card__cta">
+                        <ArrowRight size={14} />
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+        
+      </>
+    );
+  }
+
+  /* Has pack + plan selected → show personalized recommendation */
   return (
     <>
       <motion.div
@@ -102,6 +214,31 @@ export const PersonalizedPackSection: React.FC = () => {
             </span>
           </div>
 
+          {/* Selected plan badge + change button */}
+          {selectedPlan && (
+            <div className="personalized-pack-section__selected-plan" style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 'var(--space-2) var(--space-4)',
+              borderBottom: '1px solid var(--border-subtle)',
+              background: 'var(--surface-subtle)',
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                  {t('personalPack.planSelected')}
+                </span>
+                <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {selectedPlan.name[locale] ?? selectedPlan.name['es'] ?? ''} — {fmtPlanPrice(selectedPlan)} {selectedPlan.interval[locale] ?? selectedPlan.interval['es'] ?? ''}
+                </span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleChangePlan}>
+                <ArrowLeft size={14} />
+                {t('personalPack.changePlan')}
+              </Button>
+            </div>
+          )}
+
           {/* GenAI Description */}
           <AnimatePresence>
             {pack.genaiDescription && (
@@ -112,7 +249,7 @@ export const PersonalizedPackSection: React.FC = () => {
                 className="personalized-pack-section__ai-description"
               >
                 <p className="text-sm leading-relaxed text-secondary">
-                  {pack.genaiDescription}
+                  <TypewriterText text={pack.genaiDescription} />
                 </p>
               </motion.div>
             )}
@@ -136,15 +273,22 @@ export const PersonalizedPackSection: React.FC = () => {
           {/* Total + Actions */}
           <div className="personalized-pack-section__footer">
             <div className="personalized-pack-section__total">
-              <span className="text-sm text-muted">{t('pack.total')}</span>
-              <span className="text-lg font-semibold text-primary">{pack.totalPrice.toFixed(2)}€</span>
+              <span className="text-sm text-muted">{selectedPlan ? t('personalPack.planPrice') : t('pack.total')}</span>
+              <span className="text-lg font-semibold text-primary">
+                {selectedPlan ? fmtPlanPrice(selectedPlan) : `${pack.totalPrice.toFixed(2)}€`}
+              </span>
             </div>
 
             <div className="personalized-pack-section__actions">
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'subscription', authUser.uid)}
+                onClick={() => useCartStore.getState().actions.addBundle(
+                  pack.items,
+                  selectedPlan ? getPlanPrice(selectedPlan) : pack.totalPrice,
+                  'subscription',
+                  authUser.uid,
+                )}
               >
                 <RefreshCw size={14} />
                 {t('personalPack.subscribeBtn')}
@@ -152,10 +296,10 @@ export const PersonalizedPackSection: React.FC = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'oneTime', authUser.uid)}
+                onClick={handleChangePlan}
               >
-                <ShoppingCart size={14} />
-                {t('personalPack.buyOnce')}
+                <ArrowLeft size={14} />
+                {t('personalPack.changePlan')}
               </Button>
               <Button
                 variant="ghost"

@@ -592,6 +592,10 @@ export const TEXTS = {
     saved:             { es: 'Pack guardado', en: 'Pack saved!' },
     loadingProfiles:   { es: 'Cargando productos...', en: 'Loading products...' },
     quantity:          { es: 'Cantidad', en: 'Quantity' },
+    itemCounter:       { es: 'productos seleccionados', en: 'products selected' },
+    packComplete:      { es: 'Pack completo', en: 'Pack complete' },
+    packIncomplete:    { es: 'Selecciona exactamente {n} productos', en: 'Select exactly {n} products' },
+    maxReached:        { es: 'Has alcanzado el máximo de productos', en: 'You have reached the maximum number of products' },
   },
 
   /* ── Personalized Pack Section (Shop) ── */
@@ -607,6 +611,13 @@ export const TEXTS = {
     noPackYet:         { es: 'Completa el quiz para descubrir tu pack ideal', en: 'Complete the quiz to discover your ideal pack' },
     takeQuizCta:       { es: 'Descubre tu pack', en: 'Discover your pack' },
     generating:        { es: 'Generando tu nuevo pack...', en: 'Generating your new pack...' },
+    /* Plan selection step */
+    choosePlan:        { es: 'Elige tu plan', en: 'Choose your plan' },
+    choosePlanDesc:    { es: 'Selecciona el plan que mejor se adapte a tus necesidades', en: 'Select the plan that best fits your needs' },
+    planSelected:      { es: 'Plan seleccionado', en: 'Plan selected' },
+    changePlan:        { es: 'Cambiar plan', en: 'Change plan' },
+    selectProducts:    { es: 'Elegir productos', en: 'Choose products' },
+    planPrice:         { es: 'Precio del plan', en: 'Plan price' },
   },
 
   /* ── User Subscription (Profile) ── */

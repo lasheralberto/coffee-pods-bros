@@ -21,7 +21,6 @@ import {
 } from '../data/shopProducts';
 import { t, getLocale } from '../data/texts';
 import { UsersPlanSuscription } from '../components/shop/UsersPlanSuscription';
-import { PersonalizedPackSection } from '../components/shop/PersonalizedPackSection';
 import { onProductsCatalog, type ProductCatalogFirestore } from '../providers/firebaseProvider';
 
 /* ── FilterPanel (shared mobile drawer + desktop sidebar) ── */
@@ -152,9 +151,6 @@ export const ShopPage: React.FC = () => {
       <div className="h-[var(--space-6)]" />
 
           {/* <UsersPlanSuscription /> */}
-
-          {/* Personalized pack recommendation */}
-          <PersonalizedPackSection />
 
           <div className="flex flex-col lg:flex-row gap-9 lg:gap-14">
             <aside className="hidden lg:block w-[232px] shrink-0">

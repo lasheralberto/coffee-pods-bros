@@ -1202,6 +1202,122 @@
   color: var(--text-secondary);
 }
 
+/* Plan grid inside QuizUserCard — Step 1 */
+.quiz-user-card__plan-grid {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--space-3);
+}
+@media (min-width: 640px) {
+  .quiz-user-card__plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+/* Individual plan card */
+.quiz-plan-card {
+  position:      relative;
+  display:       flex;
+  flex-direction: column;
+  gap:           var(--space-2);
+  padding:       var(--space-4);
+  border-radius: var(--radius-lg);
+  border:        var(--border-width) var(--border-style) var(--border-color);
+  background:    var(--color-surface);
+  transition:    border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.quiz-plan-card:hover {
+  border-color: var(--color-accent);
+  box-shadow:   0 4px 16px rgba(0,0,0,0.06);
+}
+.quiz-plan-card--highlighted {
+  border-color:    var(--color-accent);
+  background:      var(--color-espresso);
+  color:           var(--color-cream);
+}
+.quiz-plan-card--highlighted .quiz-plan-card__desc {
+  color: rgba(250, 247, 242, 0.55);
+}
+.quiz-plan-card--highlighted .quiz-plan-card__price-interval {
+  color: rgba(250, 247, 242, 0.45);
+}
+
+.quiz-plan-card__badge {
+  display:          inline-block;
+  align-self:       flex-start;
+  font-size:        var(--text-2xs, 10px);
+  font-weight:      var(--font-bold);
+  letter-spacing:   0.12em;
+  text-transform:   uppercase;
+  padding:          3px 8px;
+  border-radius:    var(--radius-full);
+  background:       var(--color-foam);
+  color:            var(--text-muted);
+}
+.quiz-plan-card--highlighted .quiz-plan-card__badge {
+  background: rgba(196, 119, 59, 0.2);
+  color:      var(--color-caramel);
+}
+
+.quiz-plan-card__name {
+  font-family: var(--font-display);
+  font-size:   var(--text-lg);
+  font-weight: var(--font-semibold);
+  line-height: 1.15;
+}
+
+.quiz-plan-card__desc {
+  font-size:   var(--text-xs);
+  color:       var(--text-muted);
+  line-height: 1.45;
+}
+
+.quiz-plan-card__price {
+  display:     flex;
+  align-items: baseline;
+  gap:         var(--space-1);
+  margin-top:  auto;
+}
+.quiz-plan-card__price-value {
+  font-size:      var(--text-2xl, 1.5rem);
+  font-weight:    var(--font-bold);
+  letter-spacing: -0.02em;
+}
+.quiz-plan-card__price-interval {
+  font-size: var(--text-xs);
+  color:     var(--text-muted);
+}
+
+.quiz-plan-card__cta {
+  position:     absolute;
+  top:          var(--space-4);
+  right:        var(--space-4);
+  color:        var(--text-muted);
+  opacity:      0;
+  transition:   opacity var(--duration-fast);
+}
+.quiz-plan-card:hover .quiz-plan-card__cta {
+  opacity: 1;
+}
+
+/* Selected plan badge inside QuizUserCard — Steps 2 & 3 */
+.quiz-user-card__selected-plan {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  gap:             var(--space-3);
+  padding:         var(--space-3) var(--space-4);
+  border-radius:   var(--radius-md);
+  background:      var(--color-foam);
+  border:          var(--border-width) var(--border-style) var(--border-color);
+}
+.quiz-user-card__selected-plan-info {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+
 /* ── PACK CUSTOMIZER MODAL ───────────────────────────────── */
 
 .pack-modal {
@@ -1366,6 +1482,58 @@
   color:        var(--color-success);
   text-align:   center;
   font-weight:  var(--font-medium);
+}
+
+/* Counter badge */
+.pack-modal__counter {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           var(--space-2);
+  margin-top:    var(--space-2);
+  padding:       var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background:    var(--color-mist);
+  font-size:     var(--text-xs);
+  font-weight:   var(--font-medium);
+  color:         var(--text-secondary);
+  transition:    all var(--duration-normal);
+}
+.pack-modal__counter--complete {
+  background:  rgba(74, 94, 58, 0.12);
+  color:       var(--color-leaf);
+}
+.pack-modal__counter-text {
+  line-height: 1;
+}
+.pack-modal__counter-check {
+  font-size:   var(--text-sm);
+  font-weight: var(--font-bold);
+  line-height: 1;
+}
+
+/* Hint messages */
+.pack-modal__hint {
+  font-size:      var(--text-xs);
+  color:          var(--color-caramel);
+  text-align:     center;
+  font-weight:    var(--font-medium);
+}
+.pack-modal__hint--success {
+  color:          var(--color-leaf);
+}
+
+/* Disabled plus button */
+.pack-item__btn:disabled {
+  opacity:     0.35;
+  cursor:      not-allowed;
+  border-color: var(--border-color);
+  color:       var(--text-muted);
+  background:  var(--bg-surface);
+}
+.pack-item__btn:disabled:hover {
+  border-color: var(--border-color);
+  color:       var(--text-muted);
+  background:  var(--bg-surface);
 }
 
 
@@ -1866,4 +2034,20 @@
     align-items:     center;
     padding:         var(--space-8) var(--space-10);
   }
+}
+
+/* ── Typewriter cursor (AI streaming effect) ── */
+@keyframes typewriterBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+.typewriter-cursor {
+  display:          inline-block;
+  width:            2px;
+  height:           1em;
+  margin-left:      1px;
+  vertical-align:   text-bottom;
+  background-color: var(--color-espresso, currentColor);
+  animation:        typewriterBlink 0.6s steps(1) infinite;
 }

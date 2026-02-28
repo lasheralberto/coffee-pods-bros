@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { t } from '../../data/texts';
+import { t, getLocale } from '../../data/texts';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
-import { onUserPack } from '../../providers/firebaseProvider';
-import type { QuizDoc, UserPack, PackItem } from '../../providers/firebaseProvider';
+import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack } from '../../providers/firebaseProvider';
+import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from './PackCustomizerModal';
-import { ChevronDown, RefreshCw, ShoppingCart } from 'lucide-react';
+import { ChevronDown, RefreshCw, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../stores/cartStore';
+import { TypewriterText } from '../ui/TypewriterText';
 
 interface QuizUserCardProps {
   quizData: QuizDoc | null;
   onTakeQuiz: () => void;
   uid: string;
+  /** When true, hide purchase/subscribe buttons (pack already subscribed) */
+  hasSubscription?: boolean;
 }
 
 /**
@@ -36,12 +39,18 @@ function formatDate(ts: unknown): string {
   return '';
 }
 
-export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz, uid }) => {
+export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz, uid, hasSubscription = false }) => {
   const [pack, setPack] = useState<UserPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [packModalOpen, setPackModalOpen] = useState(false);
   const [answersOpen, setAnswersOpen] = useState(false);
+  const [plans, setPlans] = useState<SubscriptionPlanFirestore[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
 
+  const locale = getLocale();
+
+  /* Listen to user pack */
   useEffect(() => {
     if (!uid) return;
     setLoading(true);
@@ -52,6 +61,36 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
     return unsub;
   }, [uid, quizData]);
 
+  /* Listen to subscription plans */
+  useEffect(() => {
+    setPlansLoading(true);
+    const unsub = onSubscriptionPlans((data) => {
+      setPlans(data);
+      setPlansLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  /** Resolve plan price as a number from string fields (e.g. "19" + "90" → 19.90) */
+  const getPlanPrice = (plan: SubscriptionPlanFirestore): number =>
+    parseFloat(`${plan.price}.${plan.priceCents}`);
+
+  /** Format plan price for display (e.g. "19,90€") */
+  const fmtPlanPrice = (plan: SubscriptionPlanFirestore): string =>
+    `${plan.price},${plan.priceCents}€`;
+
+  /** Handle plan selection — regenerate pack items based on plan's numberOfProducts */
+  const handleSelectPlan = async (plan: SubscriptionPlanFirestore) => {
+    setSavingPlan(true);
+    try {
+      const numProducts = plan.numberOfProducts ?? 6;
+      await selectPlanAndRegeneratePack(uid, plan.id, getPlanPrice(plan), numProducts);
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
+  /* ── No quiz done ── */
   if (!quizData) {
     return (
       <div>
@@ -59,7 +98,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
           <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
             {t('profile.quizNotCompleted')}
           </p>
-          <Button variant="primary" size="md" onClick={onTakeQuiz}>
+          <Button variant="primary" size="md" onClick={onTakeQuiz} style={{ width: 'fit-content', margin: '0 auto' }}>
             {t('profile.takeQuiz')}
           </Button>
         </Card>
@@ -70,6 +109,15 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const sortedAnswers = Object.entries(quizData.answers)
     .map(([key, val]) => ({ qId: Number(key), answer: val }))
     .sort((a, b) => a.qId - b.qId);
+
+  /* Derived state */
+  const selectedPlan = pack?.planId
+    ? plans.find((p) => p.id === pack.planId) ?? null
+    : null;
+  const hasPlan = !!selectedPlan;
+  const hasProducts = !!pack && pack.items.length > 0;
+  const planPrice = selectedPlan ? getPlanPrice(selectedPlan) : 0;
+  const planNumberOfProducts = selectedPlan?.numberOfProducts ?? 0;
 
   return (
     <div>
@@ -86,70 +134,166 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
           )}
         </div>
 
-        {/* Pack display */}
-        {loading && (
+        {/* GenAI Description */}
+        <AnimatePresence>
+          {pack?.genaiDescription && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="personalized-pack-section__ai-description"
+            >
+              <p className="text-sm leading-relaxed text-secondary">
+                <TypewriterText text={pack.genaiDescription} />
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Loading */}
+        {(loading || plansLoading || savingPlan) && (
           <div className="quiz-user-card__result" style={{ textAlign: 'center', padding: 'var(--space-4)' }}>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-              {t('profile.loading')}
-            </p>
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-5 h-5 rounded-full border-2 border-roast border-t-transparent animate-spin" />
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+                {savingPlan ? t('personalPack.generating') : t('profile.loading')}
+              </p>
+            </div>
           </div>
         )}
 
-        {!loading && pack && pack.items.length > 0 && (
+        {/* ═══ No pack → prompt to take quiz ═══ */}
+        {!loading && !plansLoading && !savingPlan && !pack && (
+          <div className="quiz-user-card__pack" style={{ textAlign: 'center', padding: 'var(--space-4)' }}>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>
+              {t('personalPack.noPackYet')}
+            </p>
+            <Button variant="primary" size="md" onClick={onTakeQuiz} style={{ width: 'fit-content', margin: '0 auto' }}>
+              {t('profile.takeQuiz')}
+            </Button>
+          </div>
+        )}
+
+        {/* ═══ STEP 1: Plan selection (only when pack exists) ═══ */}
+        {!loading && !plansLoading && !savingPlan && !!pack && !hasPlan && (
           <div className="quiz-user-card__pack">
             <span className="quiz-user-card__pack-label">
-              {t('profile.yourPack')}
+              {t('personalPack.choosePlan')}
             </span>
-            <div className="quiz-user-card__pack-list">
-              {pack.items.map((item: PackItem) => (
-                <div key={item.productId} className="pack-item pack-item--active">
-                  <img src={item.image} alt={item.name} className="pack-item__img" />
-                  <div className="pack-item__info">
-                    <span className="pack-item__name">{item.name}</span>
-                    <span className="pack-item__price">
-                      {item.price.toFixed(2)}€ {t('pack.perUnit')}
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
+              {t('personalPack.choosePlanDesc')}
+            </p>
+
+            <div className="quiz-user-card__plan-grid">
+              {plans.map((plan) => {
+                const planName = plan.name[locale] ?? plan.name['es'] ?? '';
+                const planBadge = plan.badge[locale] ?? plan.badge['es'] ?? '';
+                const planDesc = plan.description[locale] ?? plan.description['es'] ?? '';
+                const planInterval = plan.interval[locale] ?? plan.interval['es'] ?? '';
+                const isHighlighted = !!plan.highlighted;
+
+                return (
+                  <motion.div
+                    key={plan.id}
+                    className={`quiz-plan-card ${isHighlighted ? 'quiz-plan-card--highlighted' : ''}`}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => !savingPlan && handleSelectPlan(plan)}
+                    style={{ cursor: savingPlan ? 'wait' : 'pointer' }}
+                  >
+                    <span className="quiz-plan-card__badge">{planBadge}</span>
+                    <h4 className="quiz-plan-card__name">{planName}</h4>
+                    <p className="quiz-plan-card__desc">{planDesc}</p>
+                    <div className="quiz-plan-card__price">
+                      <span className="quiz-plan-card__price-value">{plan.price},{plan.priceCents}€</span>
+                      <span className="quiz-plan-card__price-interval">{planInterval}</span>
+                    </div>
+                    <span className="quiz-plan-card__cta">
+                      <ArrowRight size={14} />
                     </span>
-                  </div>
-                  <span className="pack-item__qty">x{item.quantity}</span>
-                </div>
-              ))}
-            </div>
-            <div className="quiz-user-card__pack-total">
-              <span className="pack-modal__total-label">{t('pack.total')}</span>
-              <span className="pack-modal__total-value">{pack.totalPrice.toFixed(2)}€</span>
-            </div>
-            <Button variant="accent" size="sm" fullWidth onClick={() => setPackModalOpen(true)}>
-              {t('profile.customizePack')}
-            </Button>
-            <div className="quiz-user-card__purchase-row">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'subscription', uid)}
-              >
-                <RefreshCw size={14} />
-                {t('profile.subscriptionBtn')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => useCartStore.getState().actions.addBundle(pack.items, pack.totalPrice, 'oneTime', uid)}
-              >
-                <ShoppingCart size={14} />
-                {t('profile.oneTimePurchase')}
-              </Button>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {!loading && (!pack || pack.items.length === 0) && quizData && (
-          <div className="quiz-user-card__pack" style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>
-              {t('pack.emptyPack')}
-            </p>
-            <Button variant="accent" size="sm" fullWidth onClick={() => setPackModalOpen(true)}>
-              {t('profile.customizePack')}
-            </Button>
+        {/* ═══ STEP 2 & 3: Plan selected — show products + actions ═══ */}
+        {!loading && !plansLoading && !savingPlan && !!pack && hasPlan && (
+          <div className="quiz-user-card__pack">
+            {/* Selected plan badge */}
+            <div className="quiz-user-card__selected-plan">
+              <div className="quiz-user-card__selected-plan-info">
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                  {t('personalPack.planSelected')}
+                </span>
+                <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {selectedPlan!.name[locale] ?? selectedPlan!.name['es'] ?? ''}
+                </span>
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-accent)', fontWeight: 700 }}>
+                  {fmtPlanPrice(selectedPlan!)} {selectedPlan!.interval[locale] ?? selectedPlan!.interval['es'] ?? ''}
+                </span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => updateUserPackPlan(uid, '', 0)}>
+                <ArrowLeft size={14} />
+                {t('personalPack.changePlan')}
+              </Button>
+            </div>
+
+            {/* Products list */}
+            {hasProducts && (
+              <>
+                <span className="quiz-user-card__pack-label">
+                  {t('profile.yourPack')}
+                </span>
+                <div className="quiz-user-card__pack-list">
+                  {pack!.items.map((item: PackItem) => (
+                    <div key={item.productId} className="pack-item pack-item--active">
+                      <img src={item.image} alt={item.name} className="pack-item__img" />
+                      <div className="pack-item__info">
+                        <span className="pack-item__name">{item.name}</span>
+                        <span className="pack-item__price">
+                          {item.price.toFixed(2)}€ {t('pack.perUnit')}
+                        </span>
+                      </div>
+                      <span className="pack-item__qty">x{item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Fixed plan price (not computed from products) */}
+                <div className="quiz-user-card__pack-total">
+                  <span className="pack-modal__total-label">{t('personalPack.planPrice')}</span>
+                  <span className="pack-modal__total-value">{fmtPlanPrice(selectedPlan!)}</span>
+                </div>
+              </>
+            )}
+
+            {/* No products yet */}
+            {!hasProducts && (
+              <div style={{ textAlign: 'center', padding: 'var(--space-3) 0' }}>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>
+                  {t('pack.emptyPack')}
+                </p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="quiz-user-card__purchase-row">
+              {hasProducts && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => useCartStore.getState().actions.addBundle(pack!.items, planPrice, 'subscription', uid)}
+                >
+                  <RefreshCw size={14} />
+                  {t('personalPack.subscribeBtn')}
+                </Button>
+              )}
+              <Button variant="accent" size="sm" onClick={() => setPackModalOpen(true)}>
+                {hasProducts ? t('profile.customizePack') : t('personalPack.selectProducts')}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -192,12 +336,14 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
           )}
         </AnimatePresence>
 
-        {/* Retake */}
-        <div className="quiz-user-card__footer">
-          <Button variant="secondary" size="sm" onClick={onTakeQuiz}>
-            {t('profile.takeQuiz')}
-          </Button>
-        </div>
+        {/* Retake — only show when user has a pack (draft) */}
+        {pack && (
+          <div className="quiz-user-card__footer">
+            <Button variant="secondary" size="sm" onClick={onTakeQuiz}>
+              {t('profile.takeQuiz')}
+            </Button>
+          </div>
+        )}
       </Card>
 
       {/* Pack Customizer Modal */}
@@ -205,6 +351,8 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
         open={packModalOpen}
         onClose={() => { setPackModalOpen(false); }}
         uid={uid}
+        maxProducts={planNumberOfProducts > 0 ? planNumberOfProducts : undefined}
+        planPrice={hasPlan ? planPrice : undefined}
       />
     </div>
   );

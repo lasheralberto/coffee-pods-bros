@@ -16,6 +16,7 @@ import {
   updateDoc,
   getDocs,
   addDoc,
+  deleteDoc,
   collection,
   query,
   where,
@@ -262,6 +263,7 @@ export async function saveQuizResults(
       uid,
       items: defaultPackItems,
       totalPrice,
+      status: 'draft',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -329,6 +331,8 @@ export interface SubscriptionPlanFirestore {
   accentColor: string;
   glowColor: string;
   order?: number;
+  /** Exact number of products the user must select for this plan's pack */
+  numberOfProducts?: number;
 }
 
 /**
@@ -360,6 +364,12 @@ export interface UserPack {
   items: PackItem[];
   totalPrice: number;
   genaiDescription?: string | null;
+  /** Selected subscription plan ID from `suscriptionPlans` */
+  planId?: string | null;
+  /** Fixed plan price (e.g. "19,90") derived from plan.price + plan.priceCents */
+  planPrice?: number | null;
+  /** Pack lifecycle status: 'draft' until confirmed, 'complete' after checkout */
+  status: 'draft' | 'complete';
   createdAt: unknown;
   updatedAt: unknown;
 }
@@ -372,17 +382,26 @@ export async function saveUserPack(
   items: PackItem[],
   totalPrice: number,
   genaiDescription?: string | null,
+  planId?: string | null,
+  planPrice?: number | null,
 ): Promise<void> {
   const packRef = doc(db, 'userPacks', uid);
   const data: Record<string, unknown> = {
     uid,
     items,
     totalPrice,
+    status: 'draft',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
   if (genaiDescription !== undefined) {
     data.genaiDescription = genaiDescription;
+  }
+  if (planId !== undefined) {
+    data.planId = planId;
+  }
+  if (planPrice !== undefined) {
+    data.planPrice = planPrice;
   }
   await setDoc(packRef, data, { merge: true });
 
@@ -390,6 +409,69 @@ export async function saveUserPack(
   await updateDoc(userRef, {
     packId: uid,
   });
+}
+
+/**
+ * Updates only the selected plan on an existing user pack.
+ */
+export async function updateUserPackPlan(
+  uid: string,
+  planId: string,
+  planPrice: number,
+): Promise<void> {
+  const packRef = doc(db, 'userPacks', uid);
+  await setDoc(packRef, {
+    planId,
+    planPrice,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+/**
+ * Selects a plan and regenerates pack items based on the plan's `numberOfProducts`.
+ *
+ * 1. Reads quiz answers from `usersToQuiz/{uid}`
+ * 2. Queries Pinecone with `numberOfProducts` as topK
+ * 3. Regenerates GenAI description
+ * 4. Writes the new pack items + plan info atomically
+ */
+export async function selectPlanAndRegeneratePack(
+  uid: string,
+  planId: string,
+  planPrice: number,
+  numberOfProducts: number,
+): Promise<void> {
+  // 1. Get quiz answers
+  const quizData = await getUserQuizData(uid);
+  if (!quizData?.answers) {
+    // No quiz data — just update plan info
+    await updateUserPackPlan(uid, planId, planPrice);
+    return;
+  }
+
+  // 2. Query Pinecone for the correct number of products
+  const { queryProducts } = await import('../services/pineconeService');
+  const { generatePackDescription } = await import('../services/genaiService');
+  // Ask Pinecone for more than needed (to compensate score filtering), then truncate to exact count
+  const topK = numberOfProducts > 0 ? Math.max(numberOfProducts * 2, 10) : 10;
+  const packItems: PackItem[] = await queryProducts(quizData.answers, topK, numberOfProducts > 0 ? numberOfProducts : undefined);
+
+  // 3. Generate new AI description
+  const genaiDescription = await generatePackDescription(quizData.answers, packItems);
+
+  // 4. Atomic write — pack items + plan + description
+  const totalPrice = packItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const packRef = doc(db, 'userPacks', uid);
+  await setDoc(packRef, {
+    uid,
+    items: packItems,
+    totalPrice,
+    planId,
+    planPrice,
+    genaiDescription: genaiDescription ?? null,
+    status: 'draft',
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 }
 
 /**
@@ -510,12 +592,29 @@ export async function savePurchase(
     createdAt: serverTimestamp(),
   });
 
-  // If this purchase includes a bundle, save subscription data from userPacks
+  // If this purchase includes a bundle with a bundleId (uid),
+  // save subscription, mark pack as complete, then delete from userPacks.
   if (bundleId) {
     await saveUserSubscription(uid, bundleId, bundleMode ?? 'oneTime');
+    await confirmAndDeleteUserPack(bundleId);
   }
 
   return docRef.id;
+}
+
+/**
+ * Marks the user pack as 'complete' and deletes it from `userPacks`.
+ * Called after a successful purchase/subscription checkout.
+ */
+async function confirmAndDeleteUserPack(uid: string): Promise<void> {
+  const packRef = doc(db, 'userPacks', uid);
+  // Mark as complete first (in case deletion fails, state is still correct)
+  await setDoc(packRef, {
+    status: 'complete',
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+  // Then remove the draft pack
+  await deleteDoc(packRef);
 }
 
 /* ── User Subscription ───────────────────────────────────── */

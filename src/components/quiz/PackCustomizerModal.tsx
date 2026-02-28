@@ -9,6 +9,7 @@ import {
   getProductsCatalog,
   getUserPack,
   saveUserPack,
+  getSubscriptionPlans,
   type ProductCatalogFirestore,
   type PackItem,
 } from '../../providers/firebaseProvider';
@@ -26,6 +27,10 @@ interface PackCustomizerModalProps {
   open: boolean;
   onClose: () => void;
   uid: string;
+  /** If provided, overrides the fetched numberOfProducts from suscriptionPlans */
+  maxProducts?: number;
+  /** Fixed plan price — when set, displayed instead of the computed product total */
+  planPrice?: number;
 }
 
 function catalogToLocal(doc: ProductCatalogFirestore): LocalProfile {
@@ -40,21 +45,22 @@ function catalogToLocal(doc: ProductCatalogFirestore): LocalProfile {
   };
 }
 
-export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, onClose, uid }) => {
+export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, onClose, uid, maxProducts, planPrice }) => {
   const [profiles, setProfiles] = useState<LocalProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [pack, setPack] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [numberOfProducts, setNumberOfProducts] = useState<number>(0);
 
-  /* Fetch all products + existing pack on open */
+  /* Fetch all products + existing pack + plan limit on open */
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoadingProfiles(true);
     setSaved(false);
-    Promise.all([getProductsCatalog(), getUserPack(uid)])
-      .then(([docs, existingPack]) => {
+    Promise.all([getProductsCatalog(), getUserPack(uid), getSubscriptionPlans()])
+      .then(([docs, existingPack, plans]) => {
         if (cancelled) return;
         setProfiles(docs.map(catalogToLocal));
         if (existingPack && existingPack.items.length > 0) {
@@ -64,15 +70,27 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
         } else {
           setPack({});
         }
+        /* Resolve numberOfProducts: prop > highlighted plan > first plan */
+        if (maxProducts && maxProducts > 0) {
+          setNumberOfProducts(maxProducts);
+        } else {
+          const highlighted = plans.find((p) => p.highlighted);
+          const planLimit = highlighted?.numberOfProducts ?? plans[0]?.numberOfProducts ?? 0;
+          setNumberOfProducts(planLimit);
+        }
       })
       .finally(() => { if (!cancelled) setLoadingProfiles(false); });
     return () => { cancelled = true; };
-  }, [open, uid]);
+  }, [open, uid, maxProducts]);
 
   const addItem = useCallback((id: string) => {
-    setPack((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
+    setPack((prev) => {
+      const currentTotal = Object.values(prev).reduce((a, b) => a + b, 0);
+      if (numberOfProducts > 0 && currentTotal >= numberOfProducts) return prev;
+      return { ...prev, [id]: (prev[id] ?? 0) + 1 };
+    });
     setSaved(false);
-  }, []);
+  }, [numberOfProducts]);
 
   const removeItem = useCallback((id: string) => {
     setPack((prev) => {
@@ -89,6 +107,8 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
 
   const totalPrice = profiles.reduce((sum, p) => sum + p.price * (pack[p.id] ?? 0), 0);
   const itemCount = Object.values(pack).reduce((a, b) => a + b, 0);
+  const isPackComplete = numberOfProducts > 0 ? itemCount === numberOfProducts : itemCount > 0;
+  const isPackFull = numberOfProducts > 0 && itemCount >= numberOfProducts;
 
   const handleSave = async () => {
     setSaving(true);
@@ -101,10 +121,15 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
         price:     p.price,
         quantity:  pack[p.id],
       }));
-    await saveUserPack(uid, items, totalPrice);
+    const priceToSave = planPrice ?? totalPrice;
+    await saveUserPack(uid, items, priceToSave);
     setSaving(false);
     onClose();
   };
+
+  const displayPrice = planPrice != null
+    ? planPrice.toFixed(2).replace('.', ',') + '€'
+    : totalPrice.toFixed(2) + '€';
 
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
@@ -139,6 +164,16 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
                     <div>
                       <h2 className="pack-modal__title">{t('pack.title')}</h2>
                       <p className="pack-modal__subtitle">{t('pack.subtitle')}</p>
+                      {numberOfProducts > 0 && (
+                        <div className={`pack-modal__counter ${isPackComplete ? 'pack-modal__counter--complete' : ''}`}>
+                          <span className="pack-modal__counter-text">
+                            {itemCount} / {numberOfProducts} {t('pack.itemCounter')}
+                          </span>
+                          {isPackComplete && (
+                            <span className="pack-modal__counter-check">✓</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <Dialog.Close asChild>
                       <button className="p-2 hover:bg-foam rounded-full transition-colors">
@@ -190,6 +225,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
                               className="pack-item__btn pack-item__btn--plus"
                               onClick={() => addItem(p.id)}
                               aria-label={t('pack.add')}
+                              disabled={isPackFull && qty === 0}
                             >
                               <Plus size={14} />
                             </button>
@@ -202,12 +238,26 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
                   {/* Footer: total + save */}
                   <div className="pack-modal__footer">
                     <div className="pack-modal__total">
-                      <span className="pack-modal__total-label">{t('pack.total')}</span>
-                      <span className="pack-modal__total-value">{totalPrice.toFixed(2)}€</span>
+                      <span className="pack-modal__total-label">
+                        {planPrice != null ? t('personalPack.planPrice') : t('pack.total')}
+                      </span>
+                      <span className="pack-modal__total-value">{displayPrice}</span>
                     </div>
 
                     {saved && (
                       <p className="pack-modal__saved">{t('pack.saved')}</p>
+                    )}
+
+                    {numberOfProducts > 0 && !isPackComplete && (
+                      <p className="pack-modal__hint">
+                        {t('pack.packIncomplete').replace('{n}', String(numberOfProducts))}
+                      </p>
+                    )}
+
+                    {isPackFull && (
+                      <p className="pack-modal__hint pack-modal__hint--success">
+                        {t('pack.packComplete')}
+                      </p>
                     )}
 
                     <Button
@@ -215,7 +265,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
                       size="md"
                       fullWidth
                       loading={saving}
-                      disabled={saving}
+                      disabled={saving || !isPackComplete}
                       onClick={handleSave}
                     >
                       {saving ? t('pack.saving') : t('pack.savePack')}
