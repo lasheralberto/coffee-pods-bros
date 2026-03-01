@@ -396,10 +396,11 @@ export async function saveUserPack(
   planPrice?: number | null,
 ): Promise<void> {
   const packRef = doc(db, 'userPacks', uid);
+  const resolvedTotalPrice = planPrice != null ? planPrice : totalPrice;
   const data: Record<string, unknown> = {
     uid,
     items,
-    totalPrice,
+    totalPrice: resolvedTotalPrice,
     status: 'draft',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -430,11 +431,15 @@ export async function updateUserPackPlan(
   planPrice: number,
 ): Promise<void> {
   const packRef = doc(db, 'userPacks', uid);
-  await setDoc(packRef, {
+  const payload: Record<string, unknown> = {
     planId,
     planPrice,
     updatedAt: serverTimestamp(),
-  }, { merge: true });
+  };
+  if (planPrice > 0) {
+    payload.totalPrice = planPrice;
+  }
+  await setDoc(packRef, payload, { merge: true });
 }
 
 /**
@@ -470,12 +475,11 @@ export async function selectPlanAndRegeneratePack(
   const genaiDescription = await generatePackDescription(quizData.answers, packItems);
 
   // 4. Atomic write — pack items + plan + description
-  const totalPrice = packItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const packRef = doc(db, 'userPacks', uid);
   await setDoc(packRef, {
     uid,
     items: packItems,
-    totalPrice,
+    totalPrice: planPrice,
     planId,
     planPrice,
     genaiDescription: genaiDescription ?? null,
@@ -668,7 +672,7 @@ export async function saveUserSubscription(
     bundleId,
     mode,
     items: pack.items,
-    totalPrice: pack.totalPrice,
+    totalPrice: pack.planPrice ?? pack.totalPrice,
     genaiDescription: pack.genaiDescription ?? null,
     subscribedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

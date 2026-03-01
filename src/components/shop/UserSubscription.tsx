@@ -1,19 +1,26 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
 import { RefreshCw, ShoppingCart, Eye } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { onUserSubscription, onProductsCatalog, type UserSubscriptionDoc, type PackItem, type ProductCatalogFirestore } from '../../providers/firebaseProvider';
+import {
+  onUserSubscription,
+  onProductsCatalog,
+  onUserPack,
+  type UserSubscriptionDoc,
+  type PackItem,
+  type ProductCatalogFirestore,
+  type UserPack,
+} from '../../providers/firebaseProvider';
 import { fmtPrice } from '../../data/shopProducts';
 import type { ShopProduct } from '../../data/shopProducts';
 import { t, getLocale } from '../../data/texts';
 import { ProductDetail } from './ProductDetail';
 import { formatRichText } from '../ui/TypewriterText';
 import { ExpandableText } from '../ui/ExpandableText';
-
-//Componente que muestra la suscripción actual del usuario, si tiene una. Se muestra en el perfil y en el checkout (si el usuario tiene una suscripción activa, no se le permite comprar packs one-time).
+import { useCartStore } from '../../stores/cartStore';
+import { SubscriptionChangeConfirmModal } from './SubscriptionChangeConfirmModal';
 
 interface UserSubscriptionProps {
   uid: string;
@@ -34,8 +41,11 @@ const formatDate = (ts: unknown): string => {
 
 export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPack }) => {
   const [sub, setSub] = useState<UserSubscriptionDoc | null>(null);
+  const [draftPack, setDraftPack] = useState<UserPack | null>(null);
   const [loading, setLoading] = useState(true);
   const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
+  const [showChangeConfirm, setShowChangeConfirm] = useState(false);
+  const [pendingSubscribe, setPendingSubscribe] = useState<(() => void) | null>(null);
 
   const locale = getLocale();
 
@@ -52,14 +62,47 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
     return unsub;
   }, [uid]);
 
-  /* Listen to product catalog for full product details */
+  useEffect(() => {
+    if (!uid) {
+      setDraftPack(null);
+      return;
+    }
+    const unsub = onUserPack(uid, (data) => {
+      setDraftPack(data);
+    });
+    return unsub;
+  }, [uid]);
+
   useEffect(() => {
     const unsub = onProductsCatalog((data) => setCatalog(data));
     return unsub;
   }, []);
 
-  /** Build a lookup map: doc.id → ProductCatalogFirestore */
-  const catalogMap = new Map(catalog.map((p) => [p.id, p]));
+  const catalogMap = new Map(catalog.map((product) => [product.id, product]));
+  const addBundle = useCartStore((state) => state.actions.addBundle);
+  const hasDraftPack = !!draftPack && draftPack.items.length > 0;
+
+  const handleSubscribeDraftPack = useCallback(() => {
+    if (!draftPack || draftPack.items.length === 0) return;
+
+    const totalPrice = draftPack.planPrice ?? draftPack.totalPrice;
+    const doSubscribe = () => {
+      addBundle(draftPack.items, totalPrice, 'subscription', uid, draftPack.planId, draftPack.planId);
+    };
+
+    if (sub) {
+      setPendingSubscribe(() => doSubscribe);
+      setShowChangeConfirm(true);
+      return;
+    }
+
+    doSubscribe();
+  }, [addBundle, draftPack, sub, uid]);
+
+  const closeChangeConfirm = useCallback(() => {
+    setShowChangeConfirm(false);
+    setPendingSubscribe(null);
+  }, []);
 
   if (loading) {
     return (
@@ -74,92 +117,125 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
 
   if (!sub) {
     return (
-      <Card variant="outline" padding="lg" className="user-subscription user-subscription--empty">
+      <>
+        <Card variant="outline" padding="lg" className="user-subscription user-subscription--empty">
+          <div className="user-subscription__header">
+            <div className="user-subscription__heading flex items-center gap-2">
+              <ShoppingCart size={18} className="text-accent" />
+              <h3 className="text-lg font-semibold text-primary mb-1">
+                {t('userSubscription.heading')}
+              </h3>
+            </div>
+            <div className="user-subscription__actions user-subscription__actions--single">
+              <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
+                {t('userSubscription.newPack')}
+              </Button>
+            </div>
+          </div>
+
+          <div className="text-center sm:text-left">
+            <p className="text-sm text-muted">
+              {t('userSubscription.noSubscription')}
+            </p>
+
+            {hasDraftPack && (
+              <div className="mt-4 space-y-3">
+                <div className="user-subscription__total justify-start">
+                  <span className="text-sm text-muted">{t('userSubscription.total')}</span>
+                  <span className="text-lg font-bold text-primary">{fmtPrice(draftPack.planPrice ?? draftPack.totalPrice)}</span>
+                </div>
+                <Button variant="primary" size="sm" onClick={handleSubscribeDraftPack}>
+                  <RefreshCw size={14} />
+                  {t('userSubscription.subscribeCta')}
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <SubscriptionChangeConfirmModal
+          open={showChangeConfirm}
+          onClose={closeChangeConfirm}
+          onConfirm={() => pendingSubscribe?.()}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Card variant="elevated" padding="none" className="user-subscription">
         <div className="user-subscription__header">
           <div className="user-subscription__heading flex items-center gap-2">
-            <ShoppingCart size={18} className="text-accent" />
-            <h3 className="text-lg font-semibold text-primary mb-1">
+            {sub.mode === 'subscription' ? (
+              <RefreshCw size={18} className="text-accent" />
+            ) : (
+              <ShoppingCart size={18} className="text-accent" />
+            )}
+            <h3 className="text-lg font-semibold text-primary">
               {t('userSubscription.heading')}
             </h3>
           </div>
-          <div className="user-subscription__actions user-subscription__actions--single">
+          <div className="user-subscription__actions flex items-center gap-2">
+            <Badge variant={sub.mode === 'subscription' ? 'leaf' : 'caramel'}>
+              {sub.mode === 'subscription'
+                ? t('userSubscription.modeSubscription')
+                : t('userSubscription.modeOneTime')}
+            </Badge>
             <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
               {t('userSubscription.newPack')}
             </Button>
           </div>
         </div>
 
-        <div className="text-center sm:text-left">
-          <p className="text-sm text-muted">
-            {t('userSubscription.noSubscription')}
-          </p>
-        </div>
-      </Card>
-    );
-  }
+        {sub.genaiDescription && (
+          <div className="user-subscription__description">
+            <ExpandableText maxLines={4}>
+              <p className="text-sm leading-relaxed text-secondary">
+                {formatRichText(sub.genaiDescription)}
+              </p>
+            </ExpandableText>
+          </div>
+        )}
 
-  return (
-    <Card variant="elevated" padding="none" className="user-subscription">
-      {/* Header */}
-      <div className="user-subscription__header">
-        <div className="user-subscription__heading flex items-center gap-2">
-          {sub.mode === 'subscription' ? (
-            <RefreshCw size={18} className="text-accent" />
-          ) : (
-            <ShoppingCart size={18} className="text-accent" />
-          )}
-          <h3 className="text-lg font-semibold text-primary">
-            {t('userSubscription.heading')}
-          </h3>
-        </div>
-        <div className="user-subscription__actions flex items-center gap-2">
-          <Badge variant={sub.mode === 'subscription' ? 'leaf' : 'caramel'}>
-            {sub.mode === 'subscription'
-              ? t('userSubscription.modeSubscription')
-              : t('userSubscription.modeOneTime')}
-          </Badge>
-          <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
-            {t('userSubscription.newPack')}
-          </Button>
-        </div>
-      </div>
-
-      {/* GenAI Description */}
-      {sub.genaiDescription && (
-        <div className="user-subscription__description">
-          <ExpandableText maxLines={4}>
-            <p className="text-sm leading-relaxed text-secondary">
-              {formatRichText(sub.genaiDescription)}
-            </p>
-          </ExpandableText>
-        </div>
-      )}
-
-      {/* Items */}
-      <div className="user-subscription__items-label">
-        <span className="text-xs font-medium text-muted uppercase tracking-wide">
-          {t('userSubscription.items')}
-        </span>
-      </div>
-      <div className="user-subscription__items">
-        {sub.items.map((item) => (
-          <SubItemWithDetail key={item.productId} item={item} catalogProduct={catalogMap.get(item.productId) ?? null} locale={locale} />
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="user-subscription__footer">
-        <div className="user-subscription__meta">
-          <span className="text-xs text-muted">
-            {t('userSubscription.subscribedAt')} {formatDate(sub.subscribedAt)}
+        <div className="user-subscription__items-label">
+          <span className="text-xs font-medium text-muted uppercase tracking-wide">
+            {t('userSubscription.items')}
           </span>
         </div>
-        <div className="user-subscription__total">
-          <span className="text-sm text-muted">{t('userSubscription.total')}</span>
-          <span className="text-lg font-bold text-primary">{fmtPrice(sub.totalPrice)}</span>
+        <div className="user-subscription__items">
+          {sub.items.map((item) => (
+            <SubItemWithDetail key={item.productId} item={item} catalogProduct={catalogMap.get(item.productId) ?? null} locale={locale} />
+          ))}
         </div>
-      </div>
-    </Card>
+
+        <div className="user-subscription__footer">
+          <div className="user-subscription__meta">
+            <span className="text-xs text-muted">
+              {t('userSubscription.subscribedAt')} {formatDate(sub.subscribedAt)}
+            </span>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="user-subscription__total">
+              <span className="text-sm text-muted">{t('userSubscription.total')}</span>
+              <span className="text-lg font-bold text-primary">{fmtPrice(sub.totalPrice)}</span>
+            </div>
+            {hasDraftPack && (
+              <Button variant="primary" size="sm" onClick={handleSubscribeDraftPack}>
+                <RefreshCw size={14} />
+                {t('userSubscription.subscribeCta')}
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      <SubscriptionChangeConfirmModal
+        open={showChangeConfirm}
+        onClose={closeChangeConfirm}
+        onConfirm={() => pendingSubscribe?.()}
+      />
+    </>
   );
 };
 
