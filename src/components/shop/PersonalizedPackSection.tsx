@@ -288,6 +288,8 @@ export const PersonalizedPackSection: React.FC = () => {
                   selectedPlan ? getPlanPrice(selectedPlan) : pack.totalPrice,
                   'subscription',
                   authUser.uid,
+                  selectedPlan?.id,
+                  selectedPlan?.id,
                 )}
               >
                 <RefreshCw size={14} />

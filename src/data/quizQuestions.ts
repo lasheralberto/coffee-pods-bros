@@ -68,25 +68,25 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
       { id: 'sweet', emoji: '🍯', label: t('quizQuestions.q4.sweet') },
     ],
   },
-  {
-    id: 5,
-    question: t('quizQuestions.q5.question'),
-    type: 'single',
-    options: [
-      { id: 'biweekly', emoji: '🗓️', label: t('quizQuestions.q5.biweekly'), sublabel: t('quizQuestions.q5.biweeklySub') },
-      { id: 'monthly', emoji: '📅', label: t('quizQuestions.q5.monthly'), sublabel: t('quizQuestions.q5.monthlySub') },
-      { id: 'six_weeks', emoji: '📆', label: t('quizQuestions.q5.sixWeeks'), sublabel: t('quizQuestions.q5.sixWeeksSub') },
-      { id: 'once', emoji: '📦', label: t('quizQuestions.q5.once'), sublabel: t('quizQuestions.q5.onceSub') },
-    ],
-  },
-  {
-    id: 6,
-    question: t('quizQuestions.q6.question'),
-    type: 'single',
-    options: [
-      { id: 'comfort', emoji: '🏠', label: t('quizQuestions.q6.comfort'), sublabel: t('quizQuestions.q6.comfortSub') },
-      { id: 'explorer', emoji: '🧭', label: t('quizQuestions.q6.explorer'), sublabel: t('quizQuestions.q6.explorerSub') },
-      { id: 'hybrid', emoji: '⚖️', label: t('quizQuestions.q6.hybrid'), sublabel: t('quizQuestions.q6.hybridSub') },
-    ],
-  },
+  // {
+  //   id: 5,
+  //   question: t('quizQuestions.q5.question'),
+  //   type: 'single',
+  //   options: [
+  //     { id: 'biweekly', emoji: '🗓️', label: t('quizQuestions.q5.biweekly'), sublabel: t('quizQuestions.q5.biweeklySub') },
+  //     { id: 'monthly', emoji: '📅', label: t('quizQuestions.q5.monthly'), sublabel: t('quizQuestions.q5.monthlySub') },
+  //     { id: 'six_weeks', emoji: '📆', label: t('quizQuestions.q5.sixWeeks'), sublabel: t('quizQuestions.q5.sixWeeksSub') },
+  //     { id: 'once', emoji: '📦', label: t('quizQuestions.q5.once'), sublabel: t('quizQuestions.q5.onceSub') },
+  //   ],
+  // },
+  // {
+  //   id: 5,
+  //   question: t('quizQuestions.q6.question'),
+  //   type: 'single',
+  //   options: [
+  //     { id: 'comfort', emoji: '🏠', label: t('quizQuestions.q6.comfort'), sublabel: t('quizQuestions.q6.comfortSub') },
+  //     { id: 'explorer', emoji: '🧭', label: t('quizQuestions.q6.explorer'), sublabel: t('quizQuestions.q6.explorerSub') },
+  //     { id: 'hybrid', emoji: '⚖️', label: t('quizQuestions.q6.hybrid'), sublabel: t('quizQuestions.q6.hybridSub') },
+  //   ],
+  // },
 ];

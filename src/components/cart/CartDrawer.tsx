@@ -9,6 +9,7 @@ import { useAuthStore, selectAuthUser, selectIsAuthenticated } from '../../store
 import { savePurchase, type PurchaseItem } from '../../providers/firebaseProvider';
 import { fmtPrice } from '../../data/shopProducts';
 import { t } from '../../data/texts';
+import { useNavigate } from 'react-router-dom';
 
 const prefersReduced =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -42,6 +43,7 @@ export const CartDrawer: React.FC = () => {
   const authUser = useAuthStore(selectAuthUser);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const authActions = useAuthStore((s) => s.actions);
+  const navigate = useNavigate();
 
   const [checkoutState, setCheckoutState] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
 
@@ -70,19 +72,27 @@ export const CartDrawer: React.FC = () => {
         bundle?.mode,
         bundle?.totalPrice,
         bundle?.bundleId,
+        bundle?.suscriptionName,
+        bundle?.suscriptionId,
       );
 
       setCheckoutState('success');
+      const hadBundle = !!bundle;
       setTimeout(() => {
         actions.clearCart();
         actions.closeCart();
         setCheckoutState('idle');
+        // Navigate to profile after bundle/subscription checkout
+        // so user sees their updated subscription immediately
+        if (hadBundle) {
+          navigate('/profile');
+        }
       }, 1800);
     } catch {
       setCheckoutState('error');
       setTimeout(() => setCheckoutState('idle'), 2500);
     }
-  }, [isAuthenticated, authUser, authActions, items, bundle, total, actions]);
+  }, [isAuthenticated, authUser, authActions, items, bundle, total, actions, navigate]);
 
   return (
     <AnimatePresence>

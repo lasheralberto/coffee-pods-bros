@@ -57,7 +57,7 @@ export interface UserDoc {
   createdAt:          ReturnType<typeof serverTimestamp>;
   lastLoginTimestamp:  ReturnType<typeof serverTimestamp>;
   role:               'customer';
-  subscriptionStatus: 'none';
+  subscriptionStatus: 'none' | 'active';
   quizCompleted:      boolean;
   packId:             string | null;
 }
@@ -349,6 +349,16 @@ export async function getSubscriptionPlans(): Promise<SubscriptionPlanFirestore[
   return plans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
+/**
+ * Fetches a single subscription plan by its document ID from `suscriptionPlans`.
+ */
+export async function getSubscriptionPlanById(planId: string): Promise<SubscriptionPlanFirestore | null> {
+  const ref = doc(db, 'suscriptionPlans', planId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as SubscriptionPlanFirestore;
+}
+
 /* ── User Packs ──────────────────────────────────────────── */
 
 export interface PackItem {
@@ -561,6 +571,8 @@ export interface PurchaseDoc {
   bundleMode?: 'subscription' | 'oneTime';
   bundleTotal?: number;
   bundleId?: string;
+  suscriptionName?: string;
+  suscriptionId?: string;
   totalPrice: number;
   status: 'completed' | 'pending' | 'cancelled';
   createdAt: unknown;
@@ -578,6 +590,8 @@ export async function savePurchase(
   bundleMode?: 'subscription' | 'oneTime',
   bundleTotal?: number,
   bundleId?: string,
+  suscriptionName?: string,
+  suscriptionId?: string,
 ): Promise<string> {
   const colRef = collection(db, 'userPurchasesPacks');
   const docRef = await addDoc(colRef, {
@@ -587,6 +601,8 @@ export async function savePurchase(
     bundleMode: bundleMode ?? null,
     bundleTotal: bundleTotal ?? null,
     bundleId: bundleId ?? null,
+    suscriptionName: suscriptionName ?? null,
+    suscriptionId: suscriptionId ?? null,
     totalPrice,
     status: 'completed',
     createdAt: serverTimestamp(),
@@ -597,6 +613,9 @@ export async function savePurchase(
   if (bundleId) {
     await saveUserSubscription(uid, bundleId, bundleMode ?? 'oneTime');
     await confirmAndDeleteUserPack(bundleId);
+    // Update user doc subscription status so real-time listener fires
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, { subscriptionStatus: 'active' });
   }
 
   return docRef.id;

@@ -6,7 +6,7 @@ import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack } from '../../providers/firebaseProvider';
 import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from './PackCustomizerModal';
-import { ChevronDown, RefreshCw, Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ChevronDown, RefreshCw, ArrowRight, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../stores/cartStore';
 import { TypewriterText } from '../ui/TypewriterText';
@@ -15,8 +15,6 @@ interface QuizUserCardProps {
   quizData: QuizDoc | null;
   onTakeQuiz: () => void;
   uid: string;
-  /** When true, hide purchase/subscribe buttons (pack already subscribed) */
-  hasSubscription?: boolean;
 }
 
 /**
@@ -39,7 +37,7 @@ function formatDate(ts: unknown): string {
   return '';
 }
 
-export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz, uid, hasSubscription = false }) => {
+export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz, uid }) => {
   const [pack, setPack] = useState<UserPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [packModalOpen, setPackModalOpen] = useState(false);
@@ -278,13 +276,13 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
               </div>
             )}
 
-            {/* Actions */}
+            {/* Actions — visible whenever pack exists */}
             <div className="quiz-user-card__purchase-row">
               {hasProducts && (
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => useCartStore.getState().actions.addBundle(pack!.items, planPrice, 'subscription', uid)}
+                  onClick={() => useCartStore.getState().actions.addBundle(pack!.items, planPrice, 'subscription', uid, selectedPlan?.id, selectedPlan?.id)}
                 >
                   <RefreshCw size={14} />
                   {t('personalPack.subscribeBtn')}

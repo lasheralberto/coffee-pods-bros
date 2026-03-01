@@ -310,6 +310,9 @@ export const TEXTS = {
     price: { es: 'Precio', en: 'Price' },
     sort: { es: 'Ordenar', en: 'Sort' },
     featured: { es: 'Destacados', en: 'Featured' },
+    sortPriceLow: { es: 'Precio: menor a mayor', en: 'Price: Low to High' },
+    sortPriceHigh: { es: 'Precio: mayor a menor', en: 'Price: High to Low' },
+    sortNewest: { es: 'Más recientes', en: 'Newest' },
     noProducts: {
       es: 'No hay productos que coincidan con los filtros seleccionados.',
       en: 'No products match the selected filters.',
@@ -327,10 +330,10 @@ export const TEXTS = {
     filterSmoky: { es: 'Ahumado', en: 'Smoky' },
     filterCitrus: { es: 'Cítrico', en: 'Citrus' },
     priceAny: { es: 'Todos', en: 'Any' },
-    price1699: { es: '$16.99', en: '$16.99' },
-    price2199: { es: '$21.99', en: '$21.99' },
-    price2230: { es: '$22 – $30', en: '$22 – $30' },
-    priceOver30: { es: 'Más de $30', en: 'Over $30' },
+    price1699: { es: '€16.99', en: '€16.99' },
+    price2199: { es: '€21.99', en: '€21.99' },
+    price2230: { es: '€22 – €30', en: '€22 – €30' },
+    priceOver30: { es: 'Más de €30', en: 'Over €30' },
   },
 
   /* ── Subscriptions Page ── */
@@ -576,6 +579,16 @@ export const TEXTS = {
     bundleLabel:     { es: 'Pack incluido', en: 'Pack included' },
     goToShop:        { es: 'Ir a la tienda', en: 'Go to shop' },
     loginToCheckout: { es: 'Inicia sesión para pagar', en: 'Sign in to checkout' },
+    viewDetails:     { es: 'Ver detalles', en: 'View details' },
+    subscriptionDetails: { es: 'Detalles de suscripción', en: 'Subscription details' },
+    planName:        { es: 'Plan', en: 'Plan' },
+    planPrice:       { es: 'Precio', en: 'Price' },
+    planFeatures:    { es: 'Características', en: 'Features' },
+    planInterval:    { es: 'Frecuencia', en: 'Frequency' },
+    planDescription: { es: 'Descripción', en: 'Description' },
+    planNotFound:    { es: 'Plan no encontrado', en: 'Plan not found' },
+    planProducts:    { es: 'Productos incluidos', en: 'Products included' },
+    close:           { es: 'Cerrar', en: 'Close' },
   },
 
   /* ── Pack Customizer Modal ── */
@@ -609,6 +622,8 @@ export const TEXTS = {
     buyOnce:           { es: 'Compra única', en: 'Buy once' },
     retakeQuiz:        { es: 'Repetir quiz', en: 'Retake quiz' },
     noPackYet:         { es: 'Completa el quiz para descubrir tu pack ideal', en: 'Complete the quiz to discover your ideal pack' },
+    alreadySubscribed: { es: 'Ya tienes una suscripción activa. Puedes ver los detalles abajo.', en: 'You already have an active subscription. See details below.' },
+    retakeQuizSubscribed: { es: 'Repetir quiz para una nueva selección', en: 'Retake quiz for a new selection' },
     takeQuizCta:       { es: 'Descubre tu pack', en: 'Discover your pack' },
     generating:        { es: 'Generando tu nuevo pack...', en: 'Generating your new pack...' },
     /* Plan selection step */
@@ -632,5 +647,11 @@ export const TEXTS = {
     total:             { es: 'Total', en: 'Total' },
     items:             { es: 'Productos incluidos', en: 'Items included' },
     manageBtn:         { es: 'Gestionar suscripción', en: 'Manage subscription' },
+  },
+
+  /* ── Subscription Status labels ── */
+  subscriptionStatus: {
+    none:   { es: 'Sin suscripción', en: 'No subscription' },
+    active: { es: 'Activa', en: 'Active' },
   },
 } as const;

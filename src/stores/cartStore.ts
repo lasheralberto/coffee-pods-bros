@@ -17,6 +17,8 @@ export interface CartBundle {
   totalPrice: number;
   mode: BundleMode;
   bundleId?: string;
+  suscriptionName?: string;
+  suscriptionId?: string;
 }
 
 interface CartStore {
@@ -31,7 +33,7 @@ interface CartStore {
     openCart: () => void;
     closeCart: () => void;
     toggleCart: () => void;
-    addBundle: (items: PackItem[], totalPrice: number, mode: BundleMode, bundleId?: string) => void;
+    addBundle: (items: PackItem[], totalPrice: number, mode: BundleMode, bundleId?: string, suscriptionName?: string, suscriptionId?: string) => void;
     removeBundle: () => void;
   };
 }
@@ -96,10 +98,10 @@ export const useCartStore = create<CartStore>()(
         closeCart: () => set({ isOpen: false }),
         toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 
-        addBundle: (items, totalPrice, mode, bundleId) =>
+        addBundle: (items, totalPrice, mode, bundleId, suscriptionName, suscriptionId) =>
           set({
             items: [],
-            bundle: { items, totalPrice, mode, bundleId },
+            bundle: { items, totalPrice, mode, bundleId, suscriptionName, suscriptionId },
             isOpen: true,
           }),
 

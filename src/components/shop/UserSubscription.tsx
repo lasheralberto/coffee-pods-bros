@@ -66,10 +66,10 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
               {t('userSubscription.noSubscription')}
             </p>
           </div>
-          <Button variant="primary" size="md" onClick={() => navigate('/shop')}>
+          {/* <Button variant="primary" size="md" onClick={() => navigate('/shop')}>
             <Package size={16} />
             {t('userSubscription.subscribeCta')}
-          </Button>
+          </Button> */}
         </div>
       </Card>
     );

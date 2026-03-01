@@ -144,29 +144,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </motion.div>
 
-              {/* User details card */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.08 }}
-              >
-                <Card variant="outline" padding="lg" className="profile-details-card">
-                  <div className="profile-details-grid">
-                    <div className="profile-detail">
-                      <span className="profile-detail__label">{t('profile.email')}</span>
-                      <span className="profile-detail__value">{displayEmail}</span>
-                    </div>
-                    
-                    <div className="profile-detail">
-                      <span className="profile-detail__label">{t('profile.subscription')}</span>
-                      <span className="profile-detail__value" style={{ textTransform: 'capitalize' }}>
-                        {userDoc?.subscriptionStatus ?? '—'}
-                      </span>
-                    </div>
-                     
-                  </div>
-                </Card>
-              </motion.div>
+ 
 
               {/* Quiz Card — shows draft pack until user subscribes */}
               <motion.div
@@ -178,7 +156,6 @@ export const ProfilePage: React.FC = () => {
                   quizData={quizData}
                   onTakeQuiz={quizActions.openQuiz}
                   uid={authUser!.uid}
-                  hasSubscription={!!subscription}
                 />
               </motion.div>
 

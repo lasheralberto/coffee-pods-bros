@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Receipt, ChevronDown, ShoppingBag } from 'lucide-react';
+import { Receipt, ChevronDown, ShoppingBag, Package, Info } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import type { PurchaseDoc } from '../../providers/firebaseProvider';
 import { fmtPrice } from '../../data/shopProducts';
 import { t } from '../../data/texts';
 import { useNavigate } from 'react-router-dom';
+import { SubscriptionDetailsModal } from './SubscriptionDetailsModal';
 
 /* ── Helpers ── */
 
@@ -35,9 +36,17 @@ const statusLabel = (status: string): string => {
     case 'completed': return t('purchase.statusCompleted');
     case 'pending':   return t('purchase.statusPending');
     case 'cancelled': return t('purchase.statusCancelled');
-    default:          return status;
+    default:   
+    
+    return status;
   }
 };
+
+const suscriptionLabel = (suscriptionName: string): string => {
+  if (!suscriptionName) return '';
+  //Format the suscription name to be like a badge 
+  return suscriptionName.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 /* ── Component ── */
 
@@ -48,6 +57,7 @@ interface UserPurchasingHistoryProps {
 export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ purchases }) => {
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detailPlanName, setDetailPlanName] = useState<string | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -61,12 +71,15 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
           <Receipt size={16} />
         </div>
         <h3 className="purchase-history__title">{t('purchase.historyHeading')}</h3>
+        {purchases.length > 0 && (
+          <span className="purchase-history__count">{purchases.length}</span>
+        )}
       </div>
 
       {purchases.length === 0 ? (
         <div className="purchase-history__empty">
           <div className="purchase-history__empty-icon">
-            <ShoppingBag size={24} />
+            <ShoppingBag size={28} />
           </div>
           <p className="purchase-history__empty-text">{t('purchase.noHistory')}</p>
           <Button variant="secondary" size="sm" onClick={() => navigate('/shop')}>
@@ -75,41 +88,64 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
         </div>
       ) : (
         <div className="purchase-history__list">
-          {purchases.map((purchase) => {
+          {purchases.map((purchase, index) => {
             const id = purchase.id ?? '';
             const isExpanded = expandedId === id;
             const itemCount = purchase.items.reduce((sum, i) => sum + i.quantity, 0);
 
             return (
-              <div key={id} className="purchase-order">
+              <motion.div
+                key={id}
+                className="purchase-order"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: index * 0.04 }}
+              >
                 {/* Summary row */}
-                <button
-                  type="button"
-                  className="purchase-order__summary"
-                  onClick={() => toggleExpand(id)}
-                  aria-expanded={isExpanded}
-                >
-                  <div className="purchase-order__meta">
-                    <span className="purchase-order__date">
-                      {formatDate(purchase.createdAt)}
-                    </span>
-                    <Badge variant={statusBadgeVariant(purchase.status)}>
-                      {statusLabel(purchase.status)}
-                    </Badge>
-                    <span className="purchase-order__count">
-                      {itemCount} {t('purchase.items')}
-                    </span>
-                  </div>
-
-                  <div className="purchase-order__end">
-                    <span className="purchase-order__price">
-                      {fmtPrice(purchase.totalPrice)}
-                    </span>
-                    <div className={`purchase-order__chevron ${isExpanded ? 'purchase-order__chevron--open' : ''}`}>
-                      <ChevronDown size={14} />
+                <div className="purchase-order__header-row">
+                  <button
+                    type="button"
+                    className="purchase-order__summary"
+                    onClick={() => toggleExpand(id)}
+                    aria-expanded={isExpanded}
+                  >
+                    <div className="purchase-order__meta">
+                      <span className="purchase-order__date">
+                        {formatDate(purchase.createdAt)}
+                      </span>
+                      <Badge variant={statusBadgeVariant(purchase.status)}>
+                        {statusLabel(purchase.status)}
+                      </Badge>
+                      <span className="purchase-order__date">
+                        {suscriptionLabel(purchase.suscriptionName)}
+                      </span>
+                      
                     </div>
-                  </div>
-                </button>
+
+                    <div className="purchase-order__end">
+                      <span className="purchase-order__price">
+                        {fmtPrice(purchase.totalPrice)}
+                      </span>
+                      <div className={`purchase-order__chevron ${isExpanded ? 'purchase-order__chevron--open' : ''}`}>
+                        <ChevronDown size={14} />
+                      </div>
+                    </div>
+                  </button>
+
+                  {purchase.suscriptionName && (
+                    <button
+                      type="button"
+                      className="purchase-order__details-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailPlanName(purchase.suscriptionName!);
+                      }}
+                    >
+                      <Info size={14} />
+                      <span>{t('purchase.viewDetails')}</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Expanded details */}
                 <AnimatePresence>
@@ -129,11 +165,19 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
                             {purchase.items.map((item, idx) => (
                               <div key={idx} className="purchase-order__item">
                                 <div className="purchase-order__item-thumb">
-                                  <img src={item.image} alt={item.name} loading="lazy" />
+                                  {item.image ? (
+                                    <img src={item.image} alt={item.name} loading="lazy" />
+                                  ) : (
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      <Package size={20} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="purchase-order__item-info">
                                   <p className="purchase-order__item-name">{item.name}</p>
-                                  <p className="purchase-order__item-sub">{item.brand} · x{item.quantity}</p>
+                                  <p className="purchase-order__item-sub">
+                                    {item.brand ? `${item.brand} · ` : ''}x{item.quantity}
+                                  </p>
                                 </div>
                                 <span className="purchase-order__item-price">
                                   {fmtPrice(item.price * item.quantity)}
@@ -152,7 +196,13 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
                                 {purchase.bundleItems.map((bItem, idx) => (
                                   <div key={`b-${idx}`} className="purchase-order__item">
                                     <div className="purchase-order__item-thumb">
-                                      <img src={bItem.image} alt={bItem.name} loading="lazy" />
+                                      {bItem.image ? (
+                                        <img src={bItem.image} alt={bItem.name} loading="lazy" />
+                                      ) : (
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                          <Package size={20} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="purchase-order__item-info">
                                       <p className="purchase-order__item-name">{bItem.name}</p>
@@ -177,11 +227,18 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             );
           })}
         </div>
       )}
+
+      {/* Subscription details modal */}
+      <SubscriptionDetailsModal
+        open={!!detailPlanName}
+        onClose={() => setDetailPlanName(null)}
+        suscriptionName={detailPlanName ?? ''}
+      />
     </section>
   );
 };

@@ -14,75 +14,6 @@ export interface ShopProduct {
   tastesLike: string[];
 }
 
-export const SHOP_PRODUCTS: ShopProduct[] = [
-  {
-    id: 1,
-    brand: 'GREATER GOODS',
-    name: 'Lunar New Year Blend',
-    description: t('shopDescriptions.lunarNewYear'),
-    price: 16.99,
-    image: 'https://images.unsplash.com/photo-1559526324-593bc073d938?w=700&q=80',
-    isNew: true,
-    roast: 'medium',
-    tastesLike: ['chocolate', 'nutty'],
-  },
-  {
-    id: 2,
-    brand: 'PEIXOTO',
-    name: 'Familia Peixoto',
-    description: t('shopDescriptions.familiaPeixoto'),
-    price: 21.99,
-    image: 'https://images.unsplash.com/photo-1442550528053-c431ecb55509?w=700&q=80',
-    isNew: false,
-    roast: 'medium',
-    tastesLike: ['nutty', 'caramel'],
-  },
-  {
-    id: 3,
-    brand: 'DUNE',
-    name: 'Alexander Vargas Colombia',
-    description: t('shopDescriptions.alexanderVargas'),
-    price: 29.99,
-    image: 'https://images.unsplash.com/photo-1498804103079-a6351b050096?w=700&q=80',
-    isNew: true,
-    roast: 'light',
-    tastesLike: ['fruity', 'floral'],
-  },
-  {
-    id: 4,
-    brand: 'ONYX',
-    name: 'Monarch Blend',
-    description: t('shopDescriptions.monarchBlend'),
-    price: 18.50,
-    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=700&q=80',
-    isNew: false,
-    roast: 'dark',
-    tastesLike: ['chocolate', 'smoky'],
-  },
-  {
-    id: 5,
-    brand: 'HEART',
-    name: 'Stereo Blend',
-    description: t('shopDescriptions.stereoBlend'),
-    price: 22.00,
-    image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=700&q=80',
-    isNew: true,
-    roast: 'light',
-    tastesLike: ['fruity', 'citrus'],
-  },
-  {
-    id: 6,
-    brand: 'VERVE',
-    name: 'Sermon Blend',
-    description: t('shopDescriptions.sermonBlend'),
-    price: 34.00,
-    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=700&q=80',
-    isNew: false,
-    roast: 'dark',
-    tastesLike: ['smoky', 'caramel'],
-  },
-];
-
 /* ── Definición de filtros ── */
 
 export type PriceFilter = 'any' | '16.99' | '21.99' | '22-30' | '30+';
@@ -96,6 +27,15 @@ export interface ShopFilters {
 }
 
 export const INITIAL_FILTERS: ShopFilters = { price: 'any', roast: 'any', taste: 'any' };
+
+export type SortOption = 'featured' | 'price-low' | 'price-high' | 'newest';
+
+export const SORT_OPTIONS: { label: string; value: SortOption }[] = [
+  { label: t('shop.featured'),      value: 'featured' },
+  { label: t('shop.sortPriceLow'),  value: 'price-low' },
+  { label: t('shop.sortPriceHigh'), value: 'price-high' },
+  { label: t('shop.sortNewest'),    value: 'newest' },
+];
 
 export const PRICE_OPTIONS: { label: string; value: PriceFilter }[] = [
   { label: t('shop.priceAny'),   value: 'any' },
@@ -144,4 +84,15 @@ function matchesPrice(item: ShopProduct, filter: PriceFilter): boolean {
   }
 }
 
-export const fmtPrice = (n: number) => `$${n.toFixed(2)}`;
+export function sortProducts(items: ShopProduct[], sort: SortOption): ShopProduct[] {
+  const sorted = [...items];
+  switch (sort) {
+    case 'price-low':  return sorted.sort((a, b) => a.price - b.price);
+    case 'price-high': return sorted.sort((a, b) => b.price - a.price);
+    case 'newest':     return sorted.sort((a, b) => b.id - a.id);
+    case 'featured':
+    default:           return sorted;
+  }
+}
+
+export const fmtPrice = (n: number) => `${n.toFixed(2)} €`;

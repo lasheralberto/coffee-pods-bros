@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDownUp, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
 import { Section } from '../components/ui/Section';
@@ -11,10 +11,13 @@ import {
   PRICE_OPTIONS,
   ROAST_OPTIONS,
   TASTE_OPTIONS,
+  SORT_OPTIONS,
   INITIAL_FILTERS,
   filterProducts,
+  sortProducts,
   type ShopProduct,
   type ShopFilters,
+  type SortOption,
   type PriceFilter,
   type RoastFilter,
   type TasteFilter,
@@ -104,8 +107,21 @@ function toShopProduct(doc: ProductCatalogFirestore, locale: string): ShopProduc
 export const ShopPage: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filters, setFilters] = useState<ShopFilters>(INITIAL_FILTERS);
+  const [sortBy, setSortBy] = useState<SortOption>('featured');
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /* Close sort dropdown on outside click */
+  useEffect(() => {
+    if (!sortOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [sortOpen]);
 
   useEffect(() => {
     setLoading(true);
@@ -128,7 +144,9 @@ export const ShopPage: React.FC = () => {
 
   const clearFilters = useCallback(() => setFilters(INITIAL_FILTERS), []);
 
-  const filtered = useMemo(() => filterProducts(products, filters), [products, filters]);
+  const filtered = useMemo(() => sortProducts(filterProducts(products, filters), sortBy), [products, filters, sortBy]);
+
+  const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? t('shop.featured');
 
   const panelProps: FilterPanelProps = {
     filters,
@@ -171,13 +189,35 @@ export const ShopPage: React.FC = () => {
 
                 <div className="hidden lg:block" />
 
-                <div className="flex items-center gap-3">
+                <div ref={sortRef} className="flex items-center gap-3 relative">
                   <ArrowDownUp size={15} className="text-secondary" />
                   <span className="text-sm font-semibold text-primary">{t('shop.sort')}</span>
-                  <Button variant="secondary" size="sm" className="!min-w-[130px] !justify-between !gap-2">
-                    {t('shop.featured')}
-                    <ChevronDown size={14} className="text-muted" />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="!min-w-[130px] !justify-between !gap-2"
+                    onClick={() => setSortOpen((prev) => !prev)}
+                  >
+                    {currentSortLabel}
+                    <ChevronDown size={14} className={`text-muted transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
                   </Button>
+
+                  {sortOpen && (
+                    <div className="absolute top-full right-0 mt-1 z-30 min-w-[180px] rounded-xl border border-border-color bg-page shadow-lg py-1">
+                      {SORT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-surface ${
+                            sortBy === opt.value ? 'font-semibold text-roast' : 'text-primary'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
