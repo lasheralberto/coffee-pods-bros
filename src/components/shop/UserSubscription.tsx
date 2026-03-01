@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { RefreshCw, ShoppingCart, Package } from 'lucide-react';
+import { RefreshCw, ShoppingCart, Package, Eye } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { onUserSubscription, type UserSubscriptionDoc } from '../../providers/firebaseProvider';
+import { onUserSubscription, onProductsCatalog, type UserSubscriptionDoc, type PackItem, type ProductCatalogFirestore } from '../../providers/firebaseProvider';
 import { fmtPrice } from '../../data/shopProducts';
-import { t } from '../../data/texts';
+import type { ShopProduct } from '../../data/shopProducts';
+import { t, getLocale } from '../../data/texts';
 import { useNavigate } from 'react-router-dom';
+import { ProductDetail } from './ProductDetail';
 
 interface UserSubscriptionProps {
   uid: string;
@@ -29,6 +32,9 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
   const navigate = useNavigate();
   const [sub, setSub] = useState<UserSubscriptionDoc | null>(null);
   const [loading, setLoading] = useState(true);
+  const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
+
+  const locale = getLocale();
 
   useEffect(() => {
     if (!uid) {
@@ -42,6 +48,15 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
     });
     return unsub;
   }, [uid]);
+
+  /* Listen to product catalog for full product details */
+  useEffect(() => {
+    const unsub = onProductsCatalog((data) => setCatalog(data));
+    return unsub;
+  }, []);
+
+  /** Build a lookup map: doc.id → ProductCatalogFirestore */
+  const catalogMap = new Map(catalog.map((p) => [p.id, p]));
 
   if (loading) {
     return (
@@ -113,23 +128,7 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
       </div>
       <div className="user-subscription__items">
         {sub.items.map((item) => (
-          <div key={item.productId} className="user-subscription__item">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="user-subscription__item-img"
-              loading="lazy"
-            />
-            <div className="user-subscription__item-info">
-              <span className="user-subscription__item-name">{item.name}</span>
-              <span className="user-subscription__item-detail">
-                {fmtPrice(item.price)} × {item.quantity}
-              </span>
-            </div>
-            <span className="user-subscription__item-subtotal">
-              {fmtPrice(item.price * item.quantity)}
-            </span>
-          </div>
+          <SubItemWithDetail key={item.productId} item={item} catalogProduct={catalogMap.get(item.productId) ?? null} locale={locale} />
         ))}
       </div>
 
@@ -146,5 +145,81 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
         </div>
       </div>
     </Card>
+  );
+};
+
+/* ── Per-item wrapper with ProductDetail ── */
+
+function toShopProduct(item: PackItem, catalogProduct: ProductCatalogFirestore | null, locale: string): ShopProduct {
+  if (catalogProduct) {
+    return {
+      id:          catalogProduct.order ?? 0,
+      brand:       catalogProduct.brand,
+      name:        catalogProduct.name[locale] ?? catalogProduct.name['es'] ?? item.name,
+      description: catalogProduct.description[locale] ?? catalogProduct.description['es'] ?? '',
+      price:       catalogProduct.price,
+      image:       item.image || catalogProduct.image,
+      isNew:       catalogProduct.isNew,
+      roast:       catalogProduct.roast,
+      tastesLike:  catalogProduct.tastesLike,
+    };
+  }
+  return {
+    id:          Number(item.productId) || 0,
+    brand:       '',
+    name:        item.name,
+    description: '',
+    price:       item.price,
+    image:       item.image,
+    isNew:       false,
+    roast:       'medium',
+    tastesLike:  [],
+  };
+}
+
+interface SubItemProps {
+  item: PackItem;
+  catalogProduct: ProductCatalogFirestore | null;
+  locale: string;
+}
+
+const SubItemWithDetail: React.FC<SubItemProps> = ({ item, catalogProduct, locale }) => {
+  const [detailOpen, setDetailOpen] = useState(false);
+  const openDetail = useCallback(() => setDetailOpen(true), []);
+  const closeDetail = useCallback(() => setDetailOpen(false), []);
+  const product = toShopProduct(item, catalogProduct, locale);
+
+  return (
+    <>
+      <div className="user-subscription__item">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="user-subscription__item-img"
+          loading="lazy"
+        />
+        <div className="user-subscription__item-info">
+          <span className="user-subscription__item-name">{item.name}</span>
+          <span className="user-subscription__item-detail">
+            {fmtPrice(item.price)} × {item.quantity}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={openDetail}
+          className="personalized-pack-item__detail-btn"
+          aria-label={`${t('productDetail.view')} ${item.name}`}
+        >
+          <Eye size={16} />
+        </button>
+        <span className="user-subscription__item-subtotal">
+          {fmtPrice(item.price * item.quantity)}
+        </span>
+      </div>
+      {createPortal(
+        <ProductDetail product={detailOpen ? product : null} onClose={closeDetail} />,
+        document.body,
+      )}
+    </>
   );
 };
