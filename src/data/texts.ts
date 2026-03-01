@@ -639,9 +639,17 @@ export const TEXTS = {
   /* ── User Subscription (Profile) ── */
   userSubscription: {
     heading:           { es: 'Tu Suscripción', en: 'Your Subscription' },
+    draftPack:         { es: 'Pack draft', en: 'Draft pack' },
+    currentPack:       { es: 'Pack actual', en: 'Current pack' },
     newPack:           { es: 'Nuevo Pack', en: 'New Pack' },
+    manageMyPack:      { es: 'Gestionar mi pack', en: 'Manage my pack' },
     noSubscription:    { es: 'No tienes una suscripción activa', en: 'You don\'t have an active subscription' },
+    draftEmpty:        { es: 'Este draft aún no tiene productos', en: 'This draft does not have products yet' },
     subscribeCta:      { es: 'Suscribirse', en: 'Subscribe' },
+    expandDraft:       { es: 'Expandir pack draft', en: 'Expand draft pack' },
+    collapseDraft:     { es: 'Contraer pack draft', en: 'Collapse draft pack' },
+    expandCurrent:     { es: 'Expandir pack actual', en: 'Expand current pack' },
+    collapseCurrent:   { es: 'Contraer pack actual', en: 'Collapse current pack' },
     mode:              { es: 'Modalidad', en: 'Mode' },
     modeSubscription:  { es: 'Suscripción recurrente', en: 'Recurring subscription' },
     modeOneTime:       { es: 'Compra única', en: 'One-time purchase' },

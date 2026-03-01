@@ -238,6 +238,8 @@ export async function saveQuizResults(
   answers: Record<number, string | string[]>,
   defaultPackItems?: PackItem[],
   genaiDescription?: string | null,
+  planId?: string | null,
+  planPrice?: number,
 ): Promise<void> {
   const batch = writeBatch(db);
 
@@ -257,7 +259,10 @@ export async function saveQuizResults(
 
   // 3. Default recommended pack
   if (defaultPackItems && defaultPackItems.length > 0) {
-    const totalPrice = defaultPackItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const calculatedTotalPrice = defaultPackItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const totalPrice = typeof planPrice === 'number' && planPrice > 0
+      ? planPrice
+      : calculatedTotalPrice;
     const packRef = doc(db, 'userPacks', uid);
     const packData: Record<string, unknown> = {
       uid,
@@ -269,6 +274,12 @@ export async function saveQuizResults(
     };
     if (genaiDescription !== undefined) {
       packData.genaiDescription = genaiDescription;
+    }
+    if (planId !== undefined) {
+      packData.planId = planId;
+    }
+    if (planPrice !== undefined) {
+      packData.planPrice = planPrice;
     }
     batch.set(packRef, packData);  // full overwrite — no stale items
 
@@ -322,6 +333,7 @@ export interface SubscriptionPlanFirestore {
   name: Record<string, string>;
   description: Record<string, string>;
   badge: Record<string, string>;
+  totalPrice?: number;
   price: string;
   priceCents: string;
   interval: Record<string, string>;

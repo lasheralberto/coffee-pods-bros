@@ -64,13 +64,21 @@ export const CartBundleCard: React.FC<CartBundleCardProps> = ({ bundle }) => {
             />
             <div className="cart-bundle__item-info">
               <span className="cart-bundle__item-name">{item.name}</span>
-              <span className="cart-bundle__item-detail">
-                {item.price.toFixed(2)}€ {t('pack.perUnit')} × {item.quantity}
-              </span>
+              {bundle.mode === 'subscription' ? (
+                <span className="cart-bundle__item-detail">
+                  {t('pack.quantity')}: {item.quantity}
+                </span>
+              ) : (
+                <span className="cart-bundle__item-detail">
+                  {item.price.toFixed(2)}€ {t('pack.perUnit')} × {item.quantity}
+                </span>
+              )}
             </div>
-            <span className="cart-bundle__item-subtotal">
-              {(item.price * item.quantity).toFixed(2)}€
-            </span>
+            {bundle.mode === 'oneTime' && (
+              <span className="cart-bundle__item-subtotal">
+                {(item.price * item.quantity).toFixed(2)}€
+              </span>
+            )}
           </div>
         ))}
       </div>

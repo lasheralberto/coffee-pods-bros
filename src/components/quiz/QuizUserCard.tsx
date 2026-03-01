@@ -5,6 +5,7 @@ import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
+import { fmtPrice } from '../../data/shopProducts';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack, onProductsCatalog, onUserSubscription } from '../../providers/firebaseProvider';
 import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore, ProductCatalogFirestore, UserSubscriptionDoc } from '../../providers/firebaseProvider';
@@ -13,6 +14,7 @@ import { ProductDetail } from '../shop/ProductDetail';
 import { ChevronDown, RefreshCw, ArrowRight, ArrowLeft, Eye, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../stores/cartStore';
+import { QUIZ_PLAN_ANSWER_KEY } from '../../stores/quizStore';
 import { TypewriterText } from '../ui/TypewriterText';
 import { ExpandableText } from '../ui/ExpandableText';
 import { SubscriptionChangeConfirmModal } from '../shop/SubscriptionChangeConfirmModal';
@@ -98,13 +100,35 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   /** Build a lookup map: doc.id → ProductCatalogFirestore */
   const catalogMap = new Map(catalog.map((p) => [p.id, p]));
 
-  /** Resolve plan price as a number from string fields (e.g. "19" + "90" → 19.90) */
-  const getPlanPrice = (plan: SubscriptionPlanFirestore): number =>
-    parseFloat(`${plan.price}.${plan.priceCents}`);
+  const parsePositivePrice = (value: unknown): number => {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.trim().replace(',', '.');
+      const parsed = Number.parseFloat(normalized);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+    return 0;
+  };
 
-  /** Format plan price for display (e.g. "19,90€") */
+  const resolvePlanTotalPrice = (plan: SubscriptionPlanFirestore): number => {
+    const directTotal = parsePositivePrice(plan.totalPrice);
+    if (directTotal > 0) {
+      return directTotal;
+    }
+    return parsePositivePrice(`${plan.price}.${plan.priceCents}`);
+  };
+
+  /** Resolve plan price from `totalPrice` first, then fallback to legacy fields */
+  const getPlanPrice = (plan: SubscriptionPlanFirestore): number =>
+    resolvePlanTotalPrice(plan);
+
+  /** Format plan price for display */
   const fmtPlanPrice = (plan: SubscriptionPlanFirestore): string =>
-    `${plan.price},${plan.priceCents}€`;
+    fmtPrice(resolvePlanTotalPrice(plan));
 
   /** Handle plan selection — regenerate pack items based on plan's numberOfProducts */
   const handleSelectPlan = async (plan: SubscriptionPlanFirestore) => {
@@ -320,7 +344,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
                     <h4 className="quiz-plan-card__name">{planName}</h4>
                     <p className="quiz-plan-card__desc">{planDesc}</p>
                     <div className="quiz-plan-card__price">
-                      <span className="quiz-plan-card__price-value">{plan.price},{plan.priceCents}€</span>
+                      <span className="quiz-plan-card__price-value">{fmtPlanPrice(plan)}</span>
                       <span className="quiz-plan-card__price-interval">{planInterval}</span>
                     </div>
                     <span className="quiz-plan-card__cta">
@@ -439,10 +463,14 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
             >
               {sortedAnswers.map(({ qId, answer }) => {
                 const question = QUIZ_QUESTIONS.find((q) => q.id === qId);
-                const questionLabel = question?.question ?? `${t('profile.question')} ${qId}`;
+                const questionLabel = qId === QUIZ_PLAN_ANSWER_KEY
+                  ? t('personalPack.choosePlan')
+                  : question?.question ?? `${t('profile.question')} ${qId}`;
                 const answerLabels = Array.isArray(answer)
                   ? answer.map((a) => resolveAnswerLabel(qId, a)).join(', ')
-                  : resolveAnswerLabel(qId, answer);
+                  : qId === QUIZ_PLAN_ANSWER_KEY
+                    ? (plans.find((plan) => plan.id === answer)?.name[locale] ?? answer)
+                    : resolveAnswerLabel(qId, answer);
 
                 return (
                   <div key={qId} className="quiz-user-card__answer-row">
