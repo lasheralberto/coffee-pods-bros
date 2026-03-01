@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { RefreshCw, ShoppingCart, Package, Eye } from 'lucide-react';
+import { RefreshCw, ShoppingCart, Eye } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -9,11 +9,15 @@ import { onUserSubscription, onProductsCatalog, type UserSubscriptionDoc, type P
 import { fmtPrice } from '../../data/shopProducts';
 import type { ShopProduct } from '../../data/shopProducts';
 import { t, getLocale } from '../../data/texts';
-import { useNavigate } from 'react-router-dom';
 import { ProductDetail } from './ProductDetail';
+import { formatRichText } from '../ui/TypewriterText';
+import { ExpandableText } from '../ui/ExpandableText';
+
+//Componente que muestra la suscripción actual del usuario, si tiene una. Se muestra en el perfil y en el checkout (si el usuario tiene una suscripción activa, no se le permite comprar packs one-time).
 
 interface UserSubscriptionProps {
   uid: string;
+  onNewPack?: () => void;
 }
 
 const formatDate = (ts: unknown): string => {
@@ -28,8 +32,7 @@ const formatDate = (ts: unknown): string => {
   return '—';
 };
 
-export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
-  const navigate = useNavigate();
+export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPack }) => {
   const [sub, setSub] = useState<UserSubscriptionDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
@@ -72,19 +75,24 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
   if (!sub) {
     return (
       <Card variant="outline" padding="lg" className="user-subscription user-subscription--empty">
-        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-          <div className="flex-1 text-center sm:text-left">
+        <div className="user-subscription__header">
+          <div className="user-subscription__heading flex items-center gap-2">
+            <ShoppingCart size={18} className="text-accent" />
             <h3 className="text-lg font-semibold text-primary mb-1">
               {t('userSubscription.heading')}
             </h3>
-            <p className="text-sm text-muted">
-              {t('userSubscription.noSubscription')}
-            </p>
           </div>
-          {/* <Button variant="primary" size="md" onClick={() => navigate('/shop')}>
-            <Package size={16} />
-            {t('userSubscription.subscribeCta')}
-          </Button> */}
+          <div className="user-subscription__actions user-subscription__actions--single">
+            <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
+              {t('userSubscription.newPack')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="text-center sm:text-left">
+          <p className="text-sm text-muted">
+            {t('userSubscription.noSubscription')}
+          </p>
         </div>
       </Card>
     );
@@ -94,7 +102,7 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
     <Card variant="elevated" padding="none" className="user-subscription">
       {/* Header */}
       <div className="user-subscription__header">
-        <div className="flex items-center gap-2">
+        <div className="user-subscription__heading flex items-center gap-2">
           {sub.mode === 'subscription' ? (
             <RefreshCw size={18} className="text-accent" />
           ) : (
@@ -104,19 +112,26 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid }) => {
             {t('userSubscription.heading')}
           </h3>
         </div>
-        <Badge variant={sub.mode === 'subscription' ? 'leaf' : 'caramel'}>
-          {sub.mode === 'subscription'
-            ? t('userSubscription.modeSubscription')
-            : t('userSubscription.modeOneTime')}
-        </Badge>
+        <div className="user-subscription__actions flex items-center gap-2">
+          <Badge variant={sub.mode === 'subscription' ? 'leaf' : 'caramel'}>
+            {sub.mode === 'subscription'
+              ? t('userSubscription.modeSubscription')
+              : t('userSubscription.modeOneTime')}
+          </Badge>
+          <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
+            {t('userSubscription.newPack')}
+          </Button>
+        </div>
       </div>
 
       {/* GenAI Description */}
       {sub.genaiDescription && (
         <div className="user-subscription__description">
-          <p className="text-sm leading-relaxed text-secondary">
-            {sub.genaiDescription}
-          </p>
+          <ExpandableText maxLines={4}>
+            <p className="text-sm leading-relaxed text-secondary">
+              {formatRichText(sub.genaiDescription)}
+            </p>
+          </ExpandableText>
         </div>
       )}
 

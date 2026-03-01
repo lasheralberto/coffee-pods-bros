@@ -639,6 +639,7 @@ export const TEXTS = {
   /* ── User Subscription (Profile) ── */
   userSubscription: {
     heading:           { es: 'Tu Suscripción', en: 'Your Subscription' },
+    newPack:           { es: 'Nuevo Pack', en: 'New Pack' },
     noSubscription:    { es: 'No tienes una suscripción activa', en: 'You don\'t have an active subscription' },
     subscribeCta:      { es: 'Suscribirse', en: 'Subscribe' },
     mode:              { es: 'Modalidad', en: 'Mode' },
@@ -654,5 +655,19 @@ export const TEXTS = {
   subscriptionStatus: {
     none:   { es: 'Sin suscripción', en: 'No subscription' },
     active: { es: 'Activa', en: 'Active' },
+  },
+
+  /* ── Subscription Change Confirmation ── */
+  subscriptionChange: {
+    title:       { es: 'Cambio de suscripción', en: 'Subscription change' },
+    description: { es: 'Ya tienes una suscripción activa. Si continúas, se dará de baja tu suscripción actual y se reemplazará por la nueva.', en: 'You already have an active subscription. If you continue, your current subscription will be cancelled and replaced with the new one.' },
+    confirm:     { es: 'Continuar', en: 'Continue' },
+    cancel:      { es: 'Cancelar', en: 'Cancel' },
+  },
+
+  /* ── Common ── */
+  common: {
+    seeMore: { es: 'Ver más', en: 'See more' },
+    seeLess: { es: 'Ver menos', en: 'See less' },
   },
 } as const;

@@ -67,7 +67,10 @@ export async function generatePackDescription(
     const quizSummary = buildQuizSummary(answers);
     const packSummary = buildPackSummary(packItems);
 
-    const prompt = `You are a sharp, passionate barista at this company — a specialty coffee subscription service that takes coffee seriously.
+    const productNames = packItems.map((i) => i.name);
+    const productList = productNames.map((n) => `"${n}"`).join(', ');
+
+    const prompt = `You are a world-class specialty coffee expert and Q-grader at this company — a precision-driven coffee subscription service.
 
 A customer just completed a taste quiz and we've curated a personalized pack just for them.
 
@@ -77,9 +80,28 @@ ${quizSummary}
 **Selected pack:**
 ${packSummary}
 
-Write a punchy, confident description (2-3 sentences max) that tells them exactly why this pack was made for them. Be very technical and detailed about why this pack is perfect for their taste preferences. Make them feel like this wasn't random: this was crafted. Be specific about flavors, aromas, and brewing compatibility. Sound like someone who lives and breathes coffee, not a chatbot.
+The pack contains these specific products: ${productList}.
 
-IMPORTANT: Write the response in ${lang}. No markdown. No greetings or sign-offs. No filler. Just straight-up, compelling coffee knowledge.`;
+Analyze why this pack is the ideal match for this customer. You MUST reference each product by its exact name when explaining why it was selected. Respond STRICTLY in this format, no exceptions:
+
+**[One punchy sentence explaining the core reason this pack fits them perfectly, mentioning the key product(s) by name]**
+- **[Product name]**: [Technical reason explaining why this specific product matches their preferences — e.g. roast profile, origin, processing method and how it connects to their brew style]
+- **[Product name]**: [Technical reason — e.g. flavor compounds, acidity level, body, or mouthfeel aligned with their answers]
+- **[Product name]**: [Technical reason — e.g. grind compatibility, extraction dynamics, or how specific notes will express in their setup]
+
+If there are more than 3 products, add one bullet per product. Every product in the pack must appear at least once.
+
+RULES:
+- The first line must be bold and declarative, no fluff
+- Each bullet MUST start with the product name in bold followed by a colon
+- Each bullet must be max 2 lines, no run-on sentences
+- Each bullet must be genuinely technical: mention real coffee science (Maillard reaction, CO2 off-gassing, washed vs natural process, SCA parameters, etc.) when relevant
+- Never use generic phrases like "you'll love" or "perfect blend"
+- No greetings, no sign-offs
+- Use **bold** only for the first sentence and product names at the start of each bullet. No other formatting.
+- Balance technical depth with a confident, direct voice — like a Q-grader explaining to a curious enthusiast, not writing a thesis.
+- Do not write emojis or use slang.
+- Write in ${lang}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',

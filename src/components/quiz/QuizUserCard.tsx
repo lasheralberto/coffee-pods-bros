@@ -1,23 +1,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import * as Dialog from '@radix-ui/react-dialog';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
-import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack, onProductsCatalog } from '../../providers/firebaseProvider';
-import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore, ProductCatalogFirestore } from '../../providers/firebaseProvider';
+import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack, onProductsCatalog, onUserSubscription } from '../../providers/firebaseProvider';
+import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore, ProductCatalogFirestore, UserSubscriptionDoc } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from './PackCustomizerModal';
 import { ProductDetail } from '../shop/ProductDetail';
-import { ChevronDown, RefreshCw, ArrowRight, ArrowLeft, Eye } from 'lucide-react';
+import { ChevronDown, RefreshCw, ArrowRight, ArrowLeft, Eye, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../stores/cartStore';
 import { TypewriterText } from '../ui/TypewriterText';
+import { ExpandableText } from '../ui/ExpandableText';
+import { SubscriptionChangeConfirmModal } from '../shop/SubscriptionChangeConfirmModal';
 import type { ShopProduct } from '../../data/shopProducts';
 
 interface QuizUserCardProps {
   quizData: QuizDoc | null;
   onTakeQuiz: () => void;
   uid: string;
+  open: boolean;
+  onClose: () => void;
 }
 
 /**
@@ -40,7 +46,7 @@ function formatDate(ts: unknown): string {
   return '';
 }
 
-export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz, uid }) => {
+export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz, uid, open, onClose }) => {
   const [pack, setPack] = useState<UserPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [packModalOpen, setPackModalOpen] = useState(false);
@@ -49,6 +55,9 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const [plansLoading, setPlansLoading] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
   const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
+  const [existingSub, setExistingSub] = useState<UserSubscriptionDoc | null>(null);
+  const [showChangeConfirm, setShowChangeConfirm] = useState(false);
+  const [pendingSubscribe, setPendingSubscribe] = useState<(() => void) | null>(null);
 
   const locale = getLocale();
 
@@ -62,6 +71,13 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
     });
     return unsub;
   }, [uid, quizData]);
+
+  /* Listen to existing user subscription */
+  useEffect(() => {
+    if (!uid) return;
+    const unsub = onUserSubscription(uid, (sub) => setExistingSub(sub));
+    return unsub;
+  }, [uid]);
 
   /* Listen to subscription plans */
   useEffect(() => {
@@ -104,16 +120,61 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   /* ── No quiz done ── */
   if (!quizData) {
     return (
-      <div>
-        <Card variant="outline" padding="lg" className="quiz-user-card quiz-user-card--empty">
-          <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
-            {t('profile.quizNotCompleted')}
-          </p>
-          <Button variant="primary" size="md" onClick={onTakeQuiz} style={{ width: 'fit-content', margin: '0 auto' }}>
-            {t('profile.takeQuiz')}
-          </Button>
-        </Card>
-      </div>
+      <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <AnimatePresence>
+          {open && (
+            <Dialog.Portal forceMount>
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className="overlay backdrop-blur-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onPointerDown={onClose}
+                />
+              </Dialog.Overlay>
+
+              <Dialog.Content
+                onInteractOutside={onClose}
+                onPointerDownOutside={onClose}
+                asChild
+              >
+                <div className="fixed inset-0 flex items-end sm:items-center justify-center z-modal pointer-events-none">
+                  <motion.div
+                    className="modal-panel pointer-events-auto"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  >
+                    <VisuallyHidden.Root>
+                      <Dialog.Title>{t('profile.quizHeading')}</Dialog.Title>
+                      <Dialog.Description>{t('personalPack.noPackYet')}</Dialog.Description>
+                    </VisuallyHidden.Root>
+
+                    <Card variant="outline" padding="lg" className="quiz-user-card quiz-user-card--empty" style={{ position: 'relative' }}>
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label={t('purchase.close')}
+                        className="absolute top-3 right-3 p-2 hover:bg-foam rounded-full transition-colors"
+                      >
+                        <X size={18} className="text-muted" />
+                      </button>
+                      <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
+                        {t('profile.quizNotCompleted')}
+                      </p>
+                      <Button variant="primary" size="md" onClick={onTakeQuiz} style={{ width: 'fit-content', margin: '0 auto' }}>
+                        {t('profile.takeQuiz')}
+                      </Button>
+                    </Card>
+                  </motion.div>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </Dialog.Root>
     );
   }
 
@@ -131,32 +192,75 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const planNumberOfProducts = selectedPlan?.numberOfProducts ?? 0;
 
   return (
-    <div>
-      <Card variant="elevated" padding="none" className="quiz-user-card">
-        {/* Header */}
-        <div className="quiz-user-card__header">
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-medium)' }}>
-            {t('profile.quizHeading')}
-          </h3>
-          {quizData.completedAt && (
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-              {t('profile.completedAt')} {formatDate(quizData.completedAt)}
-            </span>
-          )}
-        </div>
+    <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <AnimatePresence>
+        {open && (
+          <Dialog.Portal forceMount>
+            <Dialog.Overlay asChild>
+              <motion.div
+                className="overlay backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onPointerDown={onClose}
+              />
+            </Dialog.Overlay>
 
-        {/* GenAI Description */}
+            <Dialog.Content
+              onInteractOutside={onClose}
+              onPointerDownOutside={onClose}
+              asChild
+            >
+              <div className="fixed inset-0 flex items-end sm:items-center justify-center z-modal pointer-events-none">
+                <motion.div
+                  className="modal-panel pointer-events-auto"
+                  initial={{ y: '100%', opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: '100%', opacity: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                >
+                  <VisuallyHidden.Root>
+                    <Dialog.Title>{t('profile.quizHeading')}</Dialog.Title>
+                    <Dialog.Description>{t('personalPack.subtitle')}</Dialog.Description>
+                  </VisuallyHidden.Root>
+
+                  <Card variant="elevated" padding="none" className="quiz-user-card">
+                    {/* Header */}
+                    <div className="quiz-user-card__header">
+                      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-medium)' }}>
+                        {t('profile.quizHeading')}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        {quizData.completedAt && (
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                            {t('profile.completedAt')} {formatDate(quizData.completedAt)}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={onClose}
+                          aria-label={t('purchase.close')}
+                          className="p-2 hover:bg-foam rounded-full transition-colors"
+                        >
+                          <X size={18} className="text-muted" />
+                        </button>
+                      </div>
+                    </div>
+
+        {/* GenAI Description — only after plan is selected */}
         <AnimatePresence>
-          {pack?.genaiDescription && (
+          {hasPlan && pack?.genaiDescription && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="personalized-pack-section__ai-description"
             >
-              <p className="text-sm leading-relaxed text-secondary">
-                <TypewriterText text={pack.genaiDescription} />
-              </p>
+              <ExpandableText maxLines={4}>
+                <p className="text-sm leading-relaxed text-secondary">
+                  <TypewriterText text={pack.genaiDescription} />
+                </p>
+              </ExpandableText>
             </motion.div>
           )}
         </AnimatePresence>
@@ -232,23 +336,51 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
         {/* ═══ STEP 2 & 3: Plan selected — show products + actions ═══ */}
         {!loading && !plansLoading && !savingPlan && !!pack && hasPlan && (
           <div className="quiz-user-card__pack">
-            {/* Selected plan badge */}
+            {/* Selected plan — compact row */}
             <div className="quiz-user-card__selected-plan">
               <div className="quiz-user-card__selected-plan-info">
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
-                  {t('personalPack.planSelected')}
-                </span>
-                <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                <span className="quiz-user-card__selected-plan-name">
                   {selectedPlan!.name[locale] ?? selectedPlan!.name['es'] ?? ''}
                 </span>
-                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-accent)', fontWeight: 700 }}>
-                  {fmtPlanPrice(selectedPlan!)} {selectedPlan!.interval[locale] ?? selectedPlan!.interval['es'] ?? ''}
+                <span className="quiz-user-card__selected-plan-price">
+                  {fmtPlanPrice(selectedPlan!)} / {selectedPlan!.interval[locale] ?? selectedPlan!.interval['es'] ?? ''}
                 </span>
+                <button
+                  type="button"
+                  className="quiz-user-card__change-plan-link"
+                  onClick={() => updateUserPackPlan(uid, '', 0)}
+                >
+                  <ArrowLeft size={12} />
+                  {t('personalPack.changePlan')}
+                </button>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => updateUserPackPlan(uid, '', 0)}>
-                <ArrowLeft size={14} />
-                {t('personalPack.changePlan')}
-              </Button>
+
+              <div className="quiz-user-card__selected-plan-actions">
+                {hasProducts && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      const doSubscribe = () => {
+                        useCartStore.getState().actions.addBundle(pack!.items, planPrice, 'subscription', uid, selectedPlan?.id, selectedPlan?.id);
+                        onClose();
+                      };
+                      if (existingSub) {
+                        setPendingSubscribe(() => doSubscribe);
+                        setShowChangeConfirm(true);
+                      } else {
+                        doSubscribe();
+                      }
+                    }}
+                  >
+                    <RefreshCw size={14} />
+                    {t('personalPack.subscribeBtn')}
+                  </Button>
+                )}
+                <Button variant="accent" size="sm" onClick={() => setPackModalOpen(true)}>
+                  {hasProducts ? t('profile.customizePack') : t('personalPack.selectProducts')}
+                </Button>
+              </div>
             </div>
 
             {/* Products list */}
@@ -264,10 +396,10 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
                 </div>
 
                 {/* Fixed plan price (not computed from products) */}
-                <div className="quiz-user-card__pack-total">
+                {/* <div className="quiz-user-card__pack-total">
                   <span className="pack-modal__total-label">{t('personalPack.planPrice')}</span>
                   <span className="pack-modal__total-value">{fmtPlanPrice(selectedPlan!)}</span>
-                </div>
+                </div> */}
               </>
             )}
 
@@ -280,22 +412,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
               </div>
             )}
 
-            {/* Actions — visible whenever pack exists */}
-            <div className="quiz-user-card__purchase-row">
-              {hasProducts && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => useCartStore.getState().actions.addBundle(pack!.items, planPrice, 'subscription', uid, selectedPlan?.id, selectedPlan?.id)}
-                >
-                  <RefreshCw size={14} />
-                  {t('personalPack.subscribeBtn')}
-                </Button>
-              )}
-              <Button variant="accent" size="sm" onClick={() => setPackModalOpen(true)}>
-                {hasProducts ? t('profile.customizePack') : t('personalPack.selectProducts')}
-              </Button>
-            </div>
+
           </div>
         )}
 
@@ -346,17 +463,29 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
             </Button>
           </div>
         )}
-      </Card>
+                  </Card>
 
-      {/* Pack Customizer Modal */}
-      <PackCustomizerModal
-        open={packModalOpen}
-        onClose={() => { setPackModalOpen(false); }}
-        uid={uid}
-        maxProducts={planNumberOfProducts > 0 ? planNumberOfProducts : undefined}
-        planPrice={hasPlan ? planPrice : undefined}
-      />
-    </div>
+                  {/* Pack Customizer Modal */}
+                  <PackCustomizerModal
+                    open={packModalOpen}
+                    onClose={() => { setPackModalOpen(false); }}
+                    uid={uid}
+                    maxProducts={planNumberOfProducts > 0 ? planNumberOfProducts : undefined}
+                    planPrice={hasPlan ? planPrice : undefined}
+                  />
+
+                  <SubscriptionChangeConfirmModal
+                    open={showChangeConfirm}
+                    onClose={() => { setShowChangeConfirm(false); setPendingSubscribe(null); }}
+                    onConfirm={() => { pendingSubscribe?.(); setPendingSubscribe(null); }}
+                  />
+                </motion.div>
+              </div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        )}
+      </AnimatePresence>
+    </Dialog.Root>
   );
 };
 

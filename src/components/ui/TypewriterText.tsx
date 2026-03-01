@@ -1,6 +1,54 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * Parses simple markdown-like text:
+ * - **text** → <strong>text</strong>
+ * - Lines starting with "- " → rendered on their own line
+ * - Newlines → <br />
+ */
+export function formatRichText(text: string): React.ReactNode[] {
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+
+  lines.forEach((line, lineIdx) => {
+    if (lineIdx > 0) {
+      elements.push(<br key={`br-${lineIdx}`} />);
+    }
+
+    const trimmed = line.trimStart();
+    const isBullet = trimmed.startsWith('- ');
+    const content = isBullet ? trimmed.slice(2) : line;
+
+    // Split by **bold** segments
+    const parts = content.split(/(\*\*[^*]+\*\*)/);
+    const inlineElements = parts.map((part, partIdx) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <strong key={`${lineIdx}-${partIdx}`}>
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return <React.Fragment key={`${lineIdx}-${partIdx}`}>{part}</React.Fragment>;
+    });
+
+    if (isBullet) {
+      elements.push(
+        <span key={`line-${lineIdx}`} style={{ display: 'block', paddingLeft: '0.5rem' }}>
+          {'• '}{inlineElements}
+        </span>
+      );
+    } else {
+      elements.push(
+        <React.Fragment key={`line-${lineIdx}`}>{inlineElements}</React.Fragment>
+      );
+    }
+  });
+
+  return elements;
+}
+
 interface TypewriterTextProps {
   text: string;
   className?: string;
@@ -38,7 +86,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
           className={className}
           style={{ display: 'inline-block' }}
         >
-          {text}
+          {formatRichText(text)}
         </motion.span>
       )}
     </AnimatePresence>
