@@ -234,6 +234,7 @@ export const TEXTS = {
   /* ── Product Detail Modal ── */
   productDetail: {
     close: { es: 'Cerrar detalle', en: 'Close detail' },
+    view: { es: 'Ver detalle', en: 'View detail' },
     roastLevel: { es: 'Tueste', en: 'Roast' },
     tastesLike: { es: 'Sabor', en: 'Tastes like' },
     addToCart: { es: 'Añadir al carrito', en: 'Add to cart' },

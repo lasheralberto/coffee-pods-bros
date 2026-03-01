@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, ShoppingCart, Sparkles, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
+import { RefreshCw, ShoppingCart, Sparkles, ChevronRight, ArrowLeft, ArrowRight, Eye } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
-import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack } from '../../providers/firebaseProvider';
-import type { UserPack, PackItem, SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
+import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack, onProductsCatalog } from '../../providers/firebaseProvider';
+import type { UserPack, PackItem, SubscriptionPlanFirestore, ProductCatalogFirestore } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from '../quiz/PackCustomizerModal';
+import { ProductDetail } from './ProductDetail';
 import { TypewriterText } from '../ui/TypewriterText';
 import { useCartStore } from '../../stores/cartStore';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
 import { useQuizStore } from '../../stores/quizStore';
+import type { ShopProduct } from '../../data/shopProducts';
 
 export const PersonalizedPackSection: React.FC = () => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
@@ -24,6 +27,7 @@ export const PersonalizedPackSection: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlanFirestore[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
+  const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
 
   const locale = getLocale();
 
@@ -46,6 +50,15 @@ export const PersonalizedPackSection: React.FC = () => {
     });
     return unsub;
   }, []);
+
+  /* Listen to product catalog for full product details */
+  useEffect(() => {
+    const unsub = onProductsCatalog((data) => setCatalog(data));
+    return unsub;
+  }, []);
+
+  /** Build a lookup map: doc.id → ProductCatalogFirestore */
+  const catalogMap = new Map(catalog.map((p) => [p.id, p]));
 
   /* Derived state */
   const selectedPlan = pack?.planId
@@ -258,15 +271,7 @@ export const PersonalizedPackSection: React.FC = () => {
           {/* Pack items row */}
           <div className="personalized-pack-section__items">
             {pack.items.map((item: PackItem) => (
-              <div key={item.productId} className="personalized-pack-item">
-                <img src={item.image} alt={item.name} className="personalized-pack-item__img" />
-                <div className="personalized-pack-item__info">
-                  <span className="personalized-pack-item__name">{item.name}</span>
-                  <span className="personalized-pack-item__meta">
-                    {item.price.toFixed(2)}€ {t('pack.perUnit')} · x{item.quantity}
-                  </span>
-                </div>
-              </div>
+              <PackItemWithDetail key={item.productId} item={item} catalogProduct={catalogMap.get(item.productId) ?? null} locale={locale} />
             ))}
           </div>
 
@@ -321,6 +326,76 @@ export const PersonalizedPackSection: React.FC = () => {
         onClose={() => { setPackModalOpen(false); }}
         uid={authUser.uid}
       />
+
+    </>
+  );
+};
+
+/* ── Per-item wrapper (mirrors ProductCard pattern) ── */
+
+/** Builds a full ShopProduct from catalog data (preferred) or falls back to PackItem basics */
+function toShopProduct(item: PackItem, catalogProduct: ProductCatalogFirestore | null, locale: string): ShopProduct {
+  if (catalogProduct) {
+    return {
+      id:          catalogProduct.order ?? 0,
+      brand:       catalogProduct.brand,
+      name:        catalogProduct.name[locale] ?? catalogProduct.name['es'] ?? item.name,
+      description: catalogProduct.description[locale] ?? catalogProduct.description['es'] ?? '',
+      price:       catalogProduct.price,
+      image:       item.image || catalogProduct.image,
+      isNew:       catalogProduct.isNew,
+      roast:       catalogProduct.roast,
+      tastesLike:  catalogProduct.tastesLike,
+    };
+  }
+  return {
+    id:          Number(item.productId) || 0,
+    brand:       '',
+    name:        item.name,
+    description: '',
+    price:       item.price,
+    image:       item.image,
+    isNew:       false,
+    roast:       'medium',
+    tastesLike:  [],
+  };
+}
+
+interface PackItemWithDetailProps {
+  item: PackItem;
+  catalogProduct: ProductCatalogFirestore | null;
+  locale: string;
+}
+
+const PackItemWithDetail: React.FC<PackItemWithDetailProps> = ({ item, catalogProduct, locale }) => {
+  const [detailOpen, setDetailOpen] = useState(false);
+  const openDetail = useCallback(() => setDetailOpen(true), []);
+  const closeDetail = useCallback(() => setDetailOpen(false), []);
+  const product = toShopProduct(item, catalogProduct, locale);
+
+  return (
+    <>
+      <div className="personalized-pack-item">
+        <img src={item.image} alt={item.name} className="personalized-pack-item__img" />
+        <div className="personalized-pack-item__info">
+          <span className="personalized-pack-item__name">{item.name}</span>
+          <span className="personalized-pack-item__meta">
+            {item.price.toFixed(2)}€ {t('pack.perUnit')} · x{item.quantity}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={openDetail}
+          className="personalized-pack-item__detail-btn"
+          aria-label={`${t('productDetail.view')} ${item.name}`}
+        >
+          <Eye size={16} />
+        </button>
+      </div>
+      {createPortal(
+        <ProductDetail product={detailOpen ? product : null} onClose={closeDetail} />,
+        document.body,
+      )}
     </>
   );
 };

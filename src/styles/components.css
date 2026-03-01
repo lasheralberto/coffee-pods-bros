@@ -2084,6 +2084,26 @@
   color:           var(--text-muted);
 }
 
+.personalized-pack-item__detail-btn {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           36px;
+  height:          36px;
+  flex-shrink:     0;
+  margin-left:     auto;
+  border:          none;
+  border-radius:   var(--radius-full);
+  background:      var(--surface);
+  color:           var(--text-secondary);
+  cursor:          pointer;
+  transition:      background 0.15s ease, color 0.15s ease;
+}
+.personalized-pack-item__detail-btn:hover {
+  background:      var(--accent);
+  color:           var(--on-accent, #fff);
+}
+
 .personalized-pack-section__footer {
   display:         flex;
   flex-direction:  column;

@@ -67,7 +67,7 @@ export async function generatePackDescription(
     const quizSummary = buildQuizSummary(answers);
     const packSummary = buildPackSummary(packItems);
 
-    const prompt = `You are a sharp, passionate barista at Coffee Pod Bros — a specialty coffee subscription service that takes coffee seriously.
+    const prompt = `You are a sharp, passionate barista at this company — a specialty coffee subscription service that takes coffee seriously.
 
 A customer just completed a taste quiz and we've curated a personalized pack just for them.
 
@@ -77,7 +77,7 @@ ${quizSummary}
 **Selected pack:**
 ${packSummary}
 
-Write a punchy, confident description (2-3 sentences max) that tells them exactly why this pack was made for them. Lead with insight — connect their brewing style, roast preferences, and flavor profile to what's in their pack. Make them feel like this wasn't random: this was crafted. Be specific about flavors, aromas, and brewing compatibility. Sound like someone who lives and breathes coffee, not a chatbot.
+Write a punchy, confident description (2-3 sentences max) that tells them exactly why this pack was made for them. Be very technical and detailed about why this pack is perfect for their taste preferences. Make them feel like this wasn't random: this was crafted. Be specific about flavors, aromas, and brewing compatibility. Sound like someone who lives and breathes coffee, not a chatbot.
 
 IMPORTANT: Write the response in ${lang}. No markdown. No greetings or sign-offs. No filler. Just straight-up, compelling coffee knowledge.`;
 

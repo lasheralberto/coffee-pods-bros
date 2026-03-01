@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
-import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack } from '../../providers/firebaseProvider';
-import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
+import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack, onProductsCatalog } from '../../providers/firebaseProvider';
+import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore, ProductCatalogFirestore } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from './PackCustomizerModal';
-import { ChevronDown, RefreshCw, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ProductDetail } from '../shop/ProductDetail';
+import { ChevronDown, RefreshCw, ArrowRight, ArrowLeft, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../stores/cartStore';
 import { TypewriterText } from '../ui/TypewriterText';
+import type { ShopProduct } from '../../data/shopProducts';
 
 interface QuizUserCardProps {
   quizData: QuizDoc | null;
@@ -45,6 +48,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const [plans, setPlans] = useState<SubscriptionPlanFirestore[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
+  const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
 
   const locale = getLocale();
 
@@ -68,6 +72,15 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
     });
     return unsub;
   }, []);
+
+  /* Listen to product catalog for full product details */
+  useEffect(() => {
+    const unsub = onProductsCatalog((data) => setCatalog(data));
+    return unsub;
+  }, []);
+
+  /** Build a lookup map: doc.id → ProductCatalogFirestore */
+  const catalogMap = new Map(catalog.map((p) => [p.id, p]));
 
   /** Resolve plan price as a number from string fields (e.g. "19" + "90" → 19.90) */
   const getPlanPrice = (plan: SubscriptionPlanFirestore): number =>
@@ -246,16 +259,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
                 </span>
                 <div className="quiz-user-card__pack-list">
                   {pack!.items.map((item: PackItem) => (
-                    <div key={item.productId} className="pack-item pack-item--active">
-                      <img src={item.image} alt={item.name} className="pack-item__img" />
-                      <div className="pack-item__info">
-                        <span className="pack-item__name">{item.name}</span>
-                        <span className="pack-item__price">
-                          {item.price.toFixed(2)}€ {t('pack.perUnit')}
-                        </span>
-                      </div>
-                      <span className="pack-item__qty">x{item.quantity}</span>
-                    </div>
+                    <QuizPackItemWithDetail key={item.productId} item={item} catalogProduct={catalogMap.get(item.productId) ?? null} locale={locale} />
                   ))}
                 </div>
 
@@ -353,5 +357,75 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
         planPrice={hasPlan ? planPrice : undefined}
       />
     </div>
+  );
+};
+
+/* ── Per-item wrapper with ProductDetail ── */
+
+/** Builds a full ShopProduct from catalog data (preferred) or falls back to PackItem basics */
+function toShopProduct(item: PackItem, catalogProduct: ProductCatalogFirestore | null, locale: string): ShopProduct {
+  if (catalogProduct) {
+    return {
+      id:          catalogProduct.order ?? 0,
+      brand:       catalogProduct.brand,
+      name:        catalogProduct.name[locale] ?? catalogProduct.name['es'] ?? item.name,
+      description: catalogProduct.description[locale] ?? catalogProduct.description['es'] ?? '',
+      price:       catalogProduct.price,
+      image:       item.image || catalogProduct.image,
+      isNew:       catalogProduct.isNew,
+      roast:       catalogProduct.roast,
+      tastesLike:  catalogProduct.tastesLike,
+    };
+  }
+  return {
+    id:          Number(item.productId) || 0,
+    brand:       '',
+    name:        item.name,
+    description: '',
+    price:       item.price,
+    image:       item.image,
+    isNew:       false,
+    roast:       'medium',
+    tastesLike:  [],
+  };
+}
+
+interface QuizPackItemProps {
+  item: PackItem;
+  catalogProduct: ProductCatalogFirestore | null;
+  locale: string;
+}
+
+const QuizPackItemWithDetail: React.FC<QuizPackItemProps> = ({ item, catalogProduct, locale }) => {
+  const [detailOpen, setDetailOpen] = useState(false);
+  const openDetail = useCallback(() => setDetailOpen(true), []);
+  const closeDetail = useCallback(() => setDetailOpen(false), []);
+  const product = toShopProduct(item, catalogProduct, locale);
+
+  return (
+    <>
+      <div className="pack-item pack-item--active">
+        <img src={item.image} alt={item.name} className="pack-item__img" />
+        <div className="pack-item__info">
+          <span className="pack-item__name">{item.name}</span>
+          <span className="pack-item__price">
+            {item.price.toFixed(2)}€ {t('pack.perUnit')}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={openDetail}
+          className="personalized-pack-item__detail-btn"
+          aria-label={`${t('productDetail.view')} ${item.name}`}
+        >
+          <Eye size={16} />
+        </button>
+        <span className="pack-item__qty">x{item.quantity}</span>
+      </div>
+      {createPortal(
+        <ProductDetail product={detailOpen ? product : null} onClose={closeDetail} />,
+        document.body,
+      )}
+    </>
   );
 };
