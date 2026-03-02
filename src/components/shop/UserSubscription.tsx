@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { RefreshCw, ShoppingCart, Eye, ChevronDown } from 'lucide-react';
+import { RefreshCw, ShoppingCart, Eye, ChevronDown, FileText, Trash2 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -9,6 +9,8 @@ import {
   onProductsCatalog,
   onUserPack,
   onSubscriptionPlans,
+  deleteUserPackDraft,
+  deleteUserSubscription,
   type UserSubscriptionDoc,
   type PackItem,
   type ProductCatalogFirestore,
@@ -20,6 +22,7 @@ import type { ShopProduct } from '../../data/shopProducts';
 import { t, getLocale } from '../../data/texts';
 import { ProductDetail } from './ProductDetail';
 import { formatRichText } from '../ui/TypewriterText';
+import { TypewriterText } from '../ui/TypewriterText';
 import { ExpandableText } from '../ui/ExpandableText';
 import { useCartStore } from '../../stores/cartStore';
 import { SubscriptionChangeConfirmModal } from './SubscriptionChangeConfirmModal';
@@ -73,6 +76,8 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
   const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
   const [showChangeConfirm, setShowChangeConfirm] = useState(false);
   const [pendingSubscribe, setPendingSubscribe] = useState<(() => void) | null>(null);
+  const [isDeletingDraft, setIsDeletingDraft] = useState(false);
+  const [isEndingSubscription, setIsEndingSubscription] = useState(false);
   const [isDraftOpen, setIsDraftOpen] = useState(true);
   const [isCurrentOpen, setIsCurrentOpen] = useState(false);
 
@@ -157,6 +162,34 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
     setPendingSubscribe(null);
   }, []);
 
+  const handleDeleteDraft = useCallback(async () => {
+    if (!uid || isDeletingDraft) return;
+
+    const confirmed = window.confirm(t('userSubscription.deleteDraftConfirm'));
+    if (!confirmed) return;
+
+    setIsDeletingDraft(true);
+    try {
+      await deleteUserPackDraft(uid);
+    } finally {
+      setIsDeletingDraft(false);
+    }
+  }, [isDeletingDraft, uid]);
+
+  const handleEndSubscription = useCallback(async () => {
+    if (!uid || isEndingSubscription) return;
+
+    const confirmed = window.confirm(t('userSubscription.endSubscriptionConfirm'));
+    if (!confirmed) return;
+
+    setIsEndingSubscription(true);
+    try {
+      await deleteUserSubscription(uid);
+    } finally {
+      setIsEndingSubscription(false);
+    }
+  }, [isEndingSubscription, uid]);
+
   useEffect(() => {
     if (hasUserPackDraft && hasCurrentSubscription) {
       setIsDraftOpen(true);
@@ -200,7 +233,7 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
             </div>
             <div className="user-subscription__actions user-subscription__actions--single">
               <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
-                {hasUserPackDraft ? t('userSubscription.manageMyPack') : t('userSubscription.newPack')}
+                {t('userSubscription.newPack')}
               </Button>
             </div>
           </div>
@@ -239,45 +272,73 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
       <Card variant={sub ? 'elevated' : 'outline'} padding="none" className="user-subscription">
         <div className="user-subscription__header">
           <div className="user-subscription__heading flex items-center gap-2">
-            {sub?.mode === 'subscription' ? (
-              <RefreshCw size={18} className="text-accent" />
-            ) : (
-              <ShoppingCart size={18} className="text-accent" />
-            )}
+            
             <h3 className="text-lg font-semibold text-primary">
               {t('userSubscription.heading')}
             </h3>
           </div>
-          <div className="user-subscription__actions user-subscription__actions--single">
-            <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
-              {hasUserPackDraft ? t('userSubscription.manageMyPack') : t('userSubscription.newPack')}
-            </Button>
-          </div>
+          {!hasUserPackDraft && (
+            <div className="user-subscription__actions user-subscription__actions--single">
+              <Button variant="secondary" size="sm" onClick={onNewPack} className="user-subscription__new-pack-btn">
+                {t('userSubscription.newPack')}
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="user-subscription__sections">
           {hasUserPackDraft && draftPack && (
             <section className="user-subscription__section">
-              <button
-                type="button"
-                className="user-subscription__section-toggle"
-                onClick={() => setIsDraftOpen((prev) => !prev)}
-                aria-expanded={isDraftOpen}
-                aria-label={isDraftOpen ? t('userSubscription.collapseDraft') : t('userSubscription.expandDraft')}
-              >
-                <div className="user-subscription__section-title-wrap">
-                  <RefreshCw size={16} className="text-accent" />
-                  <h4 className="user-subscription__section-title">
-                    {t('userSubscription.draftPack')}
-                  </h4>
-                </div>
-                <ChevronDown size={16} className={`user-subscription__section-chevron ${isDraftOpen ? 'is-open' : ''}`} />
-              </button>
+              <div className="user-subscription__section-header user-subscription__section-header--draft">
+                <button
+                  type="button"
+                  className="user-subscription__section-toggle user-subscription__section-toggle--draft"
+                  onClick={() => setIsDraftOpen((prev) => !prev)}
+                  aria-expanded={isDraftOpen}
+                  aria-label={isDraftOpen ? t('userSubscription.collapseDraft') : t('userSubscription.expandDraft')}
+                >
+                  <div className="user-subscription__section-title-wrap">
+                    <div className="user-subscription__section-icon user-subscription__section-icon--draft" aria-hidden="true">
+                      <FileText size={14} />
+                    </div>
+                    <div className="user-subscription__section-title-stack">
+                      <h4 className="user-subscription__section-title user-subscription__section-title--draft">
+                        {t('userSubscription.draftPack')}
+                      </h4>
+                      <span className="user-subscription__section-subtitle">
+                        {t('userSubscription.draftIntent')}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronDown size={16} className={`user-subscription__section-chevron ${isDraftOpen ? 'is-open' : ''}`} />
+                </button>
+
+                <button
+                  type="button"
+                  className="user-subscription__section-delete"
+                  onClick={handleDeleteDraft}
+                  aria-label={t('userSubscription.deleteDraftAria')}
+                  title={t('userSubscription.deleteDraft')}
+                  disabled={isDeletingDraft}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
 
               {isDraftOpen && (
                 <div className="user-subscription__section-content">
                   {hasDraftPack ? (
                     <>
+                      {draftPack.genaiDescription && (
+                        <div className="user-subscription__description user-subscription__description--draft">
+                          <ExpandableText maxLines={4}>
+                            <p className="text-sm leading-relaxed text-secondary">
+                              <TypewriterText text={draftPack.genaiDescription} />
+                            </p>
+                          </ExpandableText>
+                        </div>
+                      )}
+
                       <div className="user-subscription__items-label">
                         <span className="text-xs font-medium text-muted uppercase tracking-wide">
                           {t('userSubscription.items')}
@@ -296,15 +357,25 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
                             <span className="text-lg font-bold text-primary">{hasValidDraftPlanPrice ? fmtPrice(resolvedDraftPrice) : '—'}</span>
                           </div>
                         </div>
-                        <Button variant="primary" size="sm" onClick={handleSubscribeDraftPack} disabled={!hasValidDraftPlanPrice}>
-                          <RefreshCw size={14} />
-                          {t('userSubscription.subscribeCta')}
-                        </Button>
+                        <div className="user-subscription__draft-actions">
+                          <Button variant="primary" size="sm" onClick={handleSubscribeDraftPack} disabled={!hasValidDraftPlanPrice}>
+                            <RefreshCw size={14} />
+                            {t('personalPack.subscribeBtn')}
+                          </Button>
+                          <Button variant="accent" size="sm" onClick={onNewPack}>
+                            {hasDraftPack ? t('profile.customizePack') : t('personalPack.selectProducts')}
+                          </Button>
+                        </div>
                       </div>
                     </>
                   ) : (
                     <div className="user-subscription__empty-message">
                       <p className="text-sm text-muted">{t('userSubscription.draftEmpty')}</p>
+                      <div className="user-subscription__empty-actions">
+                        <Button variant="accent" size="sm" onClick={onNewPack}>
+                          {t('personalPack.selectProducts')}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -316,27 +387,30 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
             <section className="user-subscription__section">
               <button
                 type="button"
-                className="user-subscription__section-toggle"
+                className="user-subscription__section-toggle user-subscription__section-toggle--current"
                 onClick={() => setIsCurrentOpen((prev) => !prev)}
                 aria-expanded={isCurrentOpen}
                 aria-label={isCurrentOpen ? t('userSubscription.collapseCurrent') : t('userSubscription.expandCurrent')}
               >
                 <div className="user-subscription__section-title-wrap">
-                  {sub.mode === 'subscription' ? (
-                    <RefreshCw size={16} className="text-accent" />
-                  ) : (
-                    <ShoppingCart size={16} className="text-accent" />
-                  )}
-                  <h4 className="user-subscription__section-title">
-                    {t('userSubscription.currentPack')}
-                  </h4>
+                  <div className="user-subscription__section-icon user-subscription__section-icon--current" aria-hidden="true">
+                    {sub.mode === 'subscription' ? (
+                      <RefreshCw size={14} className="text-accent" />
+                    ) : (
+                      <ShoppingCart size={14} className="text-accent" />
+                    )}
+                  </div>
+                  <div className="user-subscription__section-title-stack">
+                    <h4 className="user-subscription__section-title">
+                      {t('userSubscription.currentPack')}
+                    </h4>
+                    <span className="user-subscription__section-subtitle">
+                      {t('userSubscription.currentIntent')}
+                    </span>
+                  </div>
                 </div>
                 <div className="user-subscription__section-meta">
-                  <Badge variant={sub.mode === 'subscription' ? 'leaf' : 'caramel'}>
-                    {sub.mode === 'subscription'
-                      ? t('userSubscription.modeSubscription')
-                      : t('userSubscription.modeOneTime')}
-                  </Badge>
+
                   <ChevronDown size={16} className={`user-subscription__section-chevron ${isCurrentOpen ? 'is-open' : ''}`} />
                 </div>
               </button>
@@ -344,7 +418,7 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
               {isCurrentOpen && (
                 <div className="user-subscription__section-content">
                   {sub.genaiDescription && (
-                    <div className="user-subscription__description">
+                    <div className="user-subscription__description user-subscription__description--current">
                       <ExpandableText maxLines={4}>
                         <p className="text-sm leading-relaxed text-secondary">
                           {formatRichText(sub.genaiDescription)}
@@ -371,6 +445,15 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
                       </span>
                     </div>
                     <div className="flex flex-col items-end gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleEndSubscription}
+                        disabled={isEndingSubscription}
+                        aria-label={t('userSubscription.endSubscriptionAria')}
+                      >
+                        {t('userSubscription.endSubscription')}
+                      </Button>
                       <div className="user-subscription__total">
                         <span className="text-sm text-muted">{t('userSubscription.total')}</span>
                         <span className="text-lg font-bold text-primary">{fmtPrice(sub.totalPrice)}</span>

@@ -510,6 +510,14 @@ export async function getUserPack(uid: string): Promise<UserPack | null> {
   return snap.data() as UserPack;
 }
 
+/**
+ * Deletes the user draft pack document from `userPacks/{uid}`.
+ */
+export async function deleteUserPackDraft(uid: string): Promise<void> {
+  const ref = doc(db, 'userPacks', uid);
+  await deleteDoc(ref);
+}
+
 /* ── Products Catalog from Firestore ─────────────────────── */
 
 /**
@@ -689,6 +697,14 @@ export async function saveUserSubscription(
     subscribedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+}
+
+/**
+ * Deletes the active subscription record from `usersToSuscription/{uid}`.
+ */
+export async function deleteUserSubscription(uid: string): Promise<void> {
+  const subRef = doc(db, 'usersToSuscription', uid);
+  await deleteDoc(subRef);
 }
 
 /**
