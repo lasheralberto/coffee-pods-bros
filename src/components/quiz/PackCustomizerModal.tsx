@@ -176,7 +176,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
                       )}
                     </div>
                     <Dialog.Close asChild>
-                      <button className="p-2 hover:bg-foam rounded-full transition-colors">
+                      <button className="pack-modal__close-btn" aria-label="Close">
                         <X size={20} className="text-muted" />
                       </button>
                     </Dialog.Close>
