@@ -113,7 +113,7 @@ export const QuizModal: React.FC = () => {
             <Dialog.Content asChild>
               <div className="fixed inset-0 flex items-end sm:items-center justify-center z-modal pointer-events-none">
                 <motion.div
-                  className="modal-panel pointer-events-auto flex flex-col h-[90vh] sm:h-auto"
+                  className="modal-panel quiz-modal-panel pointer-events-auto flex flex-col h-[90vh] sm:h-auto"
                   initial={{ y: '100%', opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: '100%', opacity: 0 }}
@@ -137,7 +137,7 @@ export const QuizModal: React.FC = () => {
                       </div>
                     )}
                     <Dialog.Close asChild>
-                      <button className="p-2 hover:bg-foam rounded-full transition-colors">
+                      <button className="quiz-modal-close-btn" aria-label="Close">
                         <X size={24} className="text-muted" />
                       </button>
                     </Dialog.Close>
@@ -188,12 +188,12 @@ export const QuizModal: React.FC = () => {
                             </p>
                           </div>
 
-                          <div className="rounded-2xl border border-border-color bg-white p-2">
+                          <div className="quiz-textarea-shell">
                             <textarea
                               value={freeTextAnswer}
                               onChange={(event) => handleTextChange(event.target.value)}
                               placeholder={t('quiz.freeTextPlaceholder')}
-                              className="input-base min-h-[220px] resize-none border-0 shadow-none focus:border-0 focus:shadow-none"
+                              className="input-base quiz-textarea-input"
                             />
                           </div>
                         </motion.div>
@@ -274,7 +274,7 @@ export const QuizModal: React.FC = () => {
 
                   {/* Footer Actions */}
                   {!hasResult && !packSaving && (isTextStep || isPlanStep) && (
-                    <div className="mt-8 flex justify-between items-center pt-4 border-t border-border-color">
+                    <div className="quiz-modal-footer">
                       <Button
                         variant="ghost"
                         onClick={prevStep}
@@ -285,13 +285,13 @@ export const QuizModal: React.FC = () => {
 
                       {isTextStep && (
                         <div className="hidden sm:flex items-center gap-2 flex-1 mx-4 overflow-x-auto">
-                          <span className="text-xs text-[var(--color-caramel)] whitespace-nowrap">{t('quiz.chipsLabel')}</span>
+                          <span className="quiz-chip-label">{t('quiz.chipsLabel')}</span>
                           {promptChips.map((chip) => (
                             <button
                               key={chip}
                               type="button"
                               onClick={() => handleAddChip(chip)}
-                              className="px-3 py-1 rounded-full border border-[var(--color-highlight)] bg-[var(--color-highlight)] text-xs text-espresso font-medium hover:bg-[var(--color-cream)] hover:border-[var(--color-caramel)] transition-colors shadow-sm whitespace-nowrap"
+                              className="quiz-chip-btn"
                             >
                               {chip}
                             </button>
@@ -328,7 +328,7 @@ export const QuizModal: React.FC = () => {
                           key={`mobile-${chip}`}
                           type="button"
                           onClick={() => handleAddChip(chip)}
-                          className="px-3 py-1 rounded-full border border-[var(--color-highlight)] bg-[var(--color-highlight)] text-xs text-espresso font-medium hover:bg-[var(--color-cream)] hover:border-[var(--color-caramel)] transition-colors shadow-sm whitespace-nowrap"
+                          className="quiz-chip-btn"
                         >
                           {chip}
                         </button>
