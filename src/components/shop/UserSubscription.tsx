@@ -13,6 +13,7 @@ import {
   deleteUserSubscription,
   type UserSubscriptionDoc,
   type PackItem,
+  type QuizDoc,
   type ProductCatalogFirestore,
   type UserPack,
   type SubscriptionPlanFirestore,
@@ -29,8 +30,11 @@ import { SubscriptionChangeConfirmModal } from './SubscriptionChangeConfirmModal
 
 interface UserSubscriptionProps {
   uid: string;
+  quizData?: QuizDoc | null;
   onNewPack?: () => void;
 }
+
+const PACK_GENERATION_GRACE_MS = 120000;
 
 const formatDate = (ts: unknown): string => {
   if (!ts) return '—';
@@ -68,11 +72,12 @@ const resolvePlanTotalPrice = (plan: SubscriptionPlanFirestore): number => {
   return legacyTotal;
 };
 
-export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPack }) => {
+export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizData, onNewPack }) => {
   const [sub, setSub] = useState<UserSubscriptionDoc | null>(null);
   const [draftPack, setDraftPack] = useState<UserPack | null>(null);
   const [planPriceById, setPlanPriceById] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [packLoading, setPackLoading] = useState(true);
   const [catalog, setCatalog] = useState<ProductCatalogFirestore[]>([]);
   const [showChangeConfirm, setShowChangeConfirm] = useState(false);
   const [pendingSubscribe, setPendingSubscribe] = useState<(() => void) | null>(null);
@@ -99,10 +104,13 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
   useEffect(() => {
     if (!uid) {
       setDraftPack(null);
+      setPackLoading(false);
       return;
     }
+    setPackLoading(true);
     const unsub = onUserPack(uid, (data) => {
       setDraftPack(data);
+      setPackLoading(false);
     });
     return unsub;
   }, [uid]);
@@ -129,6 +137,16 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
   const hasUserPackDraft = !!draftPack;
   const hasDraftPack = !!draftPack && draftPack.items.length > 0;
   const hasCurrentSubscription = !!sub;
+  const completedAt = quizData?.completedAt;
+  const completedAtDate = completedAt && typeof completedAt === 'object' && 'toDate' in (completedAt as object)
+    ? (completedAt as { toDate: () => Date }).toDate()
+    : completedAt instanceof Date
+      ? completedAt
+      : null;
+  const waitingForFreshPack = !draftPack
+    && !!completedAtDate
+    && Date.now() - completedAtDate.getTime() <= PACK_GENERATION_GRACE_MS;
+  const isLoadingSubscriptionSection = loading || packLoading || waitingForFreshPack;
   const draftPlanPrice = parsePositivePrice(draftPack?.planPrice);
   const draftTotalPrice = parsePositivePrice(draftPack?.totalPrice);
   const resolvedDraftPrice = draftPack
@@ -209,12 +227,12 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, onNewPa
     }
   }, [hasCurrentSubscription, hasUserPackDraft]);
 
-  if (loading) {
+  if (isLoadingSubscriptionSection) {
     return (
       <Card variant="outline" padding="lg" className="user-subscription">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 rounded-full border-2 border-roast border-t-transparent animate-spin" />
-          <span className="text-sm text-muted">{t('profile.loading')}</span>
+          <span className="text-sm text-muted">{waitingForFreshPack ? t('personalPack.generating') : t('profile.loading')}</span>
         </div>
       </Card>
     );

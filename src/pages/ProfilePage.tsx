@@ -156,7 +156,7 @@ export const ProfilePage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.16 }}
               >
-                <UserSubscription uid={authUser!.uid} onNewPack={() => setNewPackOpen(true)} />
+                <UserSubscription uid={authUser!.uid} quizData={quizData} onNewPack={() => setNewPackOpen(true)} />
               </motion.div>
 
               <QuizUserCard

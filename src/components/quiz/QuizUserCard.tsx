@@ -28,6 +28,8 @@ interface QuizUserCardProps {
   onClose: () => void;
 }
 
+const PACK_GENERATION_GRACE_MS = 120000;
+
 /**
  * Resolves a quiz option ID to its human-readable label.
  */
@@ -214,6 +216,15 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const hasProducts = !!pack && pack.items.length > 0;
   const planPrice = selectedPlan ? getPlanPrice(selectedPlan) : 0;
   const planNumberOfProducts = selectedPlan?.numberOfProducts ?? 0;
+  const completedAt = quizData?.completedAt;
+  const completedAtDate = completedAt && typeof completedAt === 'object' && 'toDate' in (completedAt as object)
+    ? (completedAt as { toDate: () => Date }).toDate()
+    : completedAt instanceof Date
+      ? completedAt
+      : null;
+  const waitingForFreshPack = !pack
+    && !!completedAtDate
+    && Date.now() - completedAtDate.getTime() <= PACK_GENERATION_GRACE_MS;
 
   return (
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -290,19 +301,19 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
         </AnimatePresence>
 
         {/* Loading */}
-        {(loading || plansLoading || savingPlan) && (
+        {(loading || plansLoading || savingPlan || waitingForFreshPack) && (
           <div className="quiz-user-card__result" style={{ textAlign: 'center', padding: 'var(--space-4)' }}>
             <div className="flex items-center justify-center gap-3">
               <div className="w-5 h-5 rounded-full border-2 border-roast border-t-transparent animate-spin" />
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-                {savingPlan ? t('personalPack.generating') : t('profile.loading')}
+                {(savingPlan || waitingForFreshPack) ? t('personalPack.generating') : t('profile.loading')}
               </p>
             </div>
           </div>
         )}
 
         {/* ═══ No pack → prompt to take quiz ═══ */}
-        {!loading && !plansLoading && !savingPlan && !pack && (
+        {!loading && !plansLoading && !savingPlan && !waitingForFreshPack && !pack && (
           <div className="quiz-user-card__pack" style={{ textAlign: 'center', padding: 'var(--space-4)' }}>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-3)' }}>
               {t('personalPack.noPackYet')}
