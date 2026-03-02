@@ -563,6 +563,22 @@ export const TEXTS = {
     oneTimePurchase:   { es: 'Compra única', en: 'One-time purchase' },
   },
 
+  /* ── Chat (Profile) ── */
+  chat: {
+    title:            { es: 'Chat con soporte', en: 'Support chat' },
+    open:             { es: 'Abrir chat', en: 'Open chat' },
+    empty:            { es: 'Aún no hay mensajes. Escríbenos cuando quieras.', en: 'No messages yet. Send us a message anytime.' },
+    placeholder:      { es: 'Escribe tu mensaje para el admin...', en: 'Write your message to the admin...' },
+    adminPlaceholder: { es: 'Vista admin sin bandeja habilitada', en: 'Admin view without inbox enabled' },
+    send:             { es: 'Enviar', en: 'Send' },
+    errors: {
+      missingAdmin:   { es: 'Falta configurar adminUserId en appConfig/global.', en: 'Missing adminUserId in appConfig/global.' },
+      adminNoInbox:   { es: 'La bandeja de admin no está habilitada en frontend.', en: 'Admin inbox is not enabled on frontend.' },
+      loadFailed:     { es: 'No se pudo cargar el chat. Inténtalo de nuevo.', en: 'Could not load chat. Please try again.' },
+      sendFailed:     { es: 'No se pudo enviar el mensaje. Inténtalo de nuevo.', en: 'Could not send message. Please try again.' },
+    },
+  },
+
   /* ── Purchase / Checkout ── */
   purchase: {
     processing:      { es: 'Procesando...', en: 'Processing...' },

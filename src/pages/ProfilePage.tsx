@@ -10,8 +10,9 @@ import { useQuizStore } from '../stores/quizStore';
 import { onUserDoc, onUserQuizData, onUserPurchases, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
 import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { UserSubscription } from '../components/shop/UserSubscription';
+import { ProfileChat } from '../components/profile/ProfileChat';
 import { t } from '../data/texts';
-import { LogOut } from 'lucide-react';
+import { LogOut, MessageSquare } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
@@ -23,6 +24,7 @@ export const ProfilePage: React.FC = () => {
   const [quizData, setQuizData] = useState<QuizDoc | null>(null);
   const [purchases, setPurchases] = useState<PurchaseDoc[]>([]);
   const [newPackOpen, setNewPackOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,9 +127,18 @@ export const ProfilePage: React.FC = () => {
                   )}
                 </div>
                 <div className="profile-header__info">
-                  <h1 className="heading-display" style={{ fontSize: 'var(--text-3xl)' }}>
-                    {t('profile.heading')}
-                  </h1>
+                  <div className="profile-header__top-row">
+                    <h1 className="heading-display" style={{ fontSize: 'var(--text-3xl)' }}>
+                      {t('profile.heading')}
+                    </h1>
+                    <button
+                      className="profile-chat-trigger"
+                      onClick={() => setChatOpen(true)}
+                      aria-label={t('chat.open')}
+                    >
+                      <MessageSquare size={18} />
+                    </button>
+                  </div>
                   <p className="body-lg">{displayName}</p>
                   {memberSince && (
                     <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
@@ -169,7 +180,7 @@ export const ProfilePage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.24 }}
+                transition={{ duration: 0.35, delay: 0.22 }}
                 className="profile-logout"
               >
                 <Button variant="ghost" size="sm" onClick={authActions.logout}>
@@ -177,6 +188,8 @@ export const ProfilePage: React.FC = () => {
                   {t('profile.logout')}
                 </Button>
               </motion.div>
+
+              <ProfileChat uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
             </>
           )}
         </Container>

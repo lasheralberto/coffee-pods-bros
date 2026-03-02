@@ -62,6 +62,10 @@ export interface UserDoc {
   packId:             string | null;
 }
 
+export interface AppConfigDoc {
+  adminUserId?: string;
+}
+
 /* ── Helpers ─────────────────────────────────────────────── */
 
 const toAuthUser = (user: User, quizCompleted = false): AuthUser => ({
@@ -320,6 +324,24 @@ export async function getUserQuizData(uid: string): Promise<QuizDoc | null> {
   const ref = doc(db, 'usersToQuiz', uid);
   const snap = await getDoc(ref);
   return snap.exists() ? (snap.data() as QuizDoc) : null;
+}
+
+/**
+ * Fetches app-level configuration from `appConfig/global`.
+ */
+export async function getAppConfig(): Promise<AppConfigDoc | null> {
+  const ref = doc(db, 'appConfig', 'global');
+  const snap = await getDoc(ref);
+  return snap.exists() ? (snap.data() as AppConfigDoc) : null;
+}
+
+/**
+ * Fetches admin user ID from `appConfig/global`.
+ */
+export async function getAdminUserId(): Promise<string | null> {
+  const config = await getAppConfig();
+  const adminUserId = config?.adminUserId;
+  return typeof adminUserId === 'string' && adminUserId.trim() ? adminUserId : null;
 }
 
 /* ── Subscription Plans from Firestore ────────────────── */
@@ -671,6 +693,57 @@ export interface UserSubscriptionDoc {
   genaiDescription?: string | null;
   subscribedAt: unknown;
   updatedAt: unknown;
+}
+
+/* ── Chat ────────────────────────────────────────────────── */
+
+export interface ChatMessageDoc {
+  id?: string;
+  senderId: string;
+  recipientId: string;
+  text: string;
+  createdAt: unknown;
+}
+
+/**
+ * Sends a chat message to `chats/{threadUserId}/messages`.
+ */
+export async function sendChatMessage(
+  threadUserId: string,
+  senderId: string,
+  recipientId: string,
+  text: string,
+): Promise<void> {
+  const trimmedText = text.trim();
+  if (!trimmedText) return;
+
+  const threadRef = doc(db, 'chats', threadUserId);
+  await setDoc(threadRef, {
+    userId: threadUserId,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+
+  const messagesRef = collection(db, 'chats', threadUserId, 'messages');
+  await addDoc(messagesRef, {
+    senderId,
+    recipientId,
+    text: trimmedText,
+    createdAt: serverTimestamp(),
+  });
+}
+
+/**
+ * Subscribes to `chats/{threadUserId}/messages` in real time.
+ */
+export function onChatMessages(
+  threadUserId: string,
+  callback: (messages: ChatMessageDoc[]) => void,
+): FirestoreUnsubscribe {
+  const messagesRef = collection(db, 'chats', threadUserId, 'messages');
+  const q = query(messagesRef, orderBy('createdAt', 'asc'));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessageDoc)));
+  });
 }
 
 /**

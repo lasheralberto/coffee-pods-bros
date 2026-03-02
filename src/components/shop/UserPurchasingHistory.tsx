@@ -67,9 +67,7 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
     <section className="purchase-history">
       {/* Header */}
       <div className="purchase-history__header">
-        <div className="purchase-history__header-icon">
-          <Receipt size={16} />
-        </div>
+
         <h3 className="purchase-history__title">{t('purchase.historyHeading')}</h3>
         {purchases.length > 0 && (
           <span className="purchase-history__count">{purchases.length}</span>
