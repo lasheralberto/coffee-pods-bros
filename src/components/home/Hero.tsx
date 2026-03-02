@@ -36,7 +36,7 @@ export const Hero: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-sm font-mono uppercase tracking-widest text-roast"
+            className="text-sm font-mono uppercase tracking-widest text-[var(--color-highlight)]"
           >
             {t('hero.subtitle')}
           </motion.span>
@@ -52,7 +52,7 @@ export const Hero: React.FC = () => {
             </motion.span>
             <motion.span
               className="block italic drop-shadow-sm"
-              style={{ color: '#e4f54a' }}
+              style={{ color: 'var(--color-highlight)' }}
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8, ease: [0.2, 0.65, 0.3, 0.9] }}
@@ -75,7 +75,12 @@ export const Hero: React.FC = () => {
             transition={{ delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-6 mt-4 items-center justify-center"
           >
-            <Button variant="primary" size="xl" onClick={actions.openQuiz}>
+            <Button
+              variant="primary"
+              size="xl"
+              onClick={actions.openQuiz}
+              className="border-2 border-[var(--color-highlight)]"
+            >
               {t('hero.cta')}
             </Button>
             <div className="flex flex-row gap-4 text-sm text-stone-600 font-medium">
