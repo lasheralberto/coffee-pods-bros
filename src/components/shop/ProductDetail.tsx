@@ -72,7 +72,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }
     <AnimatePresence>
       {product && (
         <div
-          className="fixed inset-0 z-50 flex items-end lg:items-center lg:justify-center"
+          className="fixed inset-0 z-modal flex items-end lg:items-center lg:justify-center"
           role="dialog"
           aria-modal="true"
           aria-label={product.name}

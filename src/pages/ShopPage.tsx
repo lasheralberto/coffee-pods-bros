@@ -256,7 +256,7 @@ export const ShopPage: React.FC = () => {
 
           {drawerOpen && (
             <div
-              className="fixed inset-0 z-50 lg:hidden"
+              className="fixed inset-0 z-modal lg:hidden"
               onClick={() => setDrawerOpen(false)}
               role="dialog"
               aria-modal="true"
