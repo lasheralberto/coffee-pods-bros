@@ -12,7 +12,6 @@
  *   VITE_PINECONE_INDEX_HOST
  */
 
-import { QUIZ_QUESTIONS } from '../data/quizQuestions';
 import { getLocale } from '../data/texts';
 import { getProductsCatalog } from '../providers/firebaseProvider';
 import type { QuizResultProduct, DefaultPackItem } from '../data/matchingRules';
@@ -24,56 +23,31 @@ const PINECONE_HOST    = import.meta.env.VITE_PINECONE_INDEX_HOST as string;
 const EMBEDDING_MODEL  = 'llama-text-embed-v2';
 const NAMESPACE        = 'coffee-products';
 const MIN_SCORE        = 0.3;
+const QUIZ_TEXT_ANSWER_KEY = 1;
 
 /* ── Helpers ─────────────────────────────────────────────── */
-
-function resolveAnswerLabel(questionId: number, answerId: string): string {
-  const question = QUIZ_QUESTIONS.find((q) => q.id === questionId);
-  if (!question) return answerId;
-  const option = question.options.find((o) => o.id === answerId);
-  return option ? option.label : answerId;
-}
 
 /**
  * Converts quiz answers into a natural-language query string
  * that maximises semantic overlap with the product embeddings.
  */
 export function buildQueryText(answers: Record<number, string | string[]>): string {
-  const parts: string[] = [];
+  const freeText = typeof answers[QUIZ_TEXT_ANSWER_KEY] === 'string'
+    ? answers[QUIZ_TEXT_ANSWER_KEY].trim()
+    : '';
 
-  // Q1 — brew method
-  if (answers[1]) {
-    parts.push(`I brew coffee with ${resolveAnswerLabel(1, answers[1] as string)}`);
+  if (freeText.length > 0) {
+    return freeText;
   }
 
-  // Q2 — milk / sugar / black / ice
-  if (answers[2]) {
-    parts.push(`I like my coffee ${resolveAnswerLabel(2, answers[2] as string)}`);
-  }
+  const fallbackParts = Object.values(answers)
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .filter((value) => value.length > 0);
 
-  // Q3 — roast preference
-  if (answers[3]) {
-    parts.push(`I prefer ${resolveAnswerLabel(3, answers[3] as string)} roast`);
-  }
-
-  // Q4 — flavor notes (multi-select)
-  if (answers[4]) {
-    const flavors = Array.isArray(answers[4]) ? answers[4] : [answers[4]];
-    const labels = flavors.map((f) => resolveAnswerLabel(4, f));
-    parts.push(`I enjoy ${labels.join(' and ')} flavor notes`);
-  }
-
-  // Q5 — frequency
-  if (answers[5]) {
-    parts.push(`I drink coffee ${resolveAnswerLabel(5, answers[5] as string)}`);
-  }
-
-  // Q6 — personality
-  if (answers[6]) {
-    parts.push(`My coffee personality is ${resolveAnswerLabel(6, answers[6] as string)}`);
-  }
-
-  return parts.join('. ') + '.';
+  return fallbackParts.length > 0
+    ? fallbackParts.join('. ')
+    : 'Specialty coffee preference profile.';
 }
 
 /* ── Pinecone Inference: query embedding ─────────────────── */

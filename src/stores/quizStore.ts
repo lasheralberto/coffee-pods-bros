@@ -4,6 +4,7 @@ import { getSubscriptionPlanById, saveQuizResults, type PackItem } from '../prov
 import { generatePackDescription } from '../services/genaiService';
 import { queryTopProduct, queryProducts } from '../services/pineconeService';
 
+export const QUIZ_TEXT_ANSWER_KEY = 1;
 export const QUIZ_PLAN_ANSWER_KEY = 100;
 
 const toNumber = (value?: string | number | null): number => {
@@ -29,6 +30,7 @@ interface QuizStore {
   packSaving: boolean;
   actions: {
     setAnswer: (step: number, value: string | string[]) => void;
+    setPackSaving: (saving: boolean) => void;
     nextStep: () => void;
     prevStep: () => void;
     calculateResult: (uid?: string | null) => Promise<void>;
@@ -50,6 +52,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       set((state) => ({
         answers: { ...state.answers, [step]: value },
       })),
+    setPackSaving: (saving) => set({ packSaving: saving }),
     nextStep: () =>
       set((state) => ({
         currentStep: state.currentStep + 1,

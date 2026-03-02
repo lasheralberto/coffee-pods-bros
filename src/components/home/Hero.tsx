@@ -26,8 +26,8 @@ export const Hero: React.FC = () => {
             scale: { duration: 2, ease: "easeOut" }
           }}
         />
-        <div className="absolute inset-0 bg-stone-900/40 mix-blend-overlay z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-stone-900/30 to-stone-900/60 z-10" />
+        <div className="absolute inset-0 bg-black/35 backdrop-blur-[1.5px] z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-stone-900/35 to-stone-900/65 z-20" />
       </div>
 
       <Container size="xl" className="relative z-20 flex flex-col md:items-center md:text-center w-full max-w-4xl mx-auto py-20 px-4">

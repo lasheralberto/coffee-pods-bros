@@ -205,6 +205,23 @@ export const TEXTS = {
       es: 'Responde unas preguntas para encontrar tu café ideal.',
       en: 'Answer a few questions to find your ideal coffee.',
     },
+    freeTextQuestion: {
+      es: 'Cuéntanos cómo te gusta el café',
+      en: 'Tell us how you like your coffee',
+    },
+    freeTextSubtitle: {
+      es: 'Describe sabor, preparación, intensidad y cualquier detalle importante para ti.',
+      en: 'Describe flavor, brew method, intensity, and any detail that matters to you.',
+    },
+    freeTextPlaceholder: {
+      es: 'Ejemplo: preparo espresso en casa, me gusta intenso, poco ácido y con notas de chocolate.',
+      en: 'Example: I brew espresso at home, prefer intense low-acid cups with chocolate notes.',
+    },
+    chipsLabel: { es: 'Sugerencias:', en: 'Suggestions:' },
+    creatingProfile: {
+      es: 'Creando tu perfil y pack personalizado...',
+      en: 'Creating your profile and personalized pack...',
+    },
     questionOf: { es: 'Pregunta', en: 'Question' },
     of: { es: 'de', en: 'of' },
     back: { es: 'Atrás', en: 'Back' },

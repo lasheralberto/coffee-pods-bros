@@ -1,9 +1,9 @@
 import { GoogleGenAI } from '@google/genai';
-import { QUIZ_QUESTIONS } from '../data/quizQuestions';
 import { getLocale } from '../data/texts';
 import type { PackItem } from '../providers/firebaseProvider';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
+const QUIZ_TEXT_ANSWER_KEY = 1;
 
 let aiInstance: GoogleGenAI | null = null;
 
@@ -18,30 +18,23 @@ function getAI(): GoogleGenAI {
 }
 
 /**
- * Resolves a quiz option ID to its human-readable label.
- */
-function resolveAnswerLabel(questionId: number, answerId: string): string {
-  const question = QUIZ_QUESTIONS.find((q) => q.id === questionId);
-  if (!question) return answerId;
-  const option = question.options.find((o) => o.id === answerId);
-  return option ? option.label : answerId;
-}
-
-/**
- * Builds a human-readable summary of quiz answers.
+ * Builds a human-readable summary of user's free-text preferences.
  */
 function buildQuizSummary(answers: Record<number, string | string[]>): string {
-  const lines: string[] = [];
-  for (const [key, val] of Object.entries(answers)) {
-    const qId = Number(key);
-    const question = QUIZ_QUESTIONS.find((q) => q.id === qId);
-    if (!question) continue;
-    const answerLabels = Array.isArray(val)
-      ? val.map((a) => resolveAnswerLabel(qId, a)).join(', ')
-      : resolveAnswerLabel(qId, val);
-    lines.push(`- ${question.question}: ${answerLabels}`);
+  const freeText = typeof answers[QUIZ_TEXT_ANSWER_KEY] === 'string'
+    ? answers[QUIZ_TEXT_ANSWER_KEY].trim()
+    : '';
+
+  if (freeText.length > 0) {
+    return freeText;
   }
-  return lines.join('\n');
+
+  const fallback = Object.values(answers)
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .filter((value) => value.length > 0);
+
+  return fallback.join('. ');
 }
 
 /**
@@ -72,9 +65,9 @@ export async function generatePackDescription(
 
     const prompt = `You are a world-class specialty coffee expert and Q-grader at this company — a precision-driven coffee subscription service.
 
-A customer just completed a taste quiz and we've curated a personalized pack just for them.
+  A customer described their coffee preferences in free text and we've curated a personalized pack just for them.
 
-**Customer quiz answers:**
+  **Customer preference text:**
 ${quizSummary}
 
 **Selected pack:**

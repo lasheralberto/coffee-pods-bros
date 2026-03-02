@@ -6,7 +6,6 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
 import { fmtPrice } from '../../data/shopProducts';
-import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { onUserPack, onSubscriptionPlans, updateUserPackPlan, selectPlanAndRegeneratePack, onProductsCatalog, onUserSubscription } from '../../providers/firebaseProvider';
 import type { QuizDoc, UserPack, PackItem, SubscriptionPlanFirestore, ProductCatalogFirestore, UserSubscriptionDoc } from '../../providers/firebaseProvider';
 import { PackCustomizerModal } from './PackCustomizerModal';
@@ -14,7 +13,7 @@ import { ProductDetail } from '../shop/ProductDetail';
 import { ChevronDown, RefreshCw, ArrowRight, ArrowLeft, Eye, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../stores/cartStore';
-import { QUIZ_PLAN_ANSWER_KEY } from '../../stores/quizStore';
+import { QUIZ_PLAN_ANSWER_KEY, QUIZ_TEXT_ANSWER_KEY } from '../../stores/quizStore';
 import { TypewriterText } from '../ui/TypewriterText';
 import { ExpandableText } from '../ui/ExpandableText';
 import { SubscriptionChangeConfirmModal } from '../shop/SubscriptionChangeConfirmModal';
@@ -29,16 +28,6 @@ interface QuizUserCardProps {
 }
 
 const PACK_GENERATION_GRACE_MS = 120000;
-
-/**
- * Resolves a quiz option ID to its human-readable label.
- */
-function resolveAnswerLabel(questionId: number, answerId: string): string {
-  const question = QUIZ_QUESTIONS.find((q) => q.id === questionId);
-  if (!question) return answerId;
-  const option = question.options.find((o) => o.id === answerId);
-  return option ? option.label : answerId;
-}
 
 function formatDate(ts: unknown): string {
   if (!ts) return '';
@@ -473,15 +462,16 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
               style={{ overflow: 'hidden' }}
             >
               {sortedAnswers.map(({ qId, answer }) => {
-                const question = QUIZ_QUESTIONS.find((q) => q.id === qId);
                 const questionLabel = qId === QUIZ_PLAN_ANSWER_KEY
                   ? t('personalPack.choosePlan')
-                  : question?.question ?? `${t('profile.question')} ${qId}`;
+                  : qId === QUIZ_TEXT_ANSWER_KEY
+                    ? t('quiz.freeTextQuestion')
+                    : `${t('profile.question')} ${qId}`;
                 const answerLabels = Array.isArray(answer)
-                  ? answer.map((a) => resolveAnswerLabel(qId, a)).join(', ')
+                  ? answer.join(', ')
                   : qId === QUIZ_PLAN_ANSWER_KEY
                     ? (plans.find((plan) => plan.id === answer)?.name[locale] ?? answer)
-                    : resolveAnswerLabel(qId, answer);
+                    : answer;
 
                 return (
                   <div key={qId} className="quiz-user-card__answer-row">

@@ -37,33 +37,21 @@ export const Footer: React.FC = () => {
               <ul className="space-y-2 text-sm text-stone-300">
                 <li><a href="#" className="hover:text-white transition-colors">{t('footer.coffeeBeans')}</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">{t('footer.subscriptions')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('footer.accessories')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('footer.gifts')}</a></li>
+                
               </ul>
             </Stack>
             <Stack gap={4}>
               <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">{t('footer.companyCol')}</h3>
               <ul className="space-y-2 text-sm text-stone-300">
                 <li><a href="#" className="hover:text-white transition-colors">{t('footer.ourStory')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('footer.sustainability')}</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">{t('footer.blog')}</a></li>
+               
+                
                 <li><a href="#" className="hover:text-white transition-colors">{t('footer.contact')}</a></li>
               </ul>
             </Stack>
           </Grid>
 
-          {/* Newsletter */}
-          <Stack gap={4}>
-            <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">{t('footer.newsletter')}</h3>
-            <p className="text-sm text-stone-400">
-              {t('footer.newsletterDesc')}
-            </p>
-            <InlineInput
-              placeholder={t('footer.emailPlaceholder')}
-              buttonLabel={t('footer.subscribe')}
-              onSubmit={(val) => console.log(val)}
-            />
-          </Stack>
+        
         </Grid>
 
         <div className="h-px bg-white/10 my-12" />

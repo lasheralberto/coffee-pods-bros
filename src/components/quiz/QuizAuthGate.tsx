@@ -26,12 +26,21 @@ export const QuizAuthGate: React.FC = () => {
   const [view, setView] = useState<AuthView>('signup');
   const { isLoading, error, actions } = useAuthStore();
   const hasQuizResult = useQuizStore((s) => !!s.result);
+  const packSaving = useQuizStore((s) => s.packSaving);
   const saveResultsForUser = useQuizStore((s) => s.actions.saveResultsForUser);
+  const setPackSaving = useQuizStore((s) => s.actions.setPackSaving);
+
+  const loading = isLoading || packSaving;
 
   const handleGoogle = async () => {
-    const user = await actions.loginWithGoogle();
-    if (user && hasQuizResult) {
-      await saveResultsForUser(user.uid);
+    if (hasQuizResult) setPackSaving(true);
+    try {
+      const user = await actions.loginWithGoogle();
+      if (user && hasQuizResult) {
+        await saveResultsForUser(user.uid);
+      }
+    } finally {
+      if (hasQuizResult) setPackSaving(false);
     }
   };
 
@@ -62,7 +71,7 @@ export const QuizAuthGate: React.FC = () => {
           fullWidth
           leftIcon={<Chrome size={18} />}
           onClick={handleGoogle}
-          loading={isLoading}
+          loading={loading}
         >
           {t('auth.continueGoogle')}
         </Button>
@@ -105,7 +114,10 @@ export const QuizAuthGate: React.FC = () => {
 const InlineSignupForm: React.FC = () => {
   const { isLoading, error, actions } = useAuthStore();
   const hasQuizResult = useQuizStore((s) => !!s.result);
+  const packSaving = useQuizStore((s) => s.packSaving);
   const saveResultsForUser = useQuizStore((s) => s.actions.saveResultsForUser);
+  const setPackSaving = useQuizStore((s) => s.actions.setPackSaving);
+  const loading = isLoading || packSaving;
   const {
     register,
     handleSubmit,
@@ -113,9 +125,14 @@ const InlineSignupForm: React.FC = () => {
   } = useForm<SignupData>();
 
   const onSubmit = async (data: SignupData) => {
-    const user = await actions.signupWithEmail(data.email, data.password, data.name);
-    if (user && hasQuizResult) {
-      await saveResultsForUser(user.uid);
+    if (hasQuizResult) setPackSaving(true);
+    try {
+      const user = await actions.signupWithEmail(data.email, data.password, data.name);
+      if (user && hasQuizResult) {
+        await saveResultsForUser(user.uid);
+      }
+    } finally {
+      if (hasQuizResult) setPackSaving(false);
     }
   };
 
@@ -146,7 +163,7 @@ const InlineSignupForm: React.FC = () => {
 
       {error && <p className="auth-error-msg">{error}</p>}
 
-      <Button type="submit" variant="primary" fullWidth loading={isLoading}>
+      <Button type="submit" variant="primary" fullWidth loading={loading}>
         {t('auth.signupBtn')}
       </Button>
     </form>
@@ -158,7 +175,10 @@ const InlineSignupForm: React.FC = () => {
 const InlineLoginForm: React.FC = () => {
   const { isLoading, error, actions } = useAuthStore();
   const hasQuizResult = useQuizStore((s) => !!s.result);
+  const packSaving = useQuizStore((s) => s.packSaving);
   const saveResultsForUser = useQuizStore((s) => s.actions.saveResultsForUser);
+  const setPackSaving = useQuizStore((s) => s.actions.setPackSaving);
+  const loading = isLoading || packSaving;
   const {
     register,
     handleSubmit,
@@ -166,9 +186,14 @@ const InlineLoginForm: React.FC = () => {
   } = useForm<LoginData>();
 
   const onSubmit = async (data: LoginData) => {
-    const user = await actions.loginWithEmail(data.email, data.password);
-    if (user && hasQuizResult) {
-      await saveResultsForUser(user.uid);
+    if (hasQuizResult) setPackSaving(true);
+    try {
+      const user = await actions.loginWithEmail(data.email, data.password);
+      if (user && hasQuizResult) {
+        await saveResultsForUser(user.uid);
+      }
+    } finally {
+      if (hasQuizResult) setPackSaving(false);
     }
   };
 
@@ -192,7 +217,7 @@ const InlineLoginForm: React.FC = () => {
 
       {error && <p className="auth-error-msg">{error}</p>}
 
-      <Button type="submit" variant="primary" fullWidth loading={isLoading}>
+      <Button type="submit" variant="primary" fullWidth loading={loading}>
         {t('auth.loginBtn')}
       </Button>
     </form>

@@ -3,17 +3,34 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useQuizStore, QUIZ_PLAN_ANSWER_KEY } from '../../stores/quizStore';
+import { useQuizStore, QUIZ_PLAN_ANSWER_KEY, QUIZ_TEXT_ANSWER_KEY } from '../../stores/quizStore';
 import { useAuthStore } from '../../stores/authStore';
-import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { ProgressBar } from '../ui/ProgressBar';
 import { Button } from '../ui/Button';
-import { OptionCard } from '../ui/OptionCard';
 import { QuizAuthGate } from './QuizAuthGate';
 import { onSubscriptionPlans, type SubscriptionPlanFirestore } from '../../providers/firebaseProvider';
 
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { getLocale, t } from '../../data/texts';
+
+const QUIZ_TOTAL_STEPS = 2;
+
+const PROMPT_CHIPS = {
+  es: [
+    'Me gusta intenso y con cuerpo',
+    'Lo preparo en espresso',
+    'Prefiero notas chocolate y frutos secos',
+    'Lo tomo con leche',
+    'Busco poca acidez',
+  ],
+  en: [
+    'I like intense, full-bodied coffee',
+    'I brew mostly espresso',
+    'I prefer chocolate and nutty notes',
+    'I drink it with milk',
+    'I want low acidity',
+  ],
+} as const;
 
 export const QuizModal: React.FC = () => {
   const { isOpen, currentStep, answers, result, packSaving, actions } = useQuizStore();
@@ -41,37 +58,29 @@ export const QuizModal: React.FC = () => {
     }
   }, [result, user, isOpen, packSaving, closeQuiz, navigate]);
 
-  const totalSteps = QUIZ_QUESTIONS.length + 1;
-  const isPlanStep = currentStep === QUIZ_QUESTIONS.length;
-  const currentQuestion = isPlanStep ? null : (QUIZ_QUESTIONS[currentStep] ?? null);
-  const isLastStep = currentStep === totalSteps - 1;
+  const isTextStep = currentStep === 0;
+  const isPlanStep = currentStep === 1;
+  const isLastStep = currentStep === QUIZ_TOTAL_STEPS - 1;
   const hasResult = !!result;
+  const isAuthGateSaving = hasResult && !user;
+  const freeTextAnswer = typeof answers[QUIZ_TEXT_ANSWER_KEY] === 'string'
+    ? (answers[QUIZ_TEXT_ANSWER_KEY] as string)
+    : '';
+  const freeTextValue = freeTextAnswer.trim();
   const selectedPlanId = typeof answers[QUIZ_PLAN_ANSWER_KEY] === 'string'
     ? (answers[QUIZ_PLAN_ANSWER_KEY] as string)
     : '';
+  const promptChips = PROMPT_CHIPS[locale] ?? PROMPT_CHIPS.es;
 
-  const handleOptionClick = (optionId: string) => {
-    if (!currentQuestion) return;
-    if (currentQuestion.type === 'multi') {
-      const currentAnswers = (answers[currentQuestion.id] as string[]) || [];
-      if (currentAnswers.includes(optionId)) {
-        setAnswer(
-          currentQuestion.id,
-          currentAnswers.filter((id) => id !== optionId)
-        );
-      } else {
-        if (currentAnswers.length < 2) {
-          setAnswer(currentQuestion.id, [...currentAnswers, optionId]);
-        }
-      }
-    } else {
-      setAnswer(currentQuestion.id, optionId);
-      if (currentStep < QUIZ_QUESTIONS.length - 1) {
-        setTimeout(nextStep, 300);
-      } else {
-        setTimeout(nextStep, 300);
-      }
-    }
+  const handleTextChange = (value: string) => {
+    setAnswer(QUIZ_TEXT_ANSWER_KEY, value);
+  };
+
+  const handleAddChip = (chip: string) => {
+    const nextText = freeTextValue.length === 0
+      ? chip
+      : `${freeTextValue}. ${chip}`;
+    setAnswer(QUIZ_TEXT_ANSWER_KEY, nextText);
   };
 
   const handlePlanClick = (planId: string) => {
@@ -86,7 +95,7 @@ export const QuizModal: React.FC = () => {
     }
   };
 
-  const progress = ((currentStep + 1) / totalSteps) * 100;
+  const progress = ((currentStep + 1) / QUIZ_TOTAL_STEPS) * 100;
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && closeQuiz()}>
@@ -123,7 +132,7 @@ export const QuizModal: React.FC = () => {
                       <div className="flex-1 mr-4">
                         <ProgressBar
                           value={progress}
-                          label={`${t('quiz.questionOf')} ${currentStep + 1} ${t('quiz.of')} ${totalSteps}`}
+                          label={`${t('quiz.questionOf')} ${currentStep + 1} ${t('quiz.of')} ${QUIZ_TOTAL_STEPS}`}
                         />
                       </div>
                     )}
@@ -144,7 +153,7 @@ export const QuizModal: React.FC = () => {
                       >
                         <div className="w-10 h-10 rounded-full border-3 border-roast border-t-transparent animate-spin" />
                         <p className="text-sm text-muted text-center">
-                          {t('personalPack.generating')}
+                          {isAuthGateSaving ? t('quiz.creatingProfile') : t('personalPack.generating')}
                         </p>
                       </motion.div>
                     ) : plansLoading && isPlanStep ? (
@@ -160,6 +169,35 @@ export const QuizModal: React.FC = () => {
                       </motion.div>
                     ) : hasResult && !user ? (
                       <QuizAuthGate />
+                    ) : isTextStep ? (
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key="quiz-text-step"
+                          initial={{ x: 50, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          exit={{ x: -50, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex flex-col gap-6"
+                        >
+                          <div>
+                            <h2 className="heading-section mb-2">
+                              {t('quiz.freeTextQuestion')}
+                            </h2>
+                            <p className="body-lg text-muted">
+                              {t('quiz.freeTextSubtitle')}
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl border border-border-color bg-white p-2">
+                            <textarea
+                              value={freeTextAnswer}
+                              onChange={(event) => handleTextChange(event.target.value)}
+                              placeholder={t('quiz.freeTextPlaceholder')}
+                              className="input-base min-h-[220px] resize-none border-0 shadow-none focus:border-0 focus:shadow-none"
+                            />
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
                     ) : isPlanStep ? (
                       <AnimatePresence mode="wait">
                         <motion.div
@@ -231,54 +269,11 @@ export const QuizModal: React.FC = () => {
                           </div>
                         </motion.div>
                       </AnimatePresence>
-                    ) : currentQuestion ? (
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={currentStep}
-                          initial={{ x: 50, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          exit={{ x: -50, opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex flex-col gap-6"
-                        >
-                          <div>
-                            <h2 className="heading-section mb-2">
-                              {currentQuestion.question}
-                            </h2>
-                            {currentQuestion.subtitle && (
-                              <p className="body-lg text-muted">
-                                {currentQuestion.subtitle}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {currentQuestion.options.map((option) => {
-                              const isSelected =
-                                currentQuestion.type === 'multi'
-                                  ? ((answers[currentQuestion.id] as string[]) || []).includes(
-                                      option.id
-                                    )
-                                  : answers[currentQuestion.id] === option.id;
-
-                              return (
-                                <OptionCard
-                                  key={option.id}
-                                  {...option}
-                                  selected={isSelected}
-                                  onClick={() => handleOptionClick(option.id)}
-                                  multiSelect={currentQuestion.type === 'multi'}
-                                />
-                              );
-                            })}
-                          </div>
-                        </motion.div>
-                      </AnimatePresence>
                     ) : null}
                   </div>
 
                   {/* Footer Actions */}
-                  {!hasResult && !packSaving && (currentQuestion || isPlanStep) && (
+                  {!hasResult && !packSaving && (isTextStep || isPlanStep) && (
                     <div className="mt-8 flex justify-between items-center pt-4 border-t border-border-color">
                       <Button
                         variant="ghost"
@@ -287,18 +282,33 @@ export const QuizModal: React.FC = () => {
                       >
                         {t('quiz.back')}
                       </Button>
-                      {currentQuestion?.type === 'multi' && (
+
+                      {isTextStep && (
+                        <div className="hidden sm:flex items-center gap-2 flex-1 mx-4 overflow-x-auto">
+                          <span className="text-xs text-[var(--color-caramel)] whitespace-nowrap">{t('quiz.chipsLabel')}</span>
+                          {promptChips.map((chip) => (
+                            <button
+                              key={chip}
+                              type="button"
+                              onClick={() => handleAddChip(chip)}
+                              className="px-3 py-1 rounded-full border border-[var(--color-highlight)] bg-[var(--color-highlight)] text-xs text-espresso font-medium hover:bg-[var(--color-cream)] hover:border-[var(--color-caramel)] transition-colors shadow-sm whitespace-nowrap"
+                            >
+                              {chip}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {isTextStep && (
                         <Button
                           variant="primary"
                           onClick={handleNext}
-                          disabled={
-                            !answers[currentQuestion.id] ||
-                            (answers[currentQuestion.id] as string[]).length === 0
-                          }
+                          disabled={freeTextValue.length === 0}
                         >
-                          {isLastStep ? t('quiz.seeResult') : t('quiz.next')}
+                          {t('quiz.next')}
                         </Button>
                       )}
+
                       {isPlanStep && (
                         <Button
                           variant="primary"
@@ -308,6 +318,21 @@ export const QuizModal: React.FC = () => {
                           {t('quiz.seeResult')}
                         </Button>
                       )}
+                    </div>
+                  )}
+
+                  {!hasResult && !packSaving && isTextStep && (
+                    <div className="sm:hidden mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+                      {promptChips.map((chip) => (
+                        <button
+                          key={`mobile-${chip}`}
+                          type="button"
+                          onClick={() => handleAddChip(chip)}
+                          className="px-3 py-1 rounded-full border border-[var(--color-highlight)] bg-[var(--color-highlight)] text-xs text-espresso font-medium hover:bg-[var(--color-cream)] hover:border-[var(--color-caramel)] transition-colors shadow-sm whitespace-nowrap"
+                        >
+                          {chip}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </motion.div>
