@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check } from 'lucide-react';
@@ -17,10 +17,9 @@ import { getLocale, t } from '../../data/texts';
 
 export const QuizModal: React.FC = () => {
   const { isOpen, currentStep, answers, result, packSaving, actions } = useQuizStore();
-  const { closeQuiz, nextStep, prevStep, setAnswer, calculateResult, saveResultsForUser } = actions;
+  const { closeQuiz, nextStep, prevStep, setAnswer, calculateResult } = actions;
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
-  const savedForUid = useRef<string | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlanFirestore[]>([]);
   const [plansLoading, setPlansLoading] = useState(false);
   const locale = getLocale();
@@ -33,14 +32,6 @@ export const QuizModal: React.FC = () => {
     });
     return unsub;
   }, []);
-
-  // When user registers/logs in after completing quiz, save results and redirect to shop
-  useEffect(() => {
-    if (user && result && !packSaving && savedForUid.current !== user.uid) {
-      savedForUid.current = user.uid;
-      saveResultsForUser(user.uid);
-    }
-  }, [user, result, packSaving, saveResultsForUser]);
 
   // When result is ready, user is logged in, and pack has been saved → redirect to profile
   useEffect(() => {

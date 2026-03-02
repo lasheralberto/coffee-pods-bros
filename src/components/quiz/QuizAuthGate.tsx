@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Mail, Chrome, Coffee } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { useQuizStore } from '../../stores/quizStore';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { t } from '../../data/texts';
@@ -24,6 +25,15 @@ interface LoginData {
 export const QuizAuthGate: React.FC = () => {
   const [view, setView] = useState<AuthView>('signup');
   const { isLoading, error, actions } = useAuthStore();
+  const hasQuizResult = useQuizStore((s) => !!s.result);
+  const saveResultsForUser = useQuizStore((s) => s.actions.saveResultsForUser);
+
+  const handleGoogle = async () => {
+    const user = await actions.loginWithGoogle();
+    if (user && hasQuizResult) {
+      await saveResultsForUser(user.uid);
+    }
+  };
 
   return (
     <motion.div
@@ -51,7 +61,7 @@ export const QuizAuthGate: React.FC = () => {
           variant="secondary"
           fullWidth
           leftIcon={<Chrome size={18} />}
-          onClick={actions.loginWithGoogle}
+          onClick={handleGoogle}
           loading={isLoading}
         >
           {t('auth.continueGoogle')}
@@ -94,14 +104,19 @@ export const QuizAuthGate: React.FC = () => {
 
 const InlineSignupForm: React.FC = () => {
   const { isLoading, error, actions } = useAuthStore();
+  const hasQuizResult = useQuizStore((s) => !!s.result);
+  const saveResultsForUser = useQuizStore((s) => s.actions.saveResultsForUser);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignupData>();
 
-  const onSubmit = (data: SignupData) => {
-    actions.signupWithEmail(data.email, data.password, data.name);
+  const onSubmit = async (data: SignupData) => {
+    const user = await actions.signupWithEmail(data.email, data.password, data.name);
+    if (user && hasQuizResult) {
+      await saveResultsForUser(user.uid);
+    }
   };
 
   return (
@@ -142,14 +157,19 @@ const InlineSignupForm: React.FC = () => {
 
 const InlineLoginForm: React.FC = () => {
   const { isLoading, error, actions } = useAuthStore();
+  const hasQuizResult = useQuizStore((s) => !!s.result);
+  const saveResultsForUser = useQuizStore((s) => s.actions.saveResultsForUser);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginData>();
 
-  const onSubmit = (data: LoginData) => {
-    actions.loginWithEmail(data.email, data.password);
+  const onSubmit = async (data: LoginData) => {
+    const user = await actions.loginWithEmail(data.email, data.password);
+    if (user && hasQuizResult) {
+      await saveResultsForUser(user.uid);
+    }
   };
 
   return (

@@ -25,9 +25,9 @@ interface AuthStore {
     openAuth:       (view?: AuthView) => void;
     closeAuth:      () => void;
     switchView:     (view: AuthView) => void;
-    loginWithEmail: (email: string, password: string) => Promise<void>;
-    signupWithEmail:(email: string, password: string, name?: string) => Promise<void>;
-    loginWithGoogle:() => Promise<void>;
+    loginWithEmail: (email: string, password: string) => Promise<AuthUser | null>;
+    signupWithEmail:(email: string, password: string, name?: string) => Promise<AuthUser | null>;
+    loginWithGoogle:() => Promise<AuthUser | null>;
     logout:         () => Promise<void>;
     clearError:     () => void;
   };
@@ -52,8 +52,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const result = await signInWithEmail(email, password);
       if (result.success) {
         set({ isLoading: false, isOpen: false });
+        return result.user ?? null;
       } else {
         set({ isLoading: false, error: result.error ?? 'Login failed' });
+        return null;
       }
     },
 
@@ -62,8 +64,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const result = await signUpWithEmail(email, password, name);
       if (result.success) {
         set({ isLoading: false, isOpen: false });
+        return result.user ?? null;
       } else {
         set({ isLoading: false, error: result.error ?? 'Signup failed' });
+        return null;
       }
     },
 
@@ -72,8 +76,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const result = await signInWithGoogle();
       if (result.success) {
         set({ isLoading: false, isOpen: false });
+        return result.user ?? null;
       } else {
         set({ isLoading: false, error: result.error ?? 'Google sign-in failed' });
+        return null;
       }
     },
 
