@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Chrome } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { useQuizStore } from '../../stores/quizStore';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { t } from '../../data/texts';
@@ -28,7 +30,11 @@ type SignupData = z.infer<typeof signupSchema>;
 
 /* ── Login Form ──────────────────────────────────────────── */
 
-const LoginForm: React.FC = () => {
+type LoginFormProps = {
+  onLoginSuccess: () => void;
+};
+
+const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const { isLoading, error, actions } = useAuthStore();
   const {
     register,
@@ -36,8 +42,11 @@ const LoginForm: React.FC = () => {
     formState: { errors },
   } = useForm<LoginData>();
 
-  const onSubmit = (data: LoginData) => {
-    actions.loginWithEmail(data.email, data.password);
+  const onSubmit = async (data: LoginData) => {
+    const user = await actions.loginWithEmail(data.email, data.password);
+    if (user) {
+      onLoginSuccess();
+    }
   };
 
   return (
@@ -129,10 +138,19 @@ const SignupForm: React.FC = () => {
 
 export const AuthModal: React.FC = () => {
   const { isOpen, view, actions } = useAuthStore();
+  const quizActions = useQuizStore((s) => s.actions);
+  const navigate = useNavigate();
 
   const prefersReduced = typeof window !== 'undefined'
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
+
+  const handleGoogleLogin = async () => {
+    const user = await actions.loginWithGoogle();
+    if (user) {
+      navigate('/profile');
+    }
+  };
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && actions.closeAuth()}>
@@ -187,7 +205,7 @@ export const AuthModal: React.FC = () => {
                       variant="secondary"
                       fullWidth
                       leftIcon={<Chrome size={18} />}
-                      onClick={actions.loginWithGoogle}
+                      onClick={handleGoogleLogin}
                     >
                       {t('auth.continueGoogle')}
                     </Button>
@@ -205,7 +223,7 @@ export const AuthModal: React.FC = () => {
                         exit={{ opacity: 0, x: view === 'login' ? 20 : -20 }}
                         transition={{ duration: 0.2 }}
                       >
-                        {view === 'login' ? <LoginForm /> : <SignupForm />}
+                        {view === 'login' ? <LoginForm onLoginSuccess={() => navigate('/profile')} /> : <SignupForm />}
                       </motion.div>
                     </AnimatePresence>
 
@@ -215,9 +233,14 @@ export const AuthModal: React.FC = () => {
                       <button
                         type="button"
                         className="auth-switch-link"
-                        onClick={() =>
-                          actions.switchView(view === 'login' ? 'signup' : 'login')
-                        }
+                        onClick={() => {
+                          if (view === 'login') {
+                            actions.closeAuth();
+                            quizActions.openQuiz();
+                            return;
+                          }
+                          actions.switchView('login');
+                        }}
                       >
                         {view === 'login' ? t('auth.goToSignup') : t('auth.goToLogin')}
                       </button>

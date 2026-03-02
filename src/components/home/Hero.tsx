@@ -128,7 +128,7 @@ export const Hero: React.FC = () => {
           <AwardSeal
             text={t('hero.awardText')}
             centerText={t('hero.awardCenter')}
-            size="md"
+            size="sm"
             className="bg-cream shadow-2xl"
           />
         </motion.div>

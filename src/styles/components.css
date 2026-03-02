@@ -408,6 +408,71 @@
 }
 @media (min-width: 768px) { .sticky-cta-mobile { display: none; } }
 
+/* ── MOBILE BOTTOM NAV (Apple-like) ──────────────────────── */
+
+.mobile-bottom-nav {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-navbar);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid rgba(250, 247, 242, 0.2);
+  border-radius: var(--radius-2xl);
+  background: rgba(26, 15, 10, 0.92);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 34px rgba(26, 15, 10, 0.28);
+}
+
+.mobile-bottom-nav--guest {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mobile-bottom-nav__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  border-radius: var(--radius-xl);
+  color: var(--color-cream);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.mobile-bottom-nav__item:hover {
+  background: rgba(228, 245, 74, 0.12);
+}
+
+.mobile-bottom-nav__item.is-active {
+  background: var(--color-highlight);
+  color: var(--color-espresso);
+  box-shadow: var(--shadow-sm);
+}
+
+.mobile-bottom-nav__item--cta {
+  border: none;
+  background: rgba(228, 245, 74, 0.18);
+}
+
+.mobile-bottom-nav__item--cta:hover {
+  background: rgba(228, 245, 74, 0.3);
+}
+
+@media (min-width: 768px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+}
+
 /* ── CART ─────────────────────────────────────────────────── */
 
 .cart-drawer-root {
@@ -774,14 +839,20 @@
 
 /* ── UTILITIES ────────────────────────────────────────────── */
 .pt-navbar-desktop {
-  padding-top: var(--navbar-height-mobile);
+  padding-top: 0;
 }
 .h-navbar-desktop {
   height: var(--navbar-height-mobile);
 }
+.pb-mobile-bottom-nav {
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+}
 @media (min-width: 768px) {
   .pt-navbar-desktop {
     padding-top: var(--navbar-height-desktop);
+  }
+  .pb-mobile-bottom-nav {
+    padding-bottom: 0;
   }
   .h-navbar-desktop {
     height: var(--navbar-height-desktop);
