@@ -267,8 +267,14 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
                   <span className="text-sm text-muted">{t('userSubscription.total')}</span>
                   <span className="text-lg font-bold text-primary">{hasValidDraftPlanPrice ? fmtPrice(resolvedDraftPrice) : '—'}</span>
                 </div>
-                <Button variant="primary" size="sm" onClick={handleSubscribeDraftPack} disabled={!hasValidDraftPlanPrice}>
-                  <RefreshCw size={14} />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSubscribeDraftPack}
+                  disabled={!hasValidDraftPlanPrice}
+                  className="user-subscription__subscribe-btn"
+                >
+                  <RefreshCw size={12} />
                   {t('userSubscription.subscribeCta')}
                 </Button>
               </div>
@@ -376,11 +382,17 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
                           </div>
                         </div>
                         <div className="user-subscription__draft-actions">
-                          <Button variant="primary" size="sm" onClick={handleSubscribeDraftPack} disabled={!hasValidDraftPlanPrice}>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleSubscribeDraftPack}
+                            disabled={!hasValidDraftPlanPrice}
+                            className="user-subscription__subscribe-btn"
+                          >
                             <RefreshCw size={14} />
                             {t('personalPack.subscribeBtn')}
                           </Button>
-                          <Button variant="accent" size="sm" onClick={onNewPack}>
+                          <Button variant="accent" size="sm" onClick={onNewPack} className="user-subscription__customize-btn">
                             {hasDraftPack ? t('profile.customizePack') : t('personalPack.selectProducts')}
                           </Button>
                         </div>
