@@ -18,7 +18,7 @@ export interface ShopProduct {
 
 export type PriceFilter = 'any' | '16.99' | '21.99' | '22-30' | '30+';
 export type RoastFilter = 'any' | 'light' | 'medium' | 'dark';
-export type TasteFilter = 'any' | 'chocolate' | 'nutty' | 'fruity' | 'floral' | 'caramel' | 'smoky' | 'citrus';
+export type TasteFilter = 'any' | string;
 
 export interface ShopFilters {
   price: PriceFilter;

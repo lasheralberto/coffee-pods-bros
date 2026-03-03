@@ -10,7 +10,6 @@ import { PageTransition, childVariants } from '../components/layout/PageTransiti
 import {
   PRICE_OPTIONS,
   ROAST_OPTIONS,
-  TASTE_OPTIONS,
   SORT_OPTIONS,
   INITIAL_FILTERS,
   filterProducts,
@@ -30,13 +29,14 @@ import { onProductsCatalog, type ProductCatalogFirestore } from '../providers/fi
 
 interface FilterPanelProps {
   filters: ShopFilters;
+  tasteOptions: { label: string; value: string }[];
   onChange: <K extends keyof ShopFilters>(key: K, value: ShopFilters[K]) => void;
   onClear: () => void;
   onClose?: () => void;
   activeCount: number;
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onChange, onClear, onClose, activeCount }) => (
+const FilterPanel: React.FC<FilterPanelProps> = ({ filters, tasteOptions, onChange, onClear, onClose, activeCount }) => (
   <nav aria-label="Product filters" className="flex flex-col gap-1.5">
     <div className="flex items-center justify-between pb-3 mb-2">
       <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-primary">
@@ -72,7 +72,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ filters, onChange, onClear, o
     <FilterGroup
       title={t('shop.coffeeTasksLike')}
       name="taste"
-      options={TASTE_OPTIONS}
+      options={tasteOptions}
       selected={filters.taste}
       onChange={(v) => onChange('taste', v as TasteFilter)}
     />
@@ -100,8 +100,12 @@ function toShopProduct(doc: ProductCatalogFirestore, locale: string): ShopProduc
     image:       doc.image,
     isNew:       doc.isNew,
     roast:       doc.roast,
-    tastesLike:  doc.tastesLike,
+    tastesLike:  doc.tastesLike.map((taste) => taste.trim().toLowerCase()).filter(Boolean),
   };
+}
+
+function formatTasteLabel(taste: string): string {
+  return taste.charAt(0).toUpperCase() + taste.slice(1);
 }
 
 export const ShopPage: React.FC = () => {
@@ -146,10 +150,28 @@ export const ShopPage: React.FC = () => {
 
   const filtered = useMemo(() => sortProducts(filterProducts(products, filters), sortBy), [products, filters, sortBy]);
 
+  const tasteOptions = useMemo(() => {
+    const unique = new Set<string>();
+    products.forEach((product) => {
+      product.tastesLike.forEach((taste) => {
+        const normalized = taste.trim().toLowerCase();
+        if (normalized) unique.add(normalized);
+      });
+    });
+
+    return [
+      { label: t('shop.filterAny'), value: 'any' },
+      ...Array.from(unique)
+        .sort((a, b) => a.localeCompare(b))
+        .map((taste) => ({ label: formatTasteLabel(taste), value: taste })),
+    ];
+  }, [products]);
+
   const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? t('shop.featured');
 
   const panelProps: FilterPanelProps = {
     filters,
+    tasteOptions,
     onChange: updateFilter,
     onClear: clearFilters,
     activeCount,
