@@ -7,10 +7,11 @@ import { QuizUserCard } from '../components/quiz/QuizUserCard';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../stores/authStore';
 import { useQuizStore } from '../stores/quizStore';
-import { onUserDoc, onUserQuizData, onUserPurchases, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
+import { onUserDoc, onUserQuizData, onUserPurchases, getAdminUserId, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
 import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { ProfileChat } from '../components/profile/ProfileChat';
+import { AdminProductsCatalogEditor } from '../components/profile/AdminProductsCatalogEditor';
 import { t } from '../data/texts';
 import { LogOut, MessageSquare } from 'lucide-react';
 
@@ -25,8 +26,29 @@ export const ProfilePage: React.FC = () => {
   const [purchases, setPurchases] = useState<PurchaseDoc[]>([]);
   const [newPackOpen, setNewPackOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authUser?.uid) {
+      setIsAdmin(false);
+      return;
+    }
+    let mounted = true;
+    getAdminUserId()
+      .then((adminUid) => {
+        if (!mounted) return;
+        setIsAdmin(Boolean(adminUid && adminUid === authUser.uid));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setIsAdmin(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [authUser?.uid]);
 
   useEffect(() => {
     if (!authUser?.uid) {
@@ -176,11 +198,21 @@ export const ProfilePage: React.FC = () => {
                 <UserPurchasingHistory purchases={purchases} />
               </motion.div>
 
+              {isAdmin && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.21 }}
+                >
+                  <AdminProductsCatalogEditor />
+                </motion.div>
+              )}
+
               {/* Logout */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.22 }}
+                transition={{ duration: 0.35, delay: 0.24 }}
                 className="profile-logout"
               >
                 <Button variant="ghost" size="sm" onClick={authActions.logout}>

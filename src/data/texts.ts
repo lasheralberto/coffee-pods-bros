@@ -36,7 +36,7 @@ export const t = (key: string): string => {
 export const TEXTS = {
   /* ── Navbar ── */
   navbar: {
-    logo: { es: 'ORIGEN', en: 'ORIGEN' },
+    logo: { es: 'ALMA', en: 'ALMA' },
     home: { es: 'Inicio', en: 'Home' },
     shop: { es: 'Tienda', en: 'Shop' },
     about: { es: 'Nosotros', en: 'About Us' },

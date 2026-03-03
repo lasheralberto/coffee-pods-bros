@@ -26,7 +26,7 @@ import {
   writeBatch,
   type Unsubscribe as FirestoreUnsubscribe,
 } from 'firebase/firestore';
-import { ref, getDownloadURL } from 'firebase/storage';
+import { ref, getDownloadURL, uploadBytes, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '../config/firebase';
 
 /* ── Types ───────────────────────────────────────────────── */
@@ -552,10 +552,101 @@ export interface ProductCatalogFirestore {
   description: Record<string, string>;
   price:       number;
   image:       string;
+  imageStoragePath?: string | null;
   isNew:       boolean;
   roast:       'light' | 'medium' | 'dark';
   tastesLike:  string[];
   order?:      number;
+}
+
+interface ProductCatalogFirestoreRaw {
+  brand: string;
+  name: Record<string, string>;
+  description: Record<string, string>;
+  price: number;
+  image?: string;
+  imageStoragePath?: string | null;
+  isNew: boolean;
+  roast: 'light' | 'medium' | 'dark';
+  tastesLike: string[];
+  order?: number;
+}
+
+export interface AdminProductCatalogPayload {
+  brand: string;
+  name: Record<string, string>;
+  description: Record<string, string>;
+  price: number;
+  isNew: boolean;
+  roast: 'light' | 'medium' | 'dark';
+  tastesLike: string[];
+  order?: number;
+}
+
+export interface ProductCatalogImageUploadResult {
+  imageUrl: string;
+  imageStoragePath: string;
+}
+
+const PRODUCT_CATALOG_STORAGE_PREFIX = 'productCatalog';
+
+const isStoragePath = (value: string): boolean => {
+  if (!value) return false;
+  return !value.startsWith('http://') && !value.startsWith('https://');
+};
+
+function normalizeProductCatalogDoc(id: string, data: ProductCatalogFirestoreRaw, resolvedImage: string): ProductCatalogFirestore {
+  const rawImage = typeof data.image === 'string' ? data.image : '';
+  const fallbackStoragePath = isStoragePath(rawImage) ? rawImage : null;
+  return {
+    id,
+    brand: data.brand,
+    name: data.name,
+    description: data.description,
+    price: data.price,
+    image: resolvedImage,
+    imageStoragePath: data.imageStoragePath ?? fallbackStoragePath,
+    isNew: data.isNew,
+    roast: data.roast,
+    tastesLike: data.tastesLike,
+    order: data.order,
+  };
+}
+
+async function assertCurrentUserIsAdmin(): Promise<void> {
+  const currentUid = auth.currentUser?.uid;
+  if (!currentUid) {
+    throw new Error('Debe iniciar sesión para administrar el catálogo.');
+  }
+  const adminUid = await getAdminUserId();
+  if (!adminUid || adminUid !== currentUid) {
+    throw new Error('No tiene permisos de administrador para esta acción.');
+  }
+}
+
+function validateAdminProductPayload(payload: AdminProductCatalogPayload): void {
+  const hasNameEs = typeof payload.name?.es === 'string' && payload.name.es.trim().length > 0;
+  const hasNameEn = typeof payload.name?.en === 'string' && payload.name.en.trim().length > 0;
+  const hasDescEs = typeof payload.description?.es === 'string' && payload.description.es.trim().length > 0;
+  const hasDescEn = typeof payload.description?.en === 'string' && payload.description.en.trim().length > 0;
+
+  if (!payload.brand.trim()) throw new Error('La marca es obligatoria.');
+  if (!hasNameEs || !hasNameEn) throw new Error('El nombre es obligatorio en ES y EN.');
+  if (!hasDescEs || !hasDescEn) throw new Error('La descripción es obligatoria en ES y EN.');
+  if (!Number.isFinite(payload.price) || payload.price <= 0) throw new Error('El precio debe ser un número mayor que 0.');
+  if (!['light', 'medium', 'dark'].includes(payload.roast)) throw new Error('El tueste no es válido.');
+  if (!Array.isArray(payload.tastesLike) || payload.tastesLike.length === 0) {
+    throw new Error('Añada al menos una nota de sabor.');
+  }
+  if (payload.order !== undefined && !Number.isFinite(payload.order)) {
+    throw new Error('El orden debe ser numérico.');
+  }
+}
+
+function buildCatalogImageStoragePath(productId: string, fileName: string): string {
+  const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
+  const timestamp = Date.now();
+  return `${PRODUCT_CATALOG_STORAGE_PREFIX}/${productId}/${timestamp}_${sanitizedName}`;
 }
 
 /**
@@ -585,17 +676,157 @@ export async function getProductsCatalog(): Promise<ProductCatalogFirestore[]> {
 
   const products = await Promise.all(
     snap.docs.map(async (d) => {
-      const data = d.data();
+      const data = d.data() as ProductCatalogFirestoreRaw;
       const resolvedImage = await resolveStorageUrl(data.image ?? '');
-      return {
-        id: d.id,
-        ...data,
-        image: resolvedImage ?? '',
-      } as ProductCatalogFirestore;
+      return normalizeProductCatalogDoc(d.id, data, resolvedImage ?? '');
     }),
   );
 
   return products.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+/**
+ * Uploads a product catalog image to Firebase Storage and returns URL + storage path.
+ */
+export async function uploadProductCatalogImage(
+  productId: string,
+  file: File,
+): Promise<ProductCatalogImageUploadResult> {
+  await assertCurrentUserIsAdmin();
+  if (!file) throw new Error('Debe seleccionar una imagen.');
+
+  const path = buildCatalogImageStoragePath(productId, file.name);
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file, { contentType: file.type || undefined });
+  const imageUrl = await getDownloadURL(storageRef);
+  return { imageUrl, imageStoragePath: path };
+}
+
+/**
+ * Deletes an existing product catalog image from Firebase Storage.
+ */
+export async function deleteProductCatalogImage(storagePath: string): Promise<void> {
+  await assertCurrentUserIsAdmin();
+  if (!storagePath) return;
+  await deleteObject(ref(storage, storagePath));
+}
+
+/**
+ * Creates a new product in `productsCatalog` with Firestore Auto-ID.
+ */
+export async function createProductCatalogProduct(
+  payload: AdminProductCatalogPayload,
+  imageFile: File,
+): Promise<string> {
+  await assertCurrentUserIsAdmin();
+  validateAdminProductPayload(payload);
+
+  const colRef = collection(db, 'productsCatalog');
+  const productRef = doc(colRef);
+  const { imageUrl, imageStoragePath } = await uploadProductCatalogImage(productRef.id, imageFile);
+
+  const data: ProductCatalogFirestoreRaw = {
+    brand: payload.brand.trim(),
+    name: {
+      es: payload.name.es.trim(),
+      en: payload.name.en.trim(),
+    },
+    description: {
+      es: payload.description.es.trim(),
+      en: payload.description.en.trim(),
+    },
+    price: payload.price,
+    image: imageUrl,
+    imageStoragePath,
+    isNew: payload.isNew,
+    roast: payload.roast,
+    tastesLike: payload.tastesLike.map((taste) => taste.trim()).filter(Boolean),
+    order: payload.order,
+  };
+
+  await setDoc(productRef, data);
+  return productRef.id;
+}
+
+/**
+ * Updates an existing product and optionally replaces/removes image.
+ */
+export async function updateProductCatalogProduct(
+  productId: string,
+  payload: AdminProductCatalogPayload,
+  imageFile?: File | null,
+  options?: { removeImage?: boolean },
+): Promise<void> {
+  await assertCurrentUserIsAdmin();
+  validateAdminProductPayload(payload);
+
+  const productRef = doc(db, 'productsCatalog', productId);
+  const snap = await getDoc(productRef);
+  if (!snap.exists()) {
+    throw new Error('Producto no encontrado.');
+  }
+
+  const currentData = snap.data() as ProductCatalogFirestoreRaw;
+  const currentImageRaw = typeof currentData.image === 'string' ? currentData.image : '';
+  const currentStoragePath = currentData.imageStoragePath ?? (isStoragePath(currentImageRaw) ? currentImageRaw : null);
+
+  let nextImage = currentImageRaw;
+  let nextStoragePath: string | null = currentStoragePath;
+
+  if (imageFile) {
+    const { imageUrl, imageStoragePath } = await uploadProductCatalogImage(productId, imageFile);
+    nextImage = imageUrl;
+    nextStoragePath = imageStoragePath;
+    if (currentStoragePath && currentStoragePath !== imageStoragePath) {
+      await deleteObject(ref(storage, currentStoragePath));
+    }
+  } else if (options?.removeImage) {
+    if (currentStoragePath) {
+      await deleteObject(ref(storage, currentStoragePath));
+    }
+    nextImage = '';
+    nextStoragePath = null;
+  }
+
+  const data: ProductCatalogFirestoreRaw = {
+    brand: payload.brand.trim(),
+    name: {
+      es: payload.name.es.trim(),
+      en: payload.name.en.trim(),
+    },
+    description: {
+      es: payload.description.es.trim(),
+      en: payload.description.en.trim(),
+    },
+    price: payload.price,
+    image: nextImage,
+    imageStoragePath: nextStoragePath,
+    isNew: payload.isNew,
+    roast: payload.roast,
+    tastesLike: payload.tastesLike.map((taste) => taste.trim()).filter(Boolean),
+    order: payload.order,
+  };
+
+  await updateDoc(productRef, data as Record<string, unknown>);
+}
+
+/**
+ * Deletes a product from Firestore and its associated Storage image when present.
+ */
+export async function deleteProductCatalogProduct(productId: string): Promise<void> {
+  await assertCurrentUserIsAdmin();
+  const productRef = doc(db, 'productsCatalog', productId);
+  const snap = await getDoc(productRef);
+  if (!snap.exists()) return;
+
+  const data = snap.data() as ProductCatalogFirestoreRaw;
+  const imageRaw = typeof data.image === 'string' ? data.image : '';
+  const storagePath = data.imageStoragePath ?? (isStoragePath(imageRaw) ? imageRaw : null);
+  if (storagePath) {
+    await deleteObject(ref(storage, storagePath));
+  }
+
+  await deleteDoc(productRef);
 }
 
 /* ── User Purchases ──────────────────────────────────────── */
@@ -846,9 +1077,9 @@ export function onProductsCatalog(
   return onSnapshot(colRef, async (snap) => {
     const products = await Promise.all(
       snap.docs.map(async (d) => {
-        const data = d.data();
+        const data = d.data() as ProductCatalogFirestoreRaw;
         const resolvedImage = await resolveStorageUrl(data.image ?? '');
-        return { id: d.id, ...data, image: resolvedImage ?? '' } as ProductCatalogFirestore;
+        return normalizeProductCatalogDoc(d.id, data, resolvedImage ?? '');
       }),
     );
     callback(products.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
