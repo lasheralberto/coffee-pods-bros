@@ -46,13 +46,19 @@ export const Navbar: React.FC = () => {
               {t('navbar.logo')}
             </Link>
 
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-2 desktop-nav">
               {isAuthenticated ? (
                 <>
-                  <Link to="/shop" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
+                  <NavLink
+                    to="/shop"
+                    className={({ isActive }) => `desktop-nav__item ${isActive ? 'is-active' : ''}`}
+                  >
                     {t('navbar.shop')}
-                  </Link>
-                  <Link to="/profile" className="nav-profile-link">
+                  </NavLink>
+                  <NavLink
+                    to="/profile"
+                    className={({ isActive }) => `nav-profile-link desktop-nav__item ${isActive ? 'is-active' : ''}`}
+                  >
                     <span className="nav-profile-avatar">
                       {authUser?.photoURL ? (
                         <img src={authUser.photoURL} alt="" />
@@ -63,25 +69,38 @@ export const Navbar: React.FC = () => {
                     <span className="text-sm font-medium uppercase tracking-wide">
                       {t('navProfile.myProfile')}
                     </span>
-                  </Link>
+                  </NavLink>
                 </>
               ) : (
                 <>
-                  <Link to="/" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
+                  <NavLink
+                    to="/"
+                    end
+                    className={({ isActive }) => `desktop-nav__item ${isActive ? 'is-active' : ''}`}
+                  >
                     {t('navbar.home')}
-                  </Link>
-                  <Link to="/shop" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
+                  </NavLink>
+                  <NavLink
+                    to="/shop"
+                    className={({ isActive }) => `desktop-nav__item ${isActive ? 'is-active' : ''}`}
+                  >
                     {t('navbar.shop')}
-                  </Link>
-                  <Link to="/our-story" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
+                  </NavLink>
+                  <NavLink
+                    to="/our-story"
+                    className={({ isActive }) => `desktop-nav__item ${isActive ? 'is-active' : ''}`}
+                  >
                     {t('navbar.ourStory')}
-                  </Link>
-                  <Link to="/contact" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
+                  </NavLink>
+                  <NavLink
+                    to="/contact"
+                    className={({ isActive }) => `desktop-nav__item ${isActive ? 'is-active' : ''}`}
+                  >
                     {t('navbar.contact')}
-                  </Link>
+                  </NavLink>
                   <button
                     type="button"
-                    className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors"
+                    className="desktop-nav__item"
                     onClick={() => authActions.openAuth('login')}
                   >
                     {t('auth.loginBtn')}
