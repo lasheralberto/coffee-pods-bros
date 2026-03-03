@@ -807,7 +807,7 @@ export async function updateProductCatalogProduct(
     order: payload.order,
   };
 
-  await updateDoc(productRef, data as Record<string, unknown>);
+  await updateDoc(productRef, data as unknown as Record<string, unknown>);
 }
 
 /**
