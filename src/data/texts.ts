@@ -40,6 +40,8 @@ export const TEXTS = {
     home: { es: 'Inicio', en: 'Home' },
     shop: { es: 'Tienda', en: 'Shop' },
     about: { es: 'Nosotros', en: 'About Us' },
+    ourStory: { es: 'Nuestra historia', en: 'Our Story' },
+    contact: { es: 'Contacto', en: 'Contact' },
     startQuiz: { es: 'Empezar Quiz', en: 'Start Quiz' },
     cartAriaLabel: { es: 'Carrito', en: 'Cart' },
     cartItems: { es: 'artículos', en: 'items' },
@@ -301,6 +303,65 @@ export const TEXTS = {
       es: 'Democratizar el acceso al café de especialidad y apoyar a los productores y tostadores que hacen las cosas bien.',
       en: 'Democratize access to specialty coffee and support the producers and roasters who do things right.',
     },
+  },
+
+  /* ── Our Story Page ── */
+  ourStory: {
+    badge: { es: 'NUESTRA HISTORIA', en: 'OUR STORY' },
+    heading: { es: 'Del tostador a tu taza, sin rodeos', en: 'From the roaster to your cup, no detours' },
+    intro: {
+      es: 'Nacimos para hacer simple el café de especialidad: seleccionar lotes increíbles, tostarlos en su punto y enviarlos frescos para que disfrutes cada taza como debe ser.',
+      en: 'We were born to make specialty coffee simple: select incredible lots, roast them at their peak, and deliver them fresh so every cup tastes the way it should.',
+    },
+    value1Title: { es: 'Selección honesta', en: 'Honest selection' },
+    value1Text: {
+      es: 'Probamos cafés de productores y tostadores que trabajan con trazabilidad, calidad y un precio justo.',
+      en: 'We taste coffees from producers and roasters who work with traceability, quality, and fair pricing.',
+    },
+    value2Title: { es: 'Tueste preciso', en: 'Precise roasting' },
+    value2Text: {
+      es: 'Cada lote se tuesta con curva propia para resaltar dulzor, equilibrio y notas de cata limpias.',
+      en: 'Each lot is roasted with its own profile to highlight sweetness, balance, and clean tasting notes.',
+    },
+    value3Title: { es: 'Suscripción flexible', en: 'Flexible subscription' },
+    value3Text: {
+      es: 'Pausas, cambias o cancelas cuando quieras. Sin permanencias y sin letra pequeña.',
+      en: 'Pause, switch, or cancel whenever you want. No lock-ins and no fine print.',
+    },
+    closingBadge: { es: 'ALMA · CAFÉ DE ESPECIALIDAD', en: 'ALMA · SPECIALTY COFFEE' },
+    closingText: {
+      es: 'Nuestro objetivo no es venderte más café; es ayudarte a tomar mejor café, todos los días.',
+      en: 'Our goal is not to sell you more coffee; it is to help you drink better coffee, every day.',
+    },
+  },
+
+  /* ── Contact Page ── */
+  contactPage: {
+    badge: { es: 'CONTACTO', en: 'CONTACT' },
+    heading: { es: 'Hablemos de café', en: 'Let’s talk coffee' },
+    intro: {
+      es: '¿Tienes dudas sobre tu suscripción, pedidos o recomendaciones? Escríbenos y te respondemos lo antes posible.',
+      en: 'Do you have questions about your subscription, orders, or recommendations? Write to us and we will reply as soon as possible.',
+    },
+    formName: { es: 'Nombre', en: 'Name' },
+    formNamePlaceholder: { es: 'Tu nombre', en: 'Your name' },
+    formEmail: { es: 'Email', en: 'Email' },
+    formEmailPlaceholder: { es: 'tu@email.com', en: 'you@email.com' },
+    formPhone: { es: 'Teléfono', en: 'Phone' },
+    formPhonePlaceholder: { es: '+34 600 000 000', en: '+1 (555) 000-0000' },
+    formSubject: { es: 'Asunto', en: 'Subject' },
+    formSubjectPlaceholder: { es: 'Tema de tu mensaje', en: 'Message subject' },
+    formMessage: { es: 'Mensaje', en: 'Message' },
+    formMessagePlaceholder: { es: 'Cuéntanos en qué te podemos ayudar...', en: 'Tell us how we can help you...' },
+    formSubmit: { es: 'Enviar mensaje', en: 'Send message' },
+    formSuccess: { es: '¡Gracias! Hemos recibido tu mensaje y te contactaremos pronto.', en: 'Thanks! We received your message and will get back to you soon.' },
+    infoHeading: { es: 'Atención al cliente', en: 'Customer support' },
+    infoEmailLabel: { es: 'Email', en: 'Email' },
+    infoEmailValue: { es: 'hola@almacoffee.com', en: 'hello@almacoffee.com' },
+    infoPhoneLabel: { es: 'Teléfono', en: 'Phone' },
+    infoPhoneValue: { es: '+34 910 000 000', en: '+1 (555) 010-1020' },
+    infoHoursLabel: { es: 'Horario', en: 'Hours' },
+    infoHoursValue: { es: 'Lunes a Viernes · 9:00 a 18:00', en: 'Monday to Friday · 9:00 AM to 6:00 PM' },
   },
 
   /* ── Home Page CTA ── */

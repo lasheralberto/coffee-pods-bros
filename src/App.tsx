@@ -6,6 +6,8 @@ import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage.tsx';
 import { ProfilePage } from './pages/ProfilePage';
 import { AboutPage } from './pages/AboutPage';
+import { OurStoryPage } from './pages/OurStoryPage';
+import { ContactPage } from './pages/ContactPage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -17,6 +19,8 @@ function AnimatedRoutes() {
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/our-story" element={<OurStoryPage />} />
+        <Route path="/contact" element={<ContactPage />} />
       </Routes>
     </AnimatePresence>
   );

@@ -73,6 +73,12 @@ export const Navbar: React.FC = () => {
                   <Link to="/shop" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
                     {t('navbar.shop')}
                   </Link>
+                  <Link to="/our-story" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
+                    {t('navbar.ourStory')}
+                  </Link>
+                  <Link to="/contact" className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors">
+                    {t('navbar.contact')}
+                  </Link>
                   <button
                     type="button"
                     className="text-sm font-medium uppercase tracking-wide hover:text-roast transition-colors"

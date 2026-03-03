@@ -5,6 +5,7 @@ import { Grid } from '../ui/Grid';
 import { InlineInput } from '../ui/InlineInput';
 import { Instagram, Youtube, Twitter } from 'lucide-react';
 import { t } from '../../data/texts';
+import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   return (
@@ -43,10 +44,16 @@ export const Footer: React.FC = () => {
             <Stack gap={4}>
               <h3 className="text-xs font-mono uppercase tracking-widest text-stone-500">{t('footer.companyCol')}</h3>
               <ul className="space-y-2 text-sm text-stone-300">
-                <li><a href="#" className="hover:text-white transition-colors">{t('footer.ourStory')}</a></li>
-               
-                
-                <li><a href="#" className="hover:text-white transition-colors">{t('footer.contact')}</a></li>
+                <li>
+                  <Link to="/our-story" className="hover:text-white transition-colors">
+                    {t('footer.ourStory')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="hover:text-white transition-colors">
+                    {t('footer.contact')}
+                  </Link>
+                </li>
               </ul>
             </Stack>
           </Grid>
