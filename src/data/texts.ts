@@ -644,6 +644,11 @@ export const TEXTS = {
   /* ── Chat (Profile) ── */
   chat: {
     title:            { es: 'Chat con soporte', en: 'Support chat' },
+    adminInboxTitle:  { es: 'Mensajes de clientes', en: 'Customer messages' },
+    adminInboxSubtitle:{ es: 'Conversaciones recibidas por el admin', en: 'Conversations received by admin' },
+    adminInboxEmpty:  { es: 'No hay conversaciones todavía.', en: 'There are no conversations yet.' },
+    adminThreadEmpty: { es: 'Este usuario aún no tiene mensajes.', en: 'This user has no messages yet.' },
+    userFallback:     { es: 'Usuario', en: 'User' },
     open:             { es: 'Abrir chat', en: 'Open chat' },
     empty:            { es: 'Aún no hay mensajes. Escríbenos cuando quieras.', en: 'No messages yet. Send us a message anytime.' },
     placeholder:      { es: 'Escribe tu mensaje para el admin...', en: 'Write your message to the admin...' },

@@ -1,4 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, X } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -41,6 +45,8 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   const [products, setProducts] = useState<ProductCatalogFirestore[]>([]);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ProductCatalogFirestore | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -71,6 +77,7 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   const resetForm = () => {
     setForm(EMPTY_FORM);
     setEditingProductId(null);
+    setFormOpen(false);
     setImageFile(null);
     setRemoveImage(false);
     setError(null);
@@ -81,6 +88,16 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       ...prev,
       [key]: value,
     }));
+  };
+
+  const openCreateModal = () => {
+    setForm(EMPTY_FORM);
+    setEditingProductId(null);
+    setImageFile(null);
+    setRemoveImage(false);
+    setError(null);
+    setSuccess(null);
+    setFormOpen(true);
   };
 
   const startEdit = (product: ProductCatalogFirestore) => {
@@ -101,9 +118,15 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     setRemoveImage(false);
     setError(null);
     setSuccess(null);
+    setFormOpen(true);
   };
 
   const parsePayload = (): AdminProductCatalogPayload => {
+    const brand = form.brand.trim();
+    const nameEs = form.nameEs.trim();
+    const nameEn = form.nameEn.trim();
+    const descriptionEs = form.descriptionEs.trim();
+    const descriptionEn = form.descriptionEn.trim();
     const price = Number(form.price);
     const order = form.order.trim() === '' ? undefined : Number(form.order);
     const tastesLike = form.tastesLike
@@ -111,15 +134,27 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       .map((item) => item.trim())
       .filter(Boolean);
 
+    if (!brand || !nameEs || !nameEn || !descriptionEs || !descriptionEn) {
+      throw new Error('Completa marca, nombres y descripciones en ambos idiomas.');
+    }
+
+    if (!Number.isFinite(price) || price <= 0) {
+      throw new Error('Introduce un precio válido mayor que 0.');
+    }
+
+    if (order !== undefined && (!Number.isFinite(order) || order < 0)) {
+      throw new Error('El orden debe ser un número válido igual o mayor que 0.');
+    }
+
     return {
-      brand: form.brand,
+      brand,
       name: {
-        es: form.nameEs,
-        en: form.nameEn,
+        es: nameEs,
+        en: nameEn,
       },
       description: {
-        es: form.descriptionEs,
-        en: form.descriptionEn,
+        es: descriptionEs,
+        en: descriptionEn,
       },
       price,
       roast: form.roast,
@@ -153,19 +188,19 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     }
   };
 
-  const handleDelete = async (productId: string) => {
-    const confirmed = window.confirm('¿Seguro que quieres borrar este producto? Esta acción no se puede deshacer.');
-    if (!confirmed) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
-    setDeletingId(productId);
+    setDeletingId(deleteTarget.id);
     setError(null);
     setSuccess(null);
     try {
-      await deleteProductCatalogProduct(productId);
-      if (editingProductId === productId) {
+      await deleteProductCatalogProduct(deleteTarget.id);
+      if (editingProductId === deleteTarget.id) {
         resetForm();
       }
       setSuccess('Producto eliminado correctamente.');
+      setDeleteTarget(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'No se pudo eliminar el producto.');
     } finally {
@@ -174,112 +209,22 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   };
 
   return (
-    <Card variant="outline" className="mt-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="heading-display" style={{ fontSize: 'var(--text-2xl)' }}>
-          Admin · Catálogo de Productos
-        </h2>
-        {editingProductId && (
-          <Button variant="ghost" size="sm" onClick={resetForm}>
-            Cancelar edición
-          </Button>
-        )}
-      </div>
-
-      {error && (
-        <p style={{ color: 'var(--color-error)', marginBottom: 'var(--space-3)' }}>{error}</p>
-      )}
-      {success && (
-        <p style={{ color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>{success}</p>
-      )}
-
-      <div className="grid md:grid-cols-2 gap-3">
-        <Input label="Marca" value={form.brand} onChange={(e) => onInputChange('brand', e.target.value)} />
-        <Input label="Precio (€)" type="number" step="0.01" value={form.price} onChange={(e) => onInputChange('price', e.target.value)} />
-        <Input label="Nombre (ES)" value={form.nameEs} onChange={(e) => onInputChange('nameEs', e.target.value)} />
-        <Input label="Name (EN)" value={form.nameEn} onChange={(e) => onInputChange('nameEn', e.target.value)} />
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-3 mt-3">
+    <Card variant="outline" className="mt-8 admin-catalog">
+      <div className="admin-catalog__header">
         <div>
-          <label className="input-label">Descripción (ES)</label>
-          <textarea
-            className="input-base"
-            rows={3}
-            value={form.descriptionEs}
-            onChange={(e) => onInputChange('descriptionEs', e.target.value)}
-          />
+          <h2 className="heading-display admin-catalog__title">Admin · Catálogo de Productos</h2>
+          <p className="admin-catalog__subtitle">Gestiona productos y precios desde una experiencia optimizada para móvil.</p>
         </div>
-        <div>
-          <label className="input-label">Description (EN)</label>
-          <textarea
-            className="input-base"
-            rows={3}
-            value={form.descriptionEn}
-            onChange={(e) => onInputChange('descriptionEn', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-3 mt-3">
-        <div>
-          <label className="input-label">Tueste</label>
-          <select
-            className="input-base"
-            value={form.roast}
-            onChange={(e) => onInputChange('roast', e.target.value as ProductFormState['roast'])}
-          >
-            <option value="light">Light</option>
-            <option value="medium">Medium</option>
-            <option value="dark">Dark</option>
-          </select>
-        </div>
-        <Input
-          label="Notas de sabor (coma separadas)"
-          value={form.tastesLike}
-          onChange={(e) => onInputChange('tastesLike', e.target.value)}
-        />
-        <Input label="Order" type="number" value={form.order} onChange={(e) => onInputChange('order', e.target.value)} />
-      </div>
-
-      <div className="mt-3">
-        <label className="input-label">Imagen</label>
-        <input
-          className="input-base"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-        />
-        {editingProductId && (
-          <label className="flex items-center gap-2 mt-2" style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-            <input
-              type="checkbox"
-              checked={removeImage}
-              onChange={(e) => setRemoveImage(e.target.checked)}
-            />
-            Borrar imagen actual
-          </label>
-        )}
-        {imagePreviewUrl && (
-          <img
-            src={imagePreviewUrl}
-            alt="preview"
-            style={{ marginTop: 'var(--space-2)', width: 96, height: 96, objectFit: 'cover', borderRadius: 'var(--radius-md)' }}
-          />
-        )}
-      </div>
-
-      <div className="mt-4">
-        <Button variant="primary" loading={saving} onClick={handleSave}>
-          {editingProductId ? 'Guardar cambios' : 'Crear producto'}
+        <Button variant="primary" size="sm" onClick={openCreateModal}>
+          <Plus size={16} />
+          Nuevo producto
         </Button>
       </div>
 
-      <hr style={{ margin: 'var(--space-6) 0', borderColor: 'var(--border-subtle)' }} />
+      {error && <p className="admin-catalog__feedback admin-catalog__feedback--error">{error}</p>}
+      {success && <p className="admin-catalog__feedback admin-catalog__feedback--success">{success}</p>}
 
-      <h3 className="heading-display" style={{ fontSize: 'var(--text-xl)', marginBottom: 'var(--space-3)' }}>
-        Productos actuales
-      </h3>
+      <h3 className="heading-display admin-catalog__section-title">Productos actuales</h3>
       {loading ? (
         <p style={{ color: 'var(--text-muted)' }}>Cargando catálogo...</p>
       ) : products.length === 0 ? (
@@ -287,34 +232,27 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       ) : (
         <div className="grid gap-3">
           {products.map((product) => (
-            <Card key={product.id} variant="flat" className="!p-3">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div className="flex items-center gap-3">
+            <Card key={product.id} variant="flat" className="admin-catalog__item !p-4">
+              <div className="admin-catalog__item-row">
+                <div className="admin-catalog__item-main">
                   {product.image ? (
                     <img
                       src={product.image}
                       alt={product.name?.es ?? product.name?.en ?? product.id}
-                      style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius-md)' }}
+                      className="admin-catalog__thumb"
                     />
                   ) : (
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--border-subtle)',
-                      }}
-                    />
+                    <div aria-hidden="true" className="admin-catalog__thumb admin-catalog__thumb--empty" />
                   )}
-                  <div>
-                    <p style={{ fontWeight: 600 }}>{product.name?.es || product.name?.en || product.id}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)' }}>
-                      {product.brand} · €{product.price.toFixed(2)} · {product.roast}
-                    </p>
+
+                  <div className="admin-catalog__item-copy">
+                    <p className="admin-catalog__item-title">{product.name?.es || product.name?.en || product.id}</p>
+                    <p className="admin-catalog__item-meta">{product.brand}</p>
+                    <p className="admin-catalog__item-meta">€{product.price.toFixed(2)} · {product.roast}</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+
+                <div className="admin-catalog__item-actions">
                   <Button variant="secondary" size="sm" onClick={() => startEdit(product)}>
                     Editar
                   </Button>
@@ -322,7 +260,7 @@ export const AdminProductsCatalogEditor: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     loading={deletingId === product.id}
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => setDeleteTarget(product)}
                   >
                     Borrar
                   </Button>
@@ -332,6 +270,197 @@ export const AdminProductsCatalogEditor: React.FC = () => {
           ))}
         </div>
       )}
+
+      <Dialog.Root
+        open={formOpen}
+        onOpenChange={(open) => {
+          if (saving) return;
+          if (!open) resetForm();
+          else setFormOpen(true);
+        }}
+      >
+        <AnimatePresence>
+          {formOpen && (
+            <Dialog.Portal forceMount>
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className="overlay backdrop-blur-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                />
+              </Dialog.Overlay>
+
+              <Dialog.Content asChild>
+                <div className="fixed inset-0 flex items-end sm:items-center justify-center z-modal pointer-events-none">
+                  <motion.div
+                    className="modal-panel admin-catalog-sheet pointer-events-auto flex flex-col"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  >
+                    <VisuallyHidden.Root>
+                      <Dialog.Title>
+                        {editingProductId ? 'Editar producto' : 'Crear producto'}
+                      </Dialog.Title>
+                      <Dialog.Description>Formulario de administración de catálogo.</Dialog.Description>
+                    </VisuallyHidden.Root>
+
+                    <div className="admin-catalog-sheet__header">
+                      <h3 className="admin-catalog-sheet__title">
+                        {editingProductId ? 'Editar producto' : 'Crear producto'}
+                      </h3>
+                      <Dialog.Close asChild>
+                        <button className="admin-catalog-sheet__close" aria-label="Cerrar">
+                          <X size={18} />
+                        </button>
+                      </Dialog.Close>
+                    </div>
+
+                    <div className="admin-catalog-sheet__body">
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <Input label="Marca" value={form.brand} onChange={(e) => onInputChange('brand', e.target.value)} />
+                        <Input label="Precio (€)" type="number" step="0.01" value={form.price} onChange={(e) => onInputChange('price', e.target.value)} />
+                        <Input label="Nombre (ES)" value={form.nameEs} onChange={(e) => onInputChange('nameEs', e.target.value)} />
+                        <Input label="Name (EN)" value={form.nameEn} onChange={(e) => onInputChange('nameEn', e.target.value)} />
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3 mt-3">
+                        <div>
+                          <label className="input-label">Descripción (ES)</label>
+                          <textarea
+                            className="input-base admin-catalog-sheet__textarea"
+                            rows={4}
+                            value={form.descriptionEs}
+                            onChange={(e) => onInputChange('descriptionEs', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="input-label">Description (EN)</label>
+                          <textarea
+                            className="input-base admin-catalog-sheet__textarea"
+                            rows={4}
+                            value={form.descriptionEn}
+                            onChange={(e) => onInputChange('descriptionEn', e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-3 gap-3 mt-3">
+                        <div>
+                          <label className="input-label">Tueste</label>
+                          <select
+                            className="input-base"
+                            value={form.roast}
+                            onChange={(e) => onInputChange('roast', e.target.value as ProductFormState['roast'])}
+                          >
+                            <option value="light">Light</option>
+                            <option value="medium">Medium</option>
+                            <option value="dark">Dark</option>
+                          </select>
+                        </div>
+                        <Input
+                          label="Notas de sabor (coma separadas)"
+                          value={form.tastesLike}
+                          onChange={(e) => onInputChange('tastesLike', e.target.value)}
+                        />
+                        <Input label="Order" type="number" value={form.order} onChange={(e) => onInputChange('order', e.target.value)} />
+                      </div>
+
+                      <div className="mt-3">
+                        <label className="input-label">Imagen</label>
+                        <input
+                          className="input-base"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                        />
+                        {editingProductId && (
+                          <label className="admin-catalog-sheet__checkbox-row">
+                            <input
+                              type="checkbox"
+                              checked={removeImage}
+                              onChange={(e) => setRemoveImage(e.target.checked)}
+                            />
+                            Borrar imagen actual
+                          </label>
+                        )}
+                        {imagePreviewUrl && (
+                          <img src={imagePreviewUrl} alt="preview" className="admin-catalog-sheet__preview" />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="admin-catalog-sheet__footer">
+                      <Button variant="secondary" size="md" fullWidth onClick={resetForm}>
+                        Cancelar
+                      </Button>
+                      <Button variant="primary" size="md" fullWidth loading={saving} onClick={handleSave}>
+                        {editingProductId ? 'Guardar cambios' : 'Crear producto'}
+                      </Button>
+                    </div>
+                  </motion.div>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </Dialog.Root>
+
+      <Dialog.Root open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AnimatePresence>
+          {deleteTarget && (
+            <Dialog.Portal forceMount>
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className="overlay backdrop-blur-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                />
+              </Dialog.Overlay>
+
+              <Dialog.Content asChild>
+                <div className="fixed inset-0 flex items-end sm:items-center justify-center z-modal pointer-events-none">
+                  <motion.div
+                    className="modal-panel admin-catalog-confirm pointer-events-auto"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  >
+                    <VisuallyHidden.Root>
+                      <Dialog.Title>Confirmar borrado</Dialog.Title>
+                      <Dialog.Description>
+                        Confirma si deseas borrar este producto de forma permanente.
+                      </Dialog.Description>
+                    </VisuallyHidden.Root>
+
+                    <h4 className="admin-catalog-confirm__title">¿Borrar producto?</h4>
+                    <p className="admin-catalog-confirm__copy">
+                      Se eliminará “{deleteTarget.name?.es || deleteTarget.name?.en || deleteTarget.id}” y no podrás deshacer esta acción.
+                    </p>
+                    <div className="admin-catalog-confirm__actions">
+                      <Button variant="secondary" fullWidth onClick={() => setDeleteTarget(null)}>
+                        Cancelar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        fullWidth
+                        loading={deletingId === deleteTarget.id}
+                        onClick={handleDelete}
+                      >
+                        Borrar
+                      </Button>
+                    </div>
+                  </motion.div>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </Dialog.Root>
     </Card>
   );
 };

@@ -11,6 +11,7 @@ import { onUserDoc, onUserQuizData, onUserPurchases, getAdminUserId, type UserDo
 import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { ProfileChat } from '../components/profile/ProfileChat';
+import { AdminChats } from '../components/profile/AdminChats';
 import { AdminProductsCatalogEditor } from '../components/profile/AdminProductsCatalogEditor';
 import { t } from '../data/texts';
 import { LogOut, MessageSquare } from 'lucide-react';
@@ -27,8 +28,18 @@ export const ProfilePage: React.FC = () => {
   const [newPackOpen, setNewPackOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(min-width: 640px)');
+    const update = () => setIsDesktop(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     if (!authUser?.uid) {
@@ -153,13 +164,15 @@ export const ProfilePage: React.FC = () => {
                     <h1 className="heading-display" style={{ fontSize: 'var(--text-3xl)' }}>
                       {t('profile.heading')}
                     </h1>
-                    <button
-                      className="profile-chat-trigger"
-                      onClick={() => setChatOpen(true)}
-                      aria-label={t('chat.open')}
-                    >
-                      <MessageSquare size={18} />
-                    </button>
+                    {(!isAdmin || !isDesktop) && (
+                      <button
+                        className="profile-chat-trigger"
+                        onClick={() => setChatOpen(true)}
+                        aria-label={t('chat.open')}
+                      >
+                        <MessageSquare size={18} />
+                      </button>
+                    )}
                   </div>
                   <p className="body-lg">{displayName}</p>
                   {memberSince && (
@@ -208,6 +221,16 @@ export const ProfilePage: React.FC = () => {
                 </motion.div>
               )}
 
+              {isAdmin && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.22 }}
+                >
+                  <AdminChats uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
+                </motion.div>
+              )}
+
               {/* Logout */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
@@ -221,7 +244,9 @@ export const ProfilePage: React.FC = () => {
                 </Button>
               </motion.div>
 
-              <ProfileChat uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
+              {!isAdmin && (
+                <ProfileChat uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
+              )}
             </>
           )}
         </Container>

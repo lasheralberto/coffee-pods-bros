@@ -936,6 +936,11 @@ export interface ChatMessageDoc {
   createdAt: unknown;
 }
 
+export interface AdminChatThreadDoc {
+  threadUserId: string;
+  updatedAt: unknown;
+}
+
 /**
  * Sends a chat message to `chats/{threadUserId}/messages`.
  */
@@ -974,6 +979,32 @@ export function onChatMessages(
   const q = query(messagesRef, orderBy('createdAt', 'asc'));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessageDoc)));
+  });
+}
+
+/**
+ * Subscribes to admin inbox threads from `chats` in real time.
+ */
+export function onAdminChatThreads(
+  callback: (threads: AdminChatThreadDoc[]) => void,
+): FirestoreUnsubscribe {
+  const chatsRef = collection(db, 'chats');
+  const q = query(chatsRef, orderBy('updatedAt', 'desc'));
+
+  return onSnapshot(q, (snap) => {
+    const threads = snap.docs
+      .map((docSnap) => {
+        const data = docSnap.data() as { updatedAt?: unknown };
+        const threadUserId = docSnap.id;
+        if (!threadUserId) return null;
+        return {
+          threadUserId,
+          updatedAt: data.updatedAt ?? null,
+        } as AdminChatThreadDoc;
+      })
+      .filter((thread): thread is AdminChatThreadDoc => thread !== null);
+
+    callback(threads);
   });
 }
 
