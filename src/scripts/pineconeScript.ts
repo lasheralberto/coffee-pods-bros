@@ -53,6 +53,7 @@ interface ProductDoc {
   isNew:       boolean;
   roast:       string;
   tastesLike:  string[];
+  formatQuantities?: string[];
   order?:      number;
 }
 
@@ -114,11 +115,13 @@ function buildProductText(doc: ProductDoc): string {
   const descEs = doc.description?.es ?? '';
   const descEn = doc.description?.en ?? '';
   const flavors = (doc.tastesLike ?? []).join(', ');
+  const formats = (doc.formatQuantities ?? []).join(', ');
 
   return [
     `Brand: ${doc.brand}`,
     `Name: ${nameEs} / ${nameEn}`,
     `Roast level: ${doc.roast}`,
+    `Available formats: ${formats}`,
     `Flavor notes: ${flavors}`,
     `Description (ES): ${descEs}`,
     `Description (EN): ${descEn}`,
@@ -168,6 +171,7 @@ async function main() {
           brand:       doc.brand,
           roast:       doc.roast,
           tastesLike:  doc.tastesLike ?? [],
+          formatQuantities: doc.formatQuantities ?? [],
           price:       doc.price,
           name_es:     doc.name?.es ?? '',
           name_en:     doc.name?.en ?? '',

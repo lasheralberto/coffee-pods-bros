@@ -4,7 +4,7 @@ import { Plus } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { ProductDetail } from './ProductDetail';
 import type { ShopProduct } from '../../data/shopProducts';
-import { fmtPrice } from '../../data/shopProducts';
+import { fmtFormatQuantities, fmtPrice } from '../../data/shopProducts';
 import { useCartStore } from '../../stores/cartStore';
 import { t } from '../../data/texts';
 
@@ -53,7 +53,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           className="cart-add-quick"
           onClick={(e) => {
             e.stopPropagation();
-            actions.addItem(product);
+            actions.addItem({
+              ...product,
+              selectedFormatQuantity: product.formatQuantities[0] ?? undefined,
+            });
           }}
           aria-label={`${t('cart.addToCart')} ${product.name} ${t('cart.toCart')}`}
         >
@@ -74,6 +77,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <div className="shop-product-card__content">
         <p className="label-caps mb-1">{product.brand}</p>
         <p className="text-sm text-primary leading-snug mb-1">{product.name}</p>
+        {product.formatQuantities.length > 0 && (
+          <p className="text-xs text-muted mb-1">{fmtFormatQuantities(product.formatQuantities)}</p>
+        )}
         <p className="text-base font-semibold text-primary">{fmtPrice(product.price)}</p>
       </div>
     </motion.article>

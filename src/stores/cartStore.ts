@@ -10,6 +10,9 @@ export interface CartItem {
   quantity: number;
 }
 
+export const getCartItemKey = (product: ShopProduct): string =>
+  `${product.id}::${product.selectedFormatQuantity ?? ''}`;
+
 export type BundleMode = 'subscription' | 'oneTime';
 
 export interface CartBundle {
@@ -27,8 +30,8 @@ interface CartStore {
   isOpen: boolean;
   actions: {
     addItem: (product: ShopProduct, quantity?: number) => void;
-    removeItem: (productId: number) => void;
-    updateQuantity: (productId: number, quantity: number) => void;
+    removeItem: (productId: number, selectedFormatQuantity?: string) => void;
+    updateQuantity: (productId: number, quantity: number, selectedFormatQuantity?: string) => void;
     clearCart: () => void;
     openCart: () => void;
     closeCart: () => void;
@@ -59,11 +62,12 @@ export const useCartStore = create<CartStore>()(
       actions: {
         addItem: (product, quantity = 1) =>
           set((state) => {
-            const existing = state.items.find((i) => i.product.id === product.id);
+            const itemKey = getCartItemKey(product);
+            const existing = state.items.find((i) => getCartItemKey(i.product) === itemKey);
             if (existing) {
               return {
                 items: state.items.map((i) =>
-                  i.product.id === product.id
+                  getCartItemKey(i.product) === itemKey
                     ? { ...i, quantity: i.quantity + quantity }
                     : i,
                 ),
@@ -76,19 +80,31 @@ export const useCartStore = create<CartStore>()(
             };
           }),
 
-        removeItem: (productId) =>
+        removeItem: (productId, selectedFormatQuantity) =>
           set((state) => ({
-            items: state.items.filter((i) => i.product.id !== productId),
+            items: state.items.filter((i) => {
+              const sameProduct = i.product.id === productId;
+              const sameFormat = (i.product.selectedFormatQuantity ?? '') === (selectedFormatQuantity ?? '');
+              return !(sameProduct && sameFormat);
+            }),
           })),
 
-        updateQuantity: (productId, quantity) =>
+        updateQuantity: (productId, quantity, selectedFormatQuantity) =>
           set((state) => {
             if (quantity <= 0) {
-              return { items: state.items.filter((i) => i.product.id !== productId) };
+              return {
+                items: state.items.filter((i) => {
+                  const sameProduct = i.product.id === productId;
+                  const sameFormat = (i.product.selectedFormatQuantity ?? '') === (selectedFormatQuantity ?? '');
+                  return !(sameProduct && sameFormat);
+                }),
+              };
             }
             return {
               items: state.items.map((i) =>
-                i.product.id === productId ? { ...i, quantity } : i,
+                i.product.id === productId && (i.product.selectedFormatQuantity ?? '') === (selectedFormatQuantity ?? '')
+                  ? { ...i, quantity }
+                  : i,
               ),
             };
           }),

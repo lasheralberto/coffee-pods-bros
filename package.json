@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "migrate:pinecone": "tsx src/scripts/pineconeScript.ts"
+    "migrate:pinecone": "tsx src/scripts/pineconeScript.ts",
+    "backfill:formats": "tsx src/scripts/backfillProductFormats.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

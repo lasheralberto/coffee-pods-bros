@@ -247,8 +247,8 @@ export const AdminPurchasingHistory: React.FC = () => {
                             </div>
 
                             <div className="purchase-order__items">
-                              {order.items.map((item) => (
-                                <div key={`${orderId}-${item.productId}`} className="purchase-order__item">
+                              {order.items.map((item, idx) => (
+                                <div key={`${orderId}-${item.productId}-${item.formatQuantity ?? 'no-format'}-${idx}`} className="purchase-order__item">
                                   <div className="purchase-order__item-thumb">
                                     {item.image ? (
                                       <img src={item.image} alt={item.name} loading="lazy" />
@@ -263,6 +263,9 @@ export const AdminPurchasingHistory: React.FC = () => {
                                     <p className="purchase-order__item-sub">
                                       {item.brand ? `${item.brand} · ` : ''}x{item.quantity}
                                     </p>
+                                    {item.formatQuantity && (
+                                      <p className="purchase-order__item-sub">Formato: {item.formatQuantity}</p>
+                                    )}
                                   </div>
                                   <span className="purchase-order__item-price">
                                     {fmtPrice(item.price * item.quantity)}

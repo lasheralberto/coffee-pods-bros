@@ -101,6 +101,7 @@ function toShopProduct(doc: ProductCatalogFirestore, locale: string): ShopProduc
     isNew:       doc.isNew,
     roast:       doc.roast,
     tastesLike:  doc.tastesLike.map((taste) => taste.trim().toLowerCase()).filter(Boolean),
+    formatQuantities: doc.formatQuantities,
   };
 }
 

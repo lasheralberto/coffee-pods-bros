@@ -558,6 +558,7 @@ export interface ProductCatalogFirestore {
   isNew:       boolean;
   roast:       'light' | 'medium' | 'dark';
   tastesLike:  string[];
+  formatQuantities: string[];
   order?:      number;
 }
 
@@ -571,6 +572,7 @@ interface ProductCatalogFirestoreRaw {
   isNew: boolean;
   roast: 'light' | 'medium' | 'dark';
   tastesLike: string[];
+  formatQuantities?: string[];
   order?: number;
 }
 
@@ -582,6 +584,7 @@ export interface AdminProductCatalogPayload {
   isNew: boolean;
   roast: 'light' | 'medium' | 'dark';
   tastesLike: string[];
+  formatQuantities: string[];
   order?: number;
 }
 
@@ -591,6 +594,21 @@ export interface ProductCatalogImageUploadResult {
 }
 
 const PRODUCT_CATALOG_STORAGE_PREFIX = 'productCatalog';
+export const PRODUCT_FORMAT_OPTIONS = ['250g', '500g', '1kg'] as const;
+type ProductFormatQuantity = (typeof PRODUCT_FORMAT_OPTIONS)[number];
+
+function normalizeFormatQuantities(value: unknown, fallbackToDefault = true): ProductFormatQuantity[] {
+  if (!Array.isArray(value)) return fallbackToDefault ? [...PRODUCT_FORMAT_OPTIONS] : [];
+
+  const normalized = value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter((item): item is ProductFormatQuantity => (PRODUCT_FORMAT_OPTIONS as readonly string[]).includes(item));
+
+  const unique = Array.from(new Set(normalized));
+  if (unique.length > 0) return unique;
+  return fallbackToDefault ? [...PRODUCT_FORMAT_OPTIONS] : [];
+}
 
 const isStoragePath = (value: string): boolean => {
   if (!value) return false;
@@ -611,6 +629,7 @@ function normalizeProductCatalogDoc(id: string, data: ProductCatalogFirestoreRaw
     isNew: data.isNew,
     roast: data.roast,
     tastesLike: data.tastesLike,
+    formatQuantities: normalizeFormatQuantities(data.formatQuantities),
     order: data.order,
   };
 }
@@ -639,6 +658,17 @@ function validateAdminProductPayload(payload: AdminProductCatalogPayload): void 
   if (!['light', 'medium', 'dark'].includes(payload.roast)) throw new Error('El tueste no es válido.');
   if (!Array.isArray(payload.tastesLike) || payload.tastesLike.length === 0) {
     throw new Error('Añada al menos una nota de sabor.');
+  }
+  if (!Array.isArray(payload.formatQuantities) || payload.formatQuantities.length === 0) {
+    throw new Error('Selecciona al menos un formato.');
+  }
+  const sanitizedFormatValues = payload.formatQuantities
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const normalizedFormats = normalizeFormatQuantities(payload.formatQuantities, false);
+  if (normalizedFormats.length !== new Set(sanitizedFormatValues).size) {
+    throw new Error(`Los formatos válidos son: ${PRODUCT_FORMAT_OPTIONS.join(', ')}.`);
   }
   if (payload.order !== undefined && !Number.isFinite(payload.order)) {
     throw new Error('El orden debe ser numérico.');
@@ -758,6 +788,7 @@ export async function createProductCatalogProduct(
     isNew: payload.isNew,
     roast: payload.roast,
     tastesLike: payload.tastesLike.map((taste) => taste.trim()).filter(Boolean),
+    formatQuantities: normalizeFormatQuantities(payload.formatQuantities, false),
     order: payload.order,
   };
 
@@ -821,6 +852,7 @@ export async function updateProductCatalogProduct(
     isNew: payload.isNew,
     roast: payload.roast,
     tastesLike: payload.tastesLike.map((taste) => taste.trim()).filter(Boolean),
+    formatQuantities: normalizeFormatQuantities(payload.formatQuantities, false),
     order: payload.order,
   };
 
@@ -855,6 +887,7 @@ export interface PurchaseItem {
   price: number;
   quantity: number;
   image: string;
+  formatQuantity?: string;
 }
 
 export interface PurchaseDoc {

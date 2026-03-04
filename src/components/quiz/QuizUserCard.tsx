@@ -533,6 +533,7 @@ function toShopProduct(item: PackItem, catalogProduct: ProductCatalogFirestore |
       isNew:       catalogProduct.isNew,
       roast:       catalogProduct.roast,
       tastesLike:  catalogProduct.tastesLike,
+      formatQuantities: catalogProduct.formatQuantities,
     };
   }
   return {
@@ -545,6 +546,7 @@ function toShopProduct(item: PackItem, catalogProduct: ProductCatalogFirestore |
     isNew:       false,
     roast:       'medium',
     tastesLike:  [],
+    formatQuantities: [],
   };
 }
 

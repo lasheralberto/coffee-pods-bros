@@ -115,6 +115,7 @@ const productsCatalog = [
     isNew: true,
     roast: 'medium',
     tastesLike: ['chocolate', 'nutty'],
+    formatQuantities: ['250g', '500g', '1kg'],
     order: 1,
   },
   {
@@ -130,6 +131,7 @@ const productsCatalog = [
     isNew: false,
     roast: 'medium',
     tastesLike: ['nutty', 'caramel'],
+    formatQuantities: ['250g', '500g', '1kg'],
     order: 2,
   },
   {
@@ -145,6 +147,7 @@ const productsCatalog = [
     isNew: true,
     roast: 'light',
     tastesLike: ['fruity', 'floral'],
+    formatQuantities: ['250g', '500g', '1kg'],
     order: 3,
   },
   {
@@ -160,6 +163,7 @@ const productsCatalog = [
     isNew: false,
     roast: 'dark',
     tastesLike: ['chocolate', 'smoky'],
+    formatQuantities: ['250g', '500g', '1kg'],
     order: 4,
   },
   {
@@ -175,6 +179,7 @@ const productsCatalog = [
     isNew: true,
     roast: 'light',
     tastesLike: ['fruity', 'citrus'],
+    formatQuantities: ['250g', '500g', '1kg'],
     order: 5,
   },
   {
@@ -190,6 +195,7 @@ const productsCatalog = [
     isNew: false,
     roast: 'dark',
     tastesLike: ['smoky', 'caramel'],
+    formatQuantities: ['250g', '500g', '1kg'],
     order: 6,
   },
 ];

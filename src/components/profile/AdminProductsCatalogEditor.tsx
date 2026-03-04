@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Plus, RefreshCw, X } from 'lucide-react';
+import { Check, ChevronDown, Package, Plus, RefreshCw, X } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -11,6 +11,7 @@ import {
   createProductCatalogProduct,
   updateProductCatalogProduct,
   deleteProductCatalogProduct,
+  PRODUCT_FORMAT_OPTIONS,
   type ProductCatalogFirestore,
   type AdminProductCatalogPayload,
 } from '../../providers/firebaseProvider';
@@ -23,6 +24,7 @@ interface ProductFormState {
   descriptionEn: string;
   price: string;
   roast: 'light' | 'medium' | 'dark';
+  formatQuantities: string[];
   tastesLike: string;
   order: string;
   isNew: boolean;
@@ -36,6 +38,7 @@ const EMPTY_FORM: ProductFormState = {
   descriptionEn: '',
   price: '',
   roast: 'medium',
+  formatQuantities: [],
   tastesLike: '',
   order: '',
   isNew: false,
@@ -53,8 +56,10 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [reindexing, setReindexing] = useState(false);
+  const [formatMenuOpen, setFormatMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const formatMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const unsub = onProductsCatalog((items) => {
@@ -75,12 +80,26 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     };
   }, [imagePreviewUrl]);
 
+  useEffect(() => {
+    if (!formatMenuOpen) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!formatMenuRef.current) return;
+      if (!formatMenuRef.current.contains(event.target as Node)) {
+        setFormatMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [formatMenuOpen]);
+
   const resetForm = () => {
     setForm(EMPTY_FORM);
     setEditingProductId(null);
     setFormOpen(false);
     setImageFile(null);
     setRemoveImage(false);
+    setFormatMenuOpen(false);
     setError(null);
   };
 
@@ -91,11 +110,24 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     }));
   };
 
+  const onFormatToggle = (formatValue: string) => {
+    setForm((prev) => {
+      const exists = prev.formatQuantities.includes(formatValue);
+      return {
+        ...prev,
+        formatQuantities: exists
+          ? prev.formatQuantities.filter((item) => item !== formatValue)
+          : [...prev.formatQuantities, formatValue],
+      };
+    });
+  };
+
   const openCreateModal = () => {
     setForm(EMPTY_FORM);
     setEditingProductId(null);
     setImageFile(null);
     setRemoveImage(false);
+    setFormatMenuOpen(false);
     setError(null);
     setSuccess(null);
     setFormOpen(true);
@@ -111,12 +143,14 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       descriptionEn: product.description?.en ?? '',
       price: String(product.price ?? ''),
       roast: product.roast,
+      formatQuantities: product.formatQuantities ?? [],
       tastesLike: (product.tastesLike ?? []).join(', '),
       order: product.order != null ? String(product.order) : '',
       isNew: Boolean(product.isNew),
     });
     setImageFile(null);
     setRemoveImage(false);
+    setFormatMenuOpen(false);
     setError(null);
     setSuccess(null);
     setFormOpen(true);
@@ -147,6 +181,10 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       throw new Error('El orden debe ser un número válido igual o mayor que 0.');
     }
 
+    if (form.formatQuantities.length === 0) {
+      throw new Error('Selecciona al menos un formato.');
+    }
+
     return {
       brand,
       name: {
@@ -159,6 +197,7 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       },
       price,
       roast: form.roast,
+      formatQuantities: form.formatQuantities,
       tastesLike,
       order,
       isNew: form.isNew,
@@ -421,6 +460,42 @@ export const AdminProductsCatalogEditor: React.FC = () => {
                             <option value="medium">Medium</option>
                             <option value="dark">Dark</option>
                           </select>
+                        </div>
+                        <div className="admin-catalog-sheet__formats" ref={formatMenuRef}>
+                          <label className="input-label">Formatos</label>
+                          <button
+                            type="button"
+                            className="input-base admin-catalog-sheet__formats-trigger"
+                            onClick={() => setFormatMenuOpen((prev) => !prev)}
+                            aria-haspopup="listbox"
+                            aria-expanded={formatMenuOpen}
+                          >
+                            <span>
+                              {form.formatQuantities.length > 0
+                                ? form.formatQuantities.join(', ')
+                                : 'Selecciona formatos'}
+                            </span>
+                            <ChevronDown size={16} className={`admin-catalog-sheet__formats-icon ${formatMenuOpen ? 'is-open' : ''}`} />
+                          </button>
+
+                          {formatMenuOpen && (
+                            <div className="admin-catalog-sheet__formats-menu" role="listbox" aria-multiselectable="true">
+                              {PRODUCT_FORMAT_OPTIONS.map((formatValue) => {
+                                const checked = form.formatQuantities.includes(formatValue);
+                                return (
+                                  <label key={formatValue} className="admin-catalog-sheet__formats-option">
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => onFormatToggle(formatValue)}
+                                    />
+                                    <span>{formatValue}</span>
+                                    {checked && <Check size={14} aria-hidden="true" />}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                         <Input
                           label="Notas de sabor (coma separadas)"

@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import type { ShopProduct } from '../../data/shopProducts';
-import { fmtPrice } from '../../data/shopProducts';
+import { fmtFormatQuantities, fmtPrice } from '../../data/shopProducts';
 import { useCartStore } from '../../stores/cartStore';
 import { t } from '../../data/texts';
 
@@ -61,12 +61,25 @@ interface ProductDetailProps {
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
   const { actions } = useCartStore();
+  const [selectedFormat, setSelectedFormat] = useState('');
+
+  useEffect(() => {
+    if (!product) {
+      setSelectedFormat('');
+      return;
+    }
+    const firstFormat = product.formatQuantities[0] ?? '';
+    setSelectedFormat((prev) => (prev && product.formatQuantities.includes(prev) ? prev : firstFormat));
+  }, [product]);
 
   const handleAdd = useCallback(() => {
     if (!product) return;
-    actions.addItem(product);
+    actions.addItem({
+      ...product,
+      selectedFormatQuantity: selectedFormat || undefined,
+    });
     onClose();
-  }, [product, actions, onClose]);
+  }, [product, selectedFormat, actions, onClose]);
 
   return (
     <AnimatePresence>
@@ -95,7 +108,13 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }
             animate="visible"
             exit="exit"
           >
-            <ProductDetailContent product={product} onClose={onClose} onAdd={handleAdd} />
+            <ProductDetailContent
+              product={product}
+              selectedFormat={selectedFormat}
+              onFormatChange={setSelectedFormat}
+              onClose={onClose}
+              onAdd={handleAdd}
+            />
           </motion.div>
 
           {/* ── Desktop modal (≥ lg) ── */}
@@ -138,6 +157,23 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }
               )}
 
               <p className="text-2xl font-bold text-primary mb-5">{fmtPrice(product.price)}</p>
+              {product.formatQuantities.length > 0 && (
+                <div className="mb-5">
+                  <label className="input-label">Formato</label>
+                  <div className="relative">
+                    <select
+                      className="input-base appearance-none pr-10"
+                      value={selectedFormat}
+                      onChange={(event) => setSelectedFormat(event.target.value)}
+                    >
+                      {product.formatQuantities.map((format) => (
+                        <option key={format} value={format}>{format}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" />
+                  </div>
+                </div>
+              )}
               <p className="text-sm text-secondary leading-relaxed mb-6">{product.description}</p>
 
               {/* Attributes */}
@@ -146,6 +182,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }
                   <span className="text-muted">{t('productDetail.roastLevel')}:</span>
                   {t(ROAST_LABELS[product.roast] ?? '')}
                 </div>
+                {product.formatQuantities.length > 0 && (
+                  <div className="rounded-full bg-surface px-4 py-2 text-xs font-medium text-primary">
+                    {fmtFormatQuantities(product.formatQuantities)}
+                  </div>
+                )}
                 {product.tastesLike.map((taste) => (
                   <div
                     key={taste}
@@ -173,11 +214,19 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }
 
 interface ContentProps {
   product: ShopProduct;
+  selectedFormat: string;
+  onFormatChange: (value: string) => void;
   onClose: () => void;
   onAdd: () => void;
 }
 
-const ProductDetailContent: React.FC<ContentProps> = ({ product, onClose, onAdd }) => (
+const ProductDetailContent: React.FC<ContentProps> = ({
+  product,
+  selectedFormat,
+  onFormatChange,
+  onClose,
+  onAdd,
+}) => (
   <>
     {/* Drag handle */}
     <div className="sticky top-0 z-10 flex justify-center pt-3 pb-2 bg-page rounded-t-3xl">
@@ -221,6 +270,23 @@ const ProductDetailContent: React.FC<ContentProps> = ({ product, onClose, onAdd 
       )}
 
       <p className="text-xl font-bold text-primary mb-4">{fmtPrice(product.price)}</p>
+      {product.formatQuantities.length > 0 && (
+        <div className="mb-4">
+          <label className="input-label">Formato</label>
+          <div className="relative">
+            <select
+              className="input-base appearance-none pr-10"
+              value={selectedFormat}
+              onChange={(event) => onFormatChange(event.target.value)}
+            >
+              {product.formatQuantities.map((format) => (
+                <option key={format} value={format}>{format}</option>
+              ))}
+            </select>
+            <ChevronDown size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" />
+          </div>
+        </div>
+      )}
       <p className="text-sm text-secondary leading-relaxed mb-5">{product.description}</p>
 
       {/* Attributes */}
@@ -229,6 +295,11 @@ const ProductDetailContent: React.FC<ContentProps> = ({ product, onClose, onAdd 
           <span className="text-muted">{t('productDetail.roastLevel')}:</span>
           {t(ROAST_LABELS[product.roast] ?? '')}
         </div>
+        {product.formatQuantities.length > 0 && (
+          <div className="rounded-full bg-surface px-3.5 py-1.5 text-xs font-medium text-primary">
+            {fmtFormatQuantities(product.formatQuantities)}
+          </div>
+        )}
         {product.tastesLike.map((taste) => (
           <div
             key={taste}

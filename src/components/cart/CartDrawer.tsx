@@ -4,7 +4,7 @@ import { ShoppingBag, X, Check } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { CartItem } from './CartItem';
 import { CartBundleCard } from './CartBundleCard';
-import { useCartStore, selectCartCount, selectCartTotal } from '../../stores/cartStore';
+import { getCartItemKey, useCartStore, selectCartCount, selectCartTotal } from '../../stores/cartStore';
 import { useAuthStore, selectAuthUser, selectIsAuthenticated } from '../../stores/authStore';
 import { savePurchase, type PurchaseItem } from '../../providers/firebaseProvider';
 import { fmtPrice } from '../../data/shopProducts';
@@ -62,6 +62,7 @@ export const CartDrawer: React.FC = () => {
         price: i.product.price,
         quantity: i.quantity,
         image: i.product.image,
+        formatQuantity: i.product.selectedFormatQuantity,
       }));
 
       await savePurchase(
@@ -147,7 +148,7 @@ export const CartDrawer: React.FC = () => {
                   {bundle && <CartBundleCard bundle={bundle} />}
                   <AnimatePresence mode="popLayout">
                     {items.map((item) => (
-                      <CartItem key={item.product.id} item={item} />
+                      <CartItem key={getCartItemKey(item.product)} item={item} />
                     ))}
                   </AnimatePresence>
                 </>

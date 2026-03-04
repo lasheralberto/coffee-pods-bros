@@ -207,11 +207,13 @@ function buildProductText(product: ProductCatalogFirestore): string {
   const descEs = product.description?.es ?? '';
   const descEn = product.description?.en ?? '';
   const flavors = (product.tastesLike ?? []).join(', ');
+  const formats = (product.formatQuantities ?? []).join(', ');
 
   return [
     `Brand: ${product.brand}`,
     `Name: ${nameEs} / ${nameEn}`,
     `Roast level: ${product.roast}`,
+    `Available formats: ${formats}`,
     `Flavor notes: ${flavors}`,
     `Description (ES): ${descEs}`,
     `Description (EN): ${descEn}`,
@@ -225,6 +227,7 @@ function buildVectorMetadata(product: ProductCatalogFirestore, text: string): Re
     brand: product.brand,
     roast: product.roast,
     tastesLike: product.tastesLike ?? [],
+    formatQuantities: product.formatQuantities ?? [],
     price: product.price,
     name_es: product.name?.es ?? '',
     name_en: product.name?.en ?? '',

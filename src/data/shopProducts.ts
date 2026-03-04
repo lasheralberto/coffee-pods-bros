@@ -12,6 +12,8 @@ export interface ShopProduct {
   isNew: boolean;
   roast: 'light' | 'medium' | 'dark';
   tastesLike: string[];
+  formatQuantities: string[];
+  selectedFormatQuantity?: string;
 }
 
 /* ── Definición de filtros ── */
@@ -96,3 +98,5 @@ export function sortProducts(items: ShopProduct[], sort: SortOption): ShopProduc
 }
 
 export const fmtPrice = (n: number) => `${n.toFixed(2)} €`;
+export const fmtFormatQuantities = (formatQuantities: string[]) =>
+  formatQuantities.filter(Boolean).join(' · ');

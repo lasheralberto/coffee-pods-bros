@@ -44,6 +44,9 @@ export const CartItem: React.FC<CartItemProps> = ({ item }) => {
       <div className="cart-item-details">
         <p className="label-caps mb-0.5">{product.brand}</p>
         <p className="text-sm text-primary leading-snug mb-1">{product.name}</p>
+        {product.selectedFormatQuantity && (
+          <p className="text-xs text-muted mb-1">Formato: {product.selectedFormatQuantity}</p>
+        )}
         <p className="text-sm font-semibold text-primary">{fmtPrice(product.price * quantity)}</p>
 
         {/* Quantity controls */}
@@ -51,7 +54,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item }) => {
           <button
             type="button"
             className="cart-qty-btn"
-            onClick={() => actions.updateQuantity(product.id, quantity - 1)}
+            onClick={() => actions.updateQuantity(product.id, quantity - 1, product.selectedFormatQuantity)}
             aria-label={`${t('cart.decreaseQty')} ${product.name}`}
           >
             <Minus size={14} />
@@ -60,7 +63,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item }) => {
           <button
             type="button"
             className="cart-qty-btn"
-            onClick={() => actions.updateQuantity(product.id, quantity + 1)}
+            onClick={() => actions.updateQuantity(product.id, quantity + 1, product.selectedFormatQuantity)}
             aria-label={`${t('cart.increaseQty')} ${product.name}`}
           >
             <Plus size={14} />
@@ -69,7 +72,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item }) => {
           <button
             type="button"
             className="cart-remove-btn"
-            onClick={() => actions.removeItem(product.id)}
+            onClick={() => actions.removeItem(product.id, product.selectedFormatQuantity)}
             aria-label={`${t('cart.removeItem')} ${product.name} ${t('cart.removeFromCart')}`}
           >
             <Trash2 size={14} />
