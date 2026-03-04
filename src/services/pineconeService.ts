@@ -13,7 +13,7 @@
  */
 
 import { getLocale } from '../data/texts';
-import { getProductsCatalog } from '../providers/firebaseProvider';
+import { getProductsCatalog, getProductCatalogProductById } from '../providers/firebaseProvider';
 import type { QuizResultProduct, DefaultPackItem } from '../data/matchingRules';
 import type { ProductCatalogFirestore } from '../providers/firebaseProvider';
 
@@ -158,6 +158,27 @@ async function deleteNamespaceVectors(): Promise<void> {
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Pinecone delete namespace failed (${res.status}): ${body}`);
+  }
+}
+
+async function deleteVectorsById(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+
+  const res = await fetch(`${PINECONE_HOST}/vectors/delete`, {
+    method: 'POST',
+    headers: {
+      'Api-Key':       PINECONE_API_KEY,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      namespace: NAMESPACE,
+      ids,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Pinecone delete vector failed (${res.status}): ${body}`);
   }
 }
 
@@ -371,8 +392,19 @@ export async function upsertProductCatalogProduct(productId: string): Promise<vo
     throw new Error('Pinecone not configured');
   }
 
-  const products = await getProductsCatalog();
-  const product = products.find((item) => item.id === productId);
+  const wait = async (ms: number) => new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+
+  let product = await getProductCatalogProductById(productId);
+
+  if (!product) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await wait(300);
+      product = await getProductCatalogProductById(productId);
+      if (product) break;
+    }
+  }
 
   if (!product) {
     throw new Error('Product not found in catalog for Pinecone upsert');
@@ -392,6 +424,17 @@ export async function upsertProductCatalogProduct(productId: string): Promise<vo
       metadata: buildVectorMetadata(product, text),
     },
   ]);
+}
+
+/**
+ * Deletes a single product vector from Pinecone without touching the namespace.
+ */
+export async function deleteProductCatalogProductVector(productId: string): Promise<void> {
+  if (!PINECONE_API_KEY || !PINECONE_HOST) {
+    throw new Error('Pinecone not configured');
+  }
+
+  await deleteVectorsById([productId]);
 }
 
 /* ── Fallbacks ───────────────────────────────────────────── */

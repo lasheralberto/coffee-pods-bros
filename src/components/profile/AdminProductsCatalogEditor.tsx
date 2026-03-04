@@ -176,12 +176,24 @@ export const AdminProductsCatalogEditor: React.FC = () => {
           throw new Error('La imagen es obligatoria al crear un producto.');
         }
         const createdProductId = await createProductCatalogProduct(payload, imageFile);
-        const { upsertProductCatalogProduct } = await import('../../services/pineconeService');
-        await upsertProductCatalogProduct(createdProductId);
-        setSuccess('Producto creado correctamente.');
+        try {
+          const { upsertProductCatalogProduct } = await import('../../services/pineconeService');
+          await upsertProductCatalogProduct(createdProductId);
+          setSuccess('Producto creado correctamente.');
+        } catch (pineconeErr: unknown) {
+          const pineconeMessage = pineconeErr instanceof Error ? pineconeErr.message : 'Error desconocido';
+          setSuccess(`Producto creado correctamente. Pinecone no se pudo sincronizar: ${pineconeMessage}`);
+        }
       } else {
         await updateProductCatalogProduct(editingProductId, payload, imageFile, { removeImage });
-        setSuccess('Producto actualizado correctamente.');
+        try {
+          const { upsertProductCatalogProduct } = await import('../../services/pineconeService');
+          await upsertProductCatalogProduct(editingProductId);
+          setSuccess('Producto actualizado correctamente.');
+        } catch (pineconeErr: unknown) {
+          const pineconeMessage = pineconeErr instanceof Error ? pineconeErr.message : 'Error desconocido';
+          setSuccess(`Producto actualizado correctamente. Pinecone no se pudo sincronizar: ${pineconeMessage}`);
+        }
       }
       resetForm();
     } catch (err: unknown) {
@@ -199,10 +211,17 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     setSuccess(null);
     try {
       await deleteProductCatalogProduct(deleteTarget.id);
+      try {
+        const { deleteProductCatalogProductVector } = await import('../../services/pineconeService');
+        await deleteProductCatalogProductVector(deleteTarget.id);
+        setSuccess('Producto eliminado correctamente.');
+      } catch (pineconeErr: unknown) {
+        const pineconeMessage = pineconeErr instanceof Error ? pineconeErr.message : 'Error desconocido';
+        setSuccess(`Producto eliminado correctamente. Pinecone no se pudo sincronizar: ${pineconeMessage}`);
+      }
       if (editingProductId === deleteTarget.id) {
         resetForm();
       }
-      setSuccess('Producto eliminado correctamente.');
       setDeleteTarget(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'No se pudo eliminar el producto.');

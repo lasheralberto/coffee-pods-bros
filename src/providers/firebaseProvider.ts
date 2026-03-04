@@ -688,6 +688,21 @@ export async function getProductsCatalog(): Promise<ProductCatalogFirestore[]> {
 }
 
 /**
+ * Fetches one product from `productsCatalog/{productId}` and resolves image URL.
+ */
+export async function getProductCatalogProductById(productId: string): Promise<ProductCatalogFirestore | null> {
+  const productRef = doc(db, 'productsCatalog', productId);
+  const snap = await getDoc(productRef);
+  if (!snap.exists()) {
+    return null;
+  }
+
+  const data = snap.data() as ProductCatalogFirestoreRaw;
+  const resolvedImage = await resolveStorageUrl(data.image ?? '');
+  return normalizeProductCatalogDoc(snap.id, data, resolvedImage ?? '');
+}
+
+/**
  * Uploads a product catalog image to Firebase Storage and returns URL + storage path.
  */
 export async function uploadProductCatalogImage(
