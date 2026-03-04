@@ -15,6 +15,7 @@
 import { getLocale } from '../data/texts';
 import { getProductsCatalog } from '../providers/firebaseProvider';
 import type { QuizResultProduct, DefaultPackItem } from '../data/matchingRules';
+import type { ProductCatalogFirestore } from '../providers/firebaseProvider';
 
 /* ── Config ──────────────────────────────────────────────── */
 
@@ -109,6 +110,92 @@ async function queryPinecone(
 
   const json = await res.json();
   return (json.matches ?? []) as PineconeMatch[];
+}
+
+interface PineconeVectorPayload {
+  id: string;
+  values: number[];
+  metadata: Record<string, unknown>;
+}
+
+async function generatePassageEmbeddings(texts: string[]): Promise<number[][]> {
+  const res = await fetch('https://api.pinecone.io/embed', {
+    method: 'POST',
+    headers: {
+      'Api-Key':       PINECONE_API_KEY,
+      'Content-Type':  'application/json',
+      'X-Pinecone-API-Version': '2025-01',
+    },
+    body: JSON.stringify({
+      model: EMBEDDING_MODEL,
+      inputs: texts.map((text) => ({ text })),
+      parameters: { input_type: 'passage', truncate: 'END' },
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Pinecone embed failed (${res.status}): ${body}`);
+  }
+
+  const json = await res.json();
+  return (json.data ?? []).map((row: { values: number[] }) => row.values);
+}
+
+async function deleteNamespaceVectors(): Promise<void> {
+  const res = await fetch(`${PINECONE_HOST}/vectors/delete`, {
+    method: 'POST',
+    headers: {
+      'Api-Key':       PINECONE_API_KEY,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      namespace: NAMESPACE,
+      deleteAll: true,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Pinecone delete namespace failed (${res.status}): ${body}`);
+  }
+}
+
+async function upsertVectors(vectors: PineconeVectorPayload[]): Promise<void> {
+  const res = await fetch(`${PINECONE_HOST}/vectors/upsert`, {
+    method: 'POST',
+    headers: {
+      'Api-Key':       PINECONE_API_KEY,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({
+      namespace: NAMESPACE,
+      vectors,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Pinecone upsert failed (${res.status}): ${body}`);
+  }
+}
+
+function buildProductText(product: ProductCatalogFirestore): string {
+  const nameEs = product.name?.es ?? '';
+  const nameEn = product.name?.en ?? '';
+  const descEs = product.description?.es ?? '';
+  const descEn = product.description?.en ?? '';
+  const flavors = (product.tastesLike ?? []).join(', ');
+
+  return [
+    `Brand: ${product.brand}`,
+    `Name: ${nameEs} / ${nameEn}`,
+    `Roast level: ${product.roast}`,
+    `Flavor notes: ${flavors}`,
+    `Description (ES): ${descEs}`,
+    `Description (EN): ${descEn}`,
+    `Price: ${product.price}€`,
+  ].join('. ');
 }
 
 /* ── Public API ──────────────────────────────────────────── */
@@ -207,6 +294,69 @@ export async function queryTopProduct(
     // Fallback: use legacy Firestore catalog
     return fallbackFirstProductResult(locale);
   }
+}
+
+/**
+ * Rebuilds Pinecone namespace from current Firestore products catalog.
+ * 1) Deletes all vectors in `coffee-products` namespace.
+ * 2) Embeds all products as passages.
+ * 3) Upserts vectors in Pinecone.
+ */
+export async function reindexProductsCatalog(): Promise<number> {
+  if (!PINECONE_API_KEY || !PINECONE_HOST) {
+    throw new Error('Pinecone not configured');
+  }
+
+  const products = await getProductsCatalog();
+  await deleteNamespaceVectors();
+
+  if (products.length === 0) {
+    return 0;
+  }
+
+  const productTexts = products.map(buildProductText);
+  const vectors: PineconeVectorPayload[] = [];
+  const EMBED_BATCH_SIZE = 96;
+
+  for (let index = 0; index < products.length; index += EMBED_BATCH_SIZE) {
+    const batchProducts = products.slice(index, index + EMBED_BATCH_SIZE);
+    const batchTexts = productTexts.slice(index, index + EMBED_BATCH_SIZE);
+    const embeddings = await generatePassageEmbeddings(batchTexts);
+
+    if (embeddings.length !== batchProducts.length) {
+      throw new Error('Embedding batch size mismatch during reindex');
+    }
+
+    for (let itemIndex = 0; itemIndex < batchProducts.length; itemIndex += 1) {
+      const product = batchProducts[itemIndex];
+      vectors.push({
+        id: product.id,
+        values: embeddings[itemIndex],
+        metadata: {
+          productId: product.id,
+          brand: product.brand,
+          roast: product.roast,
+          tastesLike: product.tastesLike ?? [],
+          price: product.price,
+          name_es: product.name?.es ?? '',
+          name_en: product.name?.en ?? '',
+          description_es: product.description?.es ?? '',
+          description_en: product.description?.en ?? '',
+          image: product.image ?? '',
+          isNew: product.isNew ?? false,
+          text: batchTexts[itemIndex].slice(0, 1000),
+        },
+      });
+    }
+  }
+
+  const UPSERT_BATCH_SIZE = 100;
+  for (let index = 0; index < vectors.length; index += UPSERT_BATCH_SIZE) {
+    const batch = vectors.slice(index, index + UPSERT_BATCH_SIZE);
+    await upsertVectors(batch);
+  }
+
+  return vectors.length;
 }
 
 /* ── Fallbacks ───────────────────────────────────────────── */

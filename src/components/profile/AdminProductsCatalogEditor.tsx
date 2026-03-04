@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
+import { Plus, RefreshCw, X } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -52,6 +52,7 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [reindexing, setReindexing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -208,6 +209,31 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     }
   };
 
+  const handleReindex = async () => {
+    if (reindexing) return;
+
+    const confirmed = window.confirm(
+      'Se borrará todo el namespace actual en Pinecone y se reindexarán los productos del catálogo. ¿Deseas continuar?',
+    );
+    if (!confirmed) return;
+
+    setReindexing(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const { reindexProductsCatalog } = await import('../../services/pineconeService');
+      const total = await reindexProductsCatalog();
+      setSuccess(total > 0
+        ? `Reindexación completada. ${total} productos indexados en Pinecone.`
+        : 'Namespace limpiado. No hay productos para indexar.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'No se pudo reindexar Pinecone.');
+    } finally {
+      setReindexing(false);
+    }
+  };
+
   return (
     <Card variant="outline" className="mt-8 admin-catalog">
       <div className="admin-catalog__header">
@@ -215,10 +241,16 @@ export const AdminProductsCatalogEditor: React.FC = () => {
           <h2 className="heading-display admin-catalog__title">Admin · Catálogo de Productos</h2>
           <p className="admin-catalog__subtitle">Gestiona productos y precios desde una experiencia optimizada para móvil.</p>
         </div>
-        <Button variant="primary" size="sm" onClick={openCreateModal}>
-          <Plus size={16} />
-          Nuevo producto
-        </Button>
+        <div className="admin-catalog__header-actions">
+          <Button variant="secondary" size="sm" loading={reindexing} onClick={handleReindex}>
+            {!reindexing && <RefreshCw size={16} />}
+            Reindexar
+          </Button>
+          <Button variant="primary" size="sm" onClick={openCreateModal}>
+            <Plus size={16} />
+            Nuevo producto
+          </Button>
+        </div>
       </div>
 
       {error && <p className="admin-catalog__feedback admin-catalog__feedback--error">{error}</p>}
