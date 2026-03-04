@@ -198,6 +198,23 @@ function buildProductText(product: ProductCatalogFirestore): string {
   ].join('. ');
 }
 
+function buildVectorMetadata(product: ProductCatalogFirestore, text: string): Record<string, unknown> {
+  return {
+    productId: product.id,
+    brand: product.brand,
+    roast: product.roast,
+    tastesLike: product.tastesLike ?? [],
+    price: product.price,
+    name_es: product.name?.es ?? '',
+    name_en: product.name?.en ?? '',
+    description_es: product.description?.es ?? '',
+    description_en: product.description?.en ?? '',
+    image: product.image ?? '',
+    isNew: product.isNew ?? false,
+    text: text.slice(0, 1000),
+  };
+}
+
 /* ── Public API ──────────────────────────────────────────── */
 
 /**
@@ -332,20 +349,7 @@ export async function reindexProductsCatalog(): Promise<number> {
       vectors.push({
         id: product.id,
         values: embeddings[itemIndex],
-        metadata: {
-          productId: product.id,
-          brand: product.brand,
-          roast: product.roast,
-          tastesLike: product.tastesLike ?? [],
-          price: product.price,
-          name_es: product.name?.es ?? '',
-          name_en: product.name?.en ?? '',
-          description_es: product.description?.es ?? '',
-          description_en: product.description?.en ?? '',
-          image: product.image ?? '',
-          isNew: product.isNew ?? false,
-          text: batchTexts[itemIndex].slice(0, 1000),
-        },
+        metadata: buildVectorMetadata(product, batchTexts[itemIndex]),
       });
     }
   }
@@ -357,6 +361,37 @@ export async function reindexProductsCatalog(): Promise<number> {
   }
 
   return vectors.length;
+}
+
+/**
+ * Upserts a single product vector into Pinecone without touching other namespace vectors.
+ */
+export async function upsertProductCatalogProduct(productId: string): Promise<void> {
+  if (!PINECONE_API_KEY || !PINECONE_HOST) {
+    throw new Error('Pinecone not configured');
+  }
+
+  const products = await getProductsCatalog();
+  const product = products.find((item) => item.id === productId);
+
+  if (!product) {
+    throw new Error('Product not found in catalog for Pinecone upsert');
+  }
+
+  const text = buildProductText(product);
+  const embeddings = await generatePassageEmbeddings([text]);
+
+  if (embeddings.length !== 1) {
+    throw new Error('Embedding size mismatch during product upsert');
+  }
+
+  await upsertVectors([
+    {
+      id: product.id,
+      values: embeddings[0],
+      metadata: buildVectorMetadata(product, text),
+    },
+  ]);
 }
 
 /* ── Fallbacks ───────────────────────────────────────────── */

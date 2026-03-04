@@ -39,6 +39,7 @@ export const TEXTS = {
     logo: { es: 'ALMA', en: 'ALMA' },
     home: { es: 'Inicio', en: 'Home' },
     shop: { es: 'Tienda', en: 'Shop' },
+    adminDashboard: { es: 'Admin Dashboard', en: 'Admin Dashboard' },
     about: { es: 'Nosotros', en: 'About Us' },
     ourStory: { es: 'Nuestra historia', en: 'Our Story' },
     contact: { es: 'Contacto', en: 'Contact' },

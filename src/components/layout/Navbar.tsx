@@ -7,6 +7,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { useQuizStore } from '../../stores/quizStore';
 import { useCartStore, selectCartCount } from '../../stores/cartStore';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
+import { useAdminAccess } from '../../hooks/useAdminAccess';
 import { t } from '../../data/texts';
 
 export const Navbar: React.FC = () => {
@@ -18,6 +19,7 @@ export const Navbar: React.FC = () => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const authUser = useAuthStore(selectAuthUser);
   const authActions = useAuthStore((s) => s.actions);
+  const { isAdmin } = useAdminAccess();
 
   useEffect(() => {
     const unsubscribe = scrollY.on('change', (latest) => {
@@ -55,6 +57,14 @@ export const Navbar: React.FC = () => {
                   >
                     {t('navbar.shop')}
                   </NavLink>
+                  {isAdmin && (
+                    <NavLink
+                      to="/admin"
+                      className={({ isActive }) => `desktop-nav__item ${isActive ? 'is-active' : ''}`}
+                    >
+                      {t('navbar.adminDashboard')}
+                    </NavLink>
+                  )}
                   <NavLink
                     to="/profile"
                     className={({ isActive }) => `nav-profile-link desktop-nav__item ${isActive ? 'is-active' : ''}`}
@@ -143,6 +153,16 @@ export const Navbar: React.FC = () => {
               <Store size={18} />
               <span>{t('navbar.shop')}</span>
             </NavLink>
+
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? 'is-active' : ''}`}
+              >
+                <Sparkles size={18} />
+                <span>{t('navbar.adminDashboard')}</span>
+              </NavLink>
+            )}
 
             <NavLink
               to="/profile"

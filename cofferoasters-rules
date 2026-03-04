@@ -15,6 +15,10 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/appConfig/global).data.adminUserId == request.auth.uid;
     }
 
+    function adminUid() {
+      return get(/databases/$(database)/documents/appConfig/global).data.adminUserId;
+    }
+
     /* Public catalog */
     match /productsCatalog/{productId} {
       allow read: if true;
@@ -63,10 +67,31 @@ service cloud.firestore {
 
     /* Chat: one thread per user */
     match /chats/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if (isOwner(userId) || isAdmin())
+        && request.resource.data.userId == userId;
+      allow delete: if false;
 
       match /messages/{messageId} {
-        allow read, write: if isOwner(userId) || isAdmin();
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if signedIn()
+          && (
+            (
+              isOwner(userId)
+              && request.resource.data.senderId == request.auth.uid
+              && request.resource.data.recipientId == adminUid()
+            )
+            ||
+            (
+              isAdmin()
+              && request.resource.data.senderId == request.auth.uid
+              && request.resource.data.recipientId == userId
+            )
+          )
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 2000;
+        allow update, delete: if false;
       }
     }
 

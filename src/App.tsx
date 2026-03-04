@@ -5,6 +5,7 @@ import { Layout } from './components/layout/Layout';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage.tsx';
 import { ProfilePage } from './pages/ProfilePage';
+import { AdminPage } from './pages/AdminPage';
 import { AboutPage } from './pages/AboutPage';
 import { OurStoryPage } from './pages/OurStoryPage';
 import { ContactPage } from './pages/ContactPage';
@@ -18,6 +19,7 @@ function AnimatedRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/our-story" element={<OurStoryPage />} />
         <Route path="/contact" element={<ContactPage />} />

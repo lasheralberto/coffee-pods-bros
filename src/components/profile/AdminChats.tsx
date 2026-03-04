@@ -116,19 +116,21 @@ const AdminChatsContent: React.FC<{ uid: string; hideHeader?: boolean }> = ({ ui
   };
 
   return (
-    <section className="admin-chats" aria-label={t('chat.adminInboxTitle')}>
+    <section className={`admin-chats ${hideHeader ? '' : 'purchase-history'}`.trim()} aria-label={t('chat.adminInboxTitle')}>
       {!hideHeader && (
-        <div className="admin-chats__header">
-          <div className="admin-chats__title-wrap">
-            <div className="profile-chat__header-icon" aria-hidden>
-              <MessageSquare size={16} />
-            </div>
-            <div>
-              <h3 className="admin-chats__title">{t('chat.adminInboxTitle')}</h3>
-              <p className="admin-chats__subtitle">{t('chat.adminInboxSubtitle')}</p>
-            </div>
+        <div className="purchase-history__header">
+          <div className="purchase-history__header-icon" aria-hidden>
+            <MessageSquare size={18} />
           </div>
+          <h3 className="purchase-history__title">{t('chat.adminInboxTitle')}</h3>
+          {visibleThreads.length > 0 && (
+            <span className="purchase-history__count">{visibleThreads.length}</span>
+          )}
         </div>
+      )}
+
+      {!hideHeader && (
+        <p className="admin-chats__subtitle">{t('chat.adminInboxSubtitle')}</p>
       )}
 
       {loading && (
@@ -235,11 +237,7 @@ export const AdminChats: React.FC<AdminChatsProps> = ({ uid, open, onOpenChange 
   }, [actions, isDesktop, open, uid]);
 
   if (isDesktop) {
-    return (
-      <section className="card card-default card-body-lg">
-        <AdminChatsContent uid={uid} />
-      </section>
-    );
+    return <AdminChatsContent uid={uid} />;
   }
 
   return (

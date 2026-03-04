@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, RefreshCw, X } from 'lucide-react';
+import { Package, Plus, RefreshCw, X } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -175,7 +175,9 @@ export const AdminProductsCatalogEditor: React.FC = () => {
         if (!imageFile) {
           throw new Error('La imagen es obligatoria al crear un producto.');
         }
-        await createProductCatalogProduct(payload, imageFile);
+        const createdProductId = await createProductCatalogProduct(payload, imageFile);
+        const { upsertProductCatalogProduct } = await import('../../services/pineconeService');
+        await upsertProductCatalogProduct(createdProductId);
         setSuccess('Producto creado correctamente.');
       } else {
         await updateProductCatalogProduct(editingProductId, payload, imageFile, { removeImage });
@@ -235,13 +237,16 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   };
 
   return (
-    <Card variant="outline" className="mt-8 admin-catalog">
-      <div className="admin-catalog__header">
-        <div>
-          <h2 className="heading-display admin-catalog__title">Admin · Catálogo de Productos</h2>
-          <p className="admin-catalog__subtitle">Gestiona productos y precios desde una experiencia optimizada para móvil.</p>
+    <section className="purchase-history admin-catalog" aria-label="Catálogo de productos">
+      <div className="purchase-history__header">
+        <div className="purchase-history__header-icon" aria-hidden>
+          <Package size={18} />
         </div>
-        <div className="admin-catalog__header-actions">
+        <h3 className="purchase-history__title">Admin · Catálogo de Productos</h3>
+        {products.length > 0 && (
+          <span className="purchase-history__count">{products.length}</span>
+        )}
+        <div className="admin-catalog__header-actions ml-auto">
           <Button variant="secondary" size="sm" loading={reindexing} onClick={handleReindex}>
             {!reindexing && <RefreshCw size={16} />}
             Reindexar
@@ -256,13 +261,19 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       {error && <p className="admin-catalog__feedback admin-catalog__feedback--error">{error}</p>}
       {success && <p className="admin-catalog__feedback admin-catalog__feedback--success">{success}</p>}
 
+      <p className="admin-catalog__subtitle">Gestiona productos y precios desde una experiencia optimizada para móvil.</p>
+
       <h3 className="heading-display admin-catalog__section-title">Productos actuales</h3>
       {loading ? (
-        <p style={{ color: 'var(--text-muted)' }}>Cargando catálogo...</p>
+        <div className="purchase-history__empty">
+          <p className="purchase-history__empty-text">Cargando catálogo...</p>
+        </div>
       ) : products.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)' }}>No hay productos en el catálogo.</p>
+        <div className="purchase-history__empty">
+          <p className="purchase-history__empty-text">No hay productos en el catálogo.</p>
+        </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="purchase-history__list">
           {products.map((product) => (
             <Card key={product.id} variant="flat" className="admin-catalog__item !p-4">
               <div className="admin-catalog__item-row">
@@ -493,6 +504,6 @@ export const AdminProductsCatalogEditor: React.FC = () => {
           )}
         </AnimatePresence>
       </Dialog.Root>
-    </Card>
+    </section>
   );
 };

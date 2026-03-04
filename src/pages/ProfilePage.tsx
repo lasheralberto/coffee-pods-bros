@@ -11,13 +11,13 @@ import { onUserDoc, onUserQuizData, onUserPurchases, getAdminUserId, type UserDo
 import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { ProfileChat } from '../components/profile/ProfileChat';
-import { AdminChats } from '../components/profile/AdminChats';
-import { AdminPurchasingHistory } from '../components/profile/AdminPurchasingHistory';
-import { AdminProductsCatalogEditor } from '../components/profile/AdminProductsCatalogEditor';
+import { AdminDashboard } from '../components/profile/AdminDashboard';
 import { t } from '../data/texts';
 import { LogOut, MessageSquare } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 export const ProfilePage: React.FC = () => {
+  const location = useLocation();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const authUser = useAuthStore(selectAuthUser);
   const authActions = useAuthStore((s) => s.actions);
@@ -89,6 +89,8 @@ export const ProfilePage: React.FC = () => {
     return () => { unsub1(); unsub2(); unsub3(); };
   }, [authUser?.uid]);
 
+ 
+ 
   /* Not authenticated */
   if (!isAuthenticated) {
     return (
@@ -176,6 +178,9 @@ export const ProfilePage: React.FC = () => {
                     )}
                   </div>
                   <p className="body-lg">{displayName}</p>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+                    {displayEmail}
+                  </p>
                   {memberSince && (
                     <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
                       {t('profile.memberSince')} {memberSince}
@@ -184,9 +189,6 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </motion.div>
 
- 
-
-              {/* User Subscription */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -203,7 +205,6 @@ export const ProfilePage: React.FC = () => {
                 onClose={() => setNewPackOpen(false)}
               />
 
-              {/* Purchase History */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -212,35 +213,7 @@ export const ProfilePage: React.FC = () => {
                 <UserPurchasingHistory purchases={purchases} />
               </motion.div>
 
-              {isAdmin && (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.21 }}
-                >
-                  <AdminProductsCatalogEditor />
-                </motion.div>
-              )}
-
-              {isAdmin && (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.215 }}
-                >
-                  <AdminPurchasingHistory />
-                </motion.div>
-              )}
-
-              {isAdmin && (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.22 }}
-                >
-                  <AdminChats uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
-                </motion.div>
-              )}
+              
 
               {/* Logout */}
               <motion.div
