@@ -12,6 +12,7 @@ import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory'
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { ProfileChat } from '../components/profile/ProfileChat';
 import { AdminChats } from '../components/profile/AdminChats';
+import { AdminPurchasingHistory } from '../components/profile/AdminPurchasingHistory';
 import { AdminProductsCatalogEditor } from '../components/profile/AdminProductsCatalogEditor';
 import { t } from '../data/texts';
 import { LogOut, MessageSquare } from 'lucide-react';
@@ -218,6 +219,16 @@ export const ProfilePage: React.FC = () => {
                   transition={{ duration: 0.35, delay: 0.21 }}
                 >
                   <AdminProductsCatalogEditor />
+                </motion.div>
+              )}
+
+              {isAdmin && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.215 }}
+                >
+                  <AdminPurchasingHistory />
                 </motion.div>
               )}
 

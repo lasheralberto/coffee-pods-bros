@@ -111,9 +111,6 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
                       <span className="purchase-order__date">
                         {formatDate(purchase.createdAt)}
                       </span>
-                      <Badge variant={statusBadgeVariant(purchase.status)}>
-                        {statusLabel(purchase.status)}
-                      </Badge>
                       <span className="purchase-order__date">
                         {suscriptionLabel(purchase.suscriptionName)}
                       </span>

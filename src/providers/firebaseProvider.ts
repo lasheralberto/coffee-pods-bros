@@ -21,6 +21,8 @@ import {
   query,
   where,
   orderBy,
+  limit,
+  startAfter,
   serverTimestamp,
   onSnapshot,
   writeBatch,
@@ -1076,6 +1078,37 @@ export async function getUserPurchases(uid: string): Promise<PurchaseDoc[]> {
   const q = query(colRef, where('uid', '==', uid), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as PurchaseDoc));
+}
+
+export interface AdminPurchasesPage {
+  purchases: PurchaseDoc[];
+  nextCursor: unknown | null;
+  hasMore: boolean;
+}
+
+/**
+ * Fetches purchases for admins from `userPurchasesPacks` paginated by `createdAt`.
+ * The cursor must be the last document `createdAt` from the previous page.
+ */
+export async function getAdminPurchasesPage(
+  pageSize: number,
+  cursor: unknown | null = null,
+): Promise<AdminPurchasesPage> {
+  const colRef = collection(db, 'userPurchasesPacks');
+  const pageQuery = cursor
+    ? query(colRef, orderBy('createdAt', 'desc'), startAfter(cursor), limit(pageSize))
+    : query(colRef, orderBy('createdAt', 'desc'), limit(pageSize));
+
+  const snap = await getDocs(pageQuery);
+  const purchases = snap.docs.map((d) => ({ id: d.id, ...d.data() } as PurchaseDoc));
+  const lastDoc = snap.docs[snap.docs.length - 1];
+  const nextCursor = lastDoc ? (lastDoc.data() as { createdAt?: unknown }).createdAt ?? null : null;
+
+  return {
+    purchases,
+    nextCursor,
+    hasMore: snap.docs.length === pageSize,
+  };
 }
 
 /**
