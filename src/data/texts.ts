@@ -36,7 +36,7 @@ export const t = (key: string): string => {
 export const TEXTS = {
   /* ── Navbar ── */
   navbar: {
-    logo: { es: 'ALMA', en: 'ALMA' },
+    logo: { es: 'ALMA RIDE', en: 'ALMA RIDE' },
     home: { es: 'Inicio', en: 'Home' },
     shop: { es: 'Tienda', en: 'Shop' },
     adminDashboard: { es: 'Admin Dashboard', en: 'Admin Dashboard' },
@@ -55,44 +55,44 @@ export const TEXTS = {
 
   /* ── Hero ── */
   hero: {
-    subtitle: { es: 'Suscripción Personalizada', en: 'Personalized Subscription' },
-    headingLine1: { es: 'Tu café.', en: 'Your coffee.' },
-    headingLine2: { es: 'Hecho a tu medida.', en: 'Made to measure.' },
-    headingLine3: { es: 'Cada mes.', en: 'Every month.' },
-    cta: { es: 'CREAR MI PERFIL →', en: 'CREATE MY PROFILE →' },
-    statRoasters: { es: 'Tostadores', en: 'Roasters' },
-    statSubscribers: { es: 'Suscriptores', en: 'Subscribers' },
-    statRating: { es: 'Valoración', en: 'Rating' },
-    imgAlt: { es: 'Granos de café tostándose', en: 'Coffee beans roasting' },
+    subtitle: { es: 'Cafe para ciclistas', en: 'Coffee for cyclists' },
+    headingLine1: { es: 'Rinde mas.', en: 'Ride stronger.' },
+    headingLine2: { es: 'Recupera mejor.', en: 'Recover cleaner.' },
+    headingLine3: { es: 'Cafe real.', en: 'Real coffee.' },
+    cta: { es: 'CONFIGURA MI FUELING ->', en: 'BUILD MY FUELING ->' },
+    statRoasters: { es: 'desnivel medio', en: 'avg elevation' },
+    statSubscribers: { es: 'potencia de grupo', en: 'group wattage' },
+    statRating: { es: 'entrega rapida', en: 'fast delivery' },
+    imgAlt: { es: 'Cafe servido para salida ciclista', en: 'Coffee prepared for a group ride' },
     awardText: {
-      es: 'MEJOR SUSCRIPCIÓN·CAFÉ ARTESANO·',
-      en: 'BEST SUBSCRIPTION·ARTISAN COFFEE·',
+      es: 'FUELING LAB 2026 · CYCLIST COFFEE ·',
+      en: 'FUELING LAB 2026 · CYCLIST COFFEE ·',
     },
-    awardCenter: { es: '2025', en: '2025' },
+    awardCenter: { es: 'RIDE', en: 'RIDE' },
   },
 
   /* ── How It Works ── */
   howItWorks: {
-    badge: { es: 'CÓMO FUNCIONA', en: 'HOW IT WORKS' },
+    badge: { es: 'COMO FUNCIONA', en: 'HOW IT WORKS' },
     step1: {
-      es: 'Completa tu perfil para que conozcamos tus gustos perfectos',
-      en: 'Complete your profile so we know your perfect taste',
+      es: 'Cuentanos tu volumen de entrenamiento, horario y gustos de cafe.',
+      en: 'Share your training volume, schedule, and coffee preferences.',
     },
     step2: {
-      es: 'Comparamos tu perfil con los mejores cafés de España y creamos cajas variadas exclusivas',
-      en: 'We match your profile with the best coffees in Spain and create exclusive varied boxes',
+      es: 'Armamos una seleccion segun intensidad, cafeina y momentos de consumo.',
+      en: 'We build a selection by intensity, caffeine load, and ride timing.',
     },
     step3: {
-      es: 'Recibe una selección única y recién tostada cada mes',
-      en: 'Receive a unique and freshly roasted selection every month',
+      es: 'Recibelo fresco cada semana y ajusta tu pack segun tu bloque.',
+      en: 'Get it fresh weekly and tune your pack per training block.',
     },
   },
 
   /* ── Origins Grid ── */
   origins: {
-    badge: { es: 'NUESTROS ORÍGENES', en: 'OUR ORIGINS' },
-    heading: { es: 'Viaja en cada taza', en: 'Travel in every cup' },
-    exploreOrigin: { es: 'Explorar Origen', en: 'Explore Origin' },
+    badge: { es: 'RUTAS Y ORIGENES', en: 'ROUTES AND ORIGINS' },
+    heading: { es: 'De la montana a tu bidon', en: 'From mountain origin to your bottle' },
+    exploreOrigin: { es: 'Ver Perfil', en: 'View Profile' },
     ethiopia: { es: 'Etiopía', en: 'Ethiopia' },
     colombia: { es: 'Colombia', en: 'Colombia' },
     brazil: { es: 'Brasil', en: 'Brazil' },
@@ -101,39 +101,39 @@ export const TEXTS = {
 
   /* ── Difference / Why Us ── */
   difference: {
-    badge: { es: 'LA DIFERENCIA ORIGEN', en: 'THE ORIGEN DIFFERENCE' },
+    badge: { es: 'POR QUE ALMA RIDE', en: 'WHY ALMA RIDE' },
     heading: {
-      es: 'Somos cafeteros obsesivos, para que tú no tengas que serlo',
-      en: 'We\'re coffee nerds, so you don\'t have to be',
+      es: 'Nutricion de cafe disena para entrenar y competir',
+      en: 'Coffee nutrition built for training and race days',
     },
     pillar1: {
       title: {
-        es: 'Un equipo apasionado por el café',
-        en: 'A passionate team of coffee people',
+        es: 'Protocolos por tipo de salida',
+        en: 'Protocols per ride type',
       },
       text: {
-        es: 'Somos baristas formados, ex-tostadores y catadores aventureros. Piensa en nosotros como tus guías hacia un café increíble.',
-        en: 'We\'re trained baristas, former roasters, and adventurous sippers. Think of us as your guides to incredible coffee.',
+        es: 'Elegimos perfiles para fondo, series o recuperacion para que no improvises.',
+        en: 'We map roast profiles to endurance, intervals, or recovery blocks.',
       },
     },
     pillar2: {
       title: {
-        es: 'Descubriendo los mejores tostadores locales',
-        en: 'Uncovering the best local roasters',
+        es: 'Cafe limpio y trazable',
+        en: 'Clean, traceable coffee',
       },
       text: {
-        es: 'Buscamos tostadores independientes, probamos todo su café y elegimos los que son demasiado buenos para quedárnoslos.',
-        en: 'We seek out independent roasters, taste all of their coffee, and pick the ones too good to keep to ourselves.',
+        es: 'Trabajamos con tostadores que mantienen calidad constante lote a lote.',
+        en: 'We partner with roasters who keep quality stable from batch to batch.',
       },
     },
     pillar3: {
       title: {
-        es: 'Para conectarte con cafés que amarás',
-        en: 'To match you with coffees you\'ll love',
+        es: 'Ajustes semanales simples',
+        en: 'Simple weekly tuning',
       },
       text: {
-        es: 'Aprendemos lo que te gusta para que cada bolsa se sienta hecha para ti. ¿No te encanta tu primer envío? Lo reemplazamos.',
-        en: 'We learn what you like so every bag feels like it\'s picked just for you. Don\'t love your first bag? We\'ll replace it.',
+        es: 'Sube o baja cafeina en segundos segun fatiga, clima y objetivo.',
+        en: 'Raise or lower caffeine in seconds based on fatigue, weather, and goals.',
       },
     },
   },
@@ -367,12 +367,12 @@ export const TEXTS = {
 
   /* ── Home Page CTA ── */
   homeCta: {
-    heading: { es: '¿Listo para tu mejor café?', en: 'Ready for your best coffee?' },
+    heading: { es: 'Listo para tu mejor bloque?', en: 'Ready for your strongest block?' },
     text: {
-      es: 'Únete a más de 10.000 amantes del café que reciben granos frescos cada mes. Sin permanencia, cancela cuando quieras.',
-      en: 'Join over 10,000 coffee lovers who receive fresh beans every month. No commitment, cancel anytime.',
+      es: 'Une cafe de especialidad y estrategia de entrenamiento. Sin permanencia y con ajustes cada semana.',
+      en: 'Combine specialty coffee with ride strategy. No lock-in, weekly adjustments included.',
     },
-    button: { es: 'EMPEZAR AHORA', en: 'START NOW' },
+    button: { es: 'EMPEZAR BLOQUE', en: 'START BLOCK' },
   },
 
   /* ── Shop Page ── */

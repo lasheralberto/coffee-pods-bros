@@ -2,9 +2,8 @@
  * ESTILOS GLOBALES — Reset + base + imports
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
-@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap');
 
 /* Note: Departure Mono is a paid/custom font, substituting with Fira Code or Courier New as fallback in tokens */
@@ -19,27 +18,27 @@
 
 @theme {
   /* ── Base palette (use literal values to avoid circular var refs) ── */
-  --color-cream:    #FAF7F2;
-  --color-espresso: #1A0F0A;
-  --color-roast:    #7B2D00;
-  --color-caramel:  #C4773B;
-  --color-foam:     #EDE8E0;
-  --color-accent:   #E8622A;
-  --color-leaf:     #4A5E3A;
-  --color-mist:     #F5F2ED;
-  --color-stone:    #8C8580;
+  --color-cream:    #f4f8fb;
+  --color-espresso: #0e1a24;
+  --color-roast:    #14324a;
+  --color-caramel:  #3e88c4;
+  --color-foam:     #e6edf4;
+  --color-accent:   #14d1ff;
+  --color-leaf:     #0e7c86;
+  --color-mist:     #f8fbfd;
+  --color-stone:    #6c8192;
 
   /* ── Semantic colors (needed by Tailwind utilities like bg-page, text-primary…) ── */
-  --color-page:      #FAF7F2;
-  --color-primary:   #1A0F0A;
-  --color-secondary: #5C4F48;
-  --color-muted:     #8C8580;
-  --color-inverse:   #FAF7F2;
-  --color-surface:   #EDE8E0;
+  --color-page:      #f4f8fb;
+  --color-primary:   #0e1a24;
+  --color-secondary: #2c475d;
+  --color-muted:     #6c8192;
+  --color-inverse:   #f4f8fb;
+  --color-surface:   #e6edf4;
 
   /* ── Borders ── */
-  --color-border-color:        #DDD8D0;
-  --color-border-color-strong: #C4BCB4;
+  --color-border-color:        #cfdeea;
+  --color-border-color-strong: #9eb4c7;
 
   /* ── Layout containers (override Tailwind defaults) ── */
   --container-3xs: initial;
@@ -57,8 +56,8 @@
   --container-7xl: initial;
 
   /* ── Typography ── */
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-body:    "Cabinet Grotesk", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body:    "Manrope", system-ui, sans-serif;
   --font-mono:    "Departure Mono", "Courier New", monospace;
 }
 
@@ -83,6 +82,8 @@ body {
   line-height:        var(--leading-normal);
   color:              var(--text-primary);
   background-color:   var(--bg-page);
+  background-image: radial-gradient(circle at 15% -10%, rgba(20, 209, 255, 0.14), transparent 35%),
+                    radial-gradient(circle at 80% 0%, rgba(217, 255, 72, 0.16), transparent 36%);
   -webkit-font-smoothing: antialiased;
   min-height:         100dvh;
 }
