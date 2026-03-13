@@ -22,24 +22,24 @@
   white-space:     nowrap;
   text-decoration: none;
   /* Mobile: touch target mínimo 44px */
-  min-height:      44px;
+  min-height:      42px;
 }
 
 /* Tamaños */
-.btn-sm  { padding: var(--space-2) var(--space-4);  font-size: var(--text-xs); min-height: 36px; }
-.btn-md  { padding: var(--space-3) var(--space-6);  font-size: var(--text-sm); }
-.btn-lg  { padding: var(--space-4) var(--space-8);  font-size: var(--text-base); min-height: 52px; }
-.btn-xl  { padding: var(--space-5) var(--space-10); font-size: var(--text-md); min-height: 60px; }
+.btn-sm  { padding: var(--space-2) var(--space-4);  font-size: var(--text-xs); min-height: 34px; }
+.btn-md  { padding: var(--space-2) var(--space-5);  font-size: var(--text-sm); }
+.btn-lg  { padding: var(--space-3) var(--space-7);  font-size: var(--text-base); min-height: 48px; }
+.btn-xl  { padding: var(--space-4) var(--space-9);  font-size: var(--text-md); min-height: 54px; }
 .btn-full { width: 100%; }  /* siempre full en mobile */
 
 /* Variantes */
 .btn-primary {
-  background: var(--color-espresso);
+  background: linear-gradient(130deg, var(--color-espresso), var(--color-roast));
   color:      var(--text-inverse);
   box-shadow: var(--shadow-sm);
 }
 .btn-primary:hover {
-  background: var(--color-roast);
+  background: linear-gradient(130deg, var(--color-roast), var(--color-accent));
   transform:  scale(1.02);
   box-shadow: var(--shadow-md);
 }

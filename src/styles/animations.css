@@ -11,6 +11,14 @@
   @keyframes slideDown   { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes scaleIn     { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
   @keyframes spinSlow    { to { transform: rotate(360deg); } }
+  @keyframes pelotonFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes cadencePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--color-accent-rgb), 0.25); }
+    50% { box-shadow: 0 0 0 8px rgba(var(--color-accent-rgb), 0); }
+  }
   @keyframes shimmer     {
     0%   { background-position: -400px 0; }
     100% { background-position:  400px 0; }
@@ -20,6 +28,8 @@
   .animate-slide-up { animation: slideUp var(--duration-slow) var(--ease-out) both; }
   .animate-scale-in { animation: scaleIn var(--duration-slow) var(--ease-spring) both; }
   .animate-spin-slow { animation: spinSlow 20s linear infinite; }
+  .animate-peloton-float { animation: pelotonFloat 4s var(--ease-default) infinite; }
+  .animate-cadence-pulse { animation: cadencePulse 2.4s var(--ease-out) infinite; }
 
   /* Skeleton shimmer */
   .skeleton {
