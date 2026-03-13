@@ -7,17 +7,23 @@ import { QuizUserCard } from '../components/quiz/QuizUserCard';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../stores/authStore';
 import { useQuizStore } from '../stores/quizStore';
-import { onUserDoc, onUserQuizData, onUserPurchases, getAdminUserId, type UserDoc, type QuizDoc, type PurchaseDoc } from '../providers/firebaseProvider';
+import {
+  onUserDoc,
+  onUserQuizData,
+  onUserPurchases,
+  getAdminUserId,
+  type UserDoc,
+  type QuizDoc,
+  type PurchaseDoc,
+} from '../providers/firebaseProvider';
 import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { ProfileChat } from '../components/profile/ProfileChat';
 import { AdminDashboard } from '../components/profile/AdminDashboard';
 import { t } from '../data/texts';
 import { LogOut, MessageSquare } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
 
 export const ProfilePage: React.FC = () => {
-  const location = useLocation();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const authUser = useAuthStore(selectAuthUser);
   const authActions = useAuthStore((s) => s.actions);
@@ -71,7 +77,10 @@ export const ProfilePage: React.FC = () => {
     setLoading(true);
     setError(null);
     let loadCount = 0;
-    const checkDone = () => { loadCount++; if (loadCount >= 3) setLoading(false); };
+    const checkDone = () => {
+      loadCount += 1;
+      if (loadCount >= 3) setLoading(false);
+    };
 
     const unsub1 = onUserDoc(authUser.uid, (uDoc) => {
       setUserDoc(uDoc);
@@ -86,12 +95,13 @@ export const ProfilePage: React.FC = () => {
       checkDone();
     });
 
-    return () => { unsub1(); unsub2(); unsub3(); };
+    return () => {
+      unsub1();
+      unsub2();
+      unsub3();
+    };
   }, [authUser?.uid]);
 
- 
- 
-  /* Not authenticated */
   if (!isAuthenticated) {
     return (
       <PageTransition>
@@ -112,28 +122,31 @@ export const ProfilePage: React.FC = () => {
   }
 
   const displayName = userDoc?.displayName ?? authUser?.displayName ?? authUser?.email ?? '';
-  const displayEmail = userDoc?.email ?? authUser?.email ?? '—';
+  const displayEmail = userDoc?.email ?? authUser?.email ?? '-';
+  const hasQuiz = Boolean(quizData);
+  const totalOrders = purchases.length;
+  const totalItemsPurchased = purchases.reduce((sum, purchase) => {
+    const orderItems = purchase.items.reduce((innerSum, item) => innerSum + item.quantity, 0);
+    const bundleItems = purchase.bundleItems?.reduce((innerSum, item) => innerSum + item.quantity, 0) ?? 0;
+    return sum + orderItems + bundleItems;
+  }, 0);
 
   const memberSince = userDoc?.createdAt
     ? (() => {
-        const ts = userDoc.createdAt as unknown;
-        if (ts && typeof ts === 'object' && 'toDate' in (ts as object)) {
-          return (ts as { toDate: () => Date }).toDate().toLocaleDateString();
-        }
-        return '';
-      })()
+      const ts = userDoc.createdAt as unknown;
+      if (ts && typeof ts === 'object' && 'toDate' in (ts as object)) {
+        return (ts as { toDate: () => Date }).toDate().toLocaleDateString();
+      }
+      return '';
+    })()
     : '';
 
   return (
     <PageTransition>
       <Section size="lg">
         <Container size="md">
-          {/* Loading state */}
-          {loading && (
-            <div className="profile-loader" />
-          )}
+          {loading && <div className="profile-loader" />}
 
-          {/* Error state */}
           {error && !loading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center" style={{ marginBottom: 'var(--space-6)' }}>
               <p style={{ color: 'var(--color-error)', marginBottom: 'var(--space-4)' }}>{error}</p>
@@ -143,10 +156,8 @@ export const ProfilePage: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Profile content — always show when not loading */}
           {!loading && !error && (
             <>
-              {/* Profile Header */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -157,9 +168,7 @@ export const ProfilePage: React.FC = () => {
                   {authUser?.photoURL ? (
                     <img src={authUser.photoURL} alt="" />
                   ) : (
-                    <span className="profile-header__initials">
-                      {(displayName[0] ?? '').toUpperCase()}
-                    </span>
+                    <span className="profile-header__initials">{(displayName[0] ?? '').toUpperCase()}</span>
                   )}
                 </div>
                 <div className="profile-header__info">
@@ -168,19 +177,13 @@ export const ProfilePage: React.FC = () => {
                       {t('profile.heading')}
                     </h1>
                     {(!isAdmin || !isDesktop) && (
-                      <button
-                        className="profile-chat-trigger"
-                        onClick={() => setChatOpen(true)}
-                        aria-label={t('chat.open')}
-                      >
+                      <button className="profile-chat-trigger" onClick={() => setChatOpen(true)} aria-label={t('chat.open')}>
                         <MessageSquare size={18} />
                       </button>
                     )}
                   </div>
                   <p className="body-lg">{displayName}</p>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-                    {displayEmail}
-                  </p>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{displayEmail}</p>
                   {memberSince && (
                     <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
                       {t('profile.memberSince')} {memberSince}
@@ -192,30 +195,64 @@ export const ProfilePage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.16 }}
+                transition={{ duration: 0.35, delay: 0.12 }}
+                className="profile-overview-grid"
               >
-                <UserSubscription uid={authUser!.uid} quizData={quizData} onNewPack={() => setNewPackOpen(true)} />
+                <article className="profile-overview-card">
+                  <p className="profile-overview-card__label">{t('purchase.historyHeading')}</p>
+                  <p className="profile-overview-card__value">{totalOrders}</p>
+                  <p className="profile-overview-card__meta">{totalItemsPurchased} {t('purchase.items')}</p>
+                </article>
+
+                <article className="profile-overview-card">
+                  <p className="profile-overview-card__label">{t('profile.quizHeading')}</p>
+                  <p className="profile-overview-card__value">{hasQuiz ? t('profile.quizCompleted') : t('profile.quizNotCompleted')}</p>
+                </article>
+
+                {!isAdmin && (
+                  <article className="profile-overview-card">
+                    <p className="profile-overview-card__label">{t('chat.title')}</p>
+                    <p className="profile-overview-card__value">{t('chat.empty')}</p>
+                    <Button variant="secondary" size="sm" onClick={() => setChatOpen(true)}>
+                      <MessageSquare size={16} />
+                      {t('chat.open')}
+                    </Button>
+                  </article>
+                )}
               </motion.div>
 
-              <QuizUserCard
-                quizData={quizData}
-                onTakeQuiz={quizActions.openQuiz}
-                uid={authUser!.uid}
-                open={newPackOpen}
-                onClose={() => setNewPackOpen(false)}
-              />
+              {isAdmin ? (
+                <AdminDashboard uid={authUser!.uid} chatOpen={chatOpen} onChatOpenChange={setChatOpen} />
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.16 }}
+                  >
+                    <UserSubscription uid={authUser!.uid} quizData={quizData} onNewPack={() => setNewPackOpen(true)} />
+                  </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.20 }}
-              >
-                <UserPurchasingHistory purchases={purchases} />
-              </motion.div>
+                  <QuizUserCard
+                    quizData={quizData}
+                    onTakeQuiz={quizActions.openQuiz}
+                    uid={authUser!.uid}
+                    open={newPackOpen}
+                    onClose={() => setNewPackOpen(false)}
+                  />
 
-              
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.2 }}
+                  >
+                    <UserPurchasingHistory purchases={purchases} />
+                  </motion.div>
 
-              {/* Logout */}
+                  <ProfileChat uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
+                </>
+              )}
+
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -227,10 +264,6 @@ export const ProfilePage: React.FC = () => {
                   {t('profile.logout')}
                 </Button>
               </motion.div>
-
-              {!isAdmin && (
-                <ProfileChat uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
-              )}
             </>
           )}
         </Container>
