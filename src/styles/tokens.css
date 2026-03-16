@@ -7,17 +7,17 @@
 :root {
 
   /* ── COLORES BASE ─────────────────────────────────────── */
-  --color-cream:         #FAF7F2;
-  --color-espresso:      #1A0F0A;
-  --color-roast:         #7B2D00;
-  --color-caramel:       #C4773B;
-  --color-foam:          #EDE8E0;
-  --color-accent:        #E8622A;
-  --color-accent-rgb:    232, 98, 42;
-  --color-highlight:     #E4F54A;
-  --color-leaf:          #4A5E3A;
-  --color-mist:          #F5F2ED;
-  --color-stone:         #8C8580;
+  --color-cream:         #f4f8fb;
+  --color-espresso:      #0e1a24;
+  --color-roast:         #14324a;
+  --color-caramel:       #3e88c4;
+  --color-foam:          #e6edf4;
+  --color-accent:        #14d1ff;
+  --color-accent-rgb:    20, 209, 255;
+  --color-highlight:     #d9ff48;
+  --color-leaf:          #0e7c86;
+  --color-mist:          #f8fbfd;
+  --color-stone:         #6c8192;
 
   /* ── COLORES SEMÁNTICOS (los que usan los componentes) ── */
   /* Fondo */
@@ -25,11 +25,11 @@
   --bg-surface:          var(--color-foam);
   --bg-surface-hover:    #E5E0D8;
   --bg-inverse:          var(--color-espresso);
-  --bg-overlay:          rgba(26, 15, 10, 0.55);
+  --bg-overlay:          rgba(14, 26, 36, 0.55);
 
   /* Texto */
   --text-primary:        var(--color-espresso);
-  --text-secondary:      #5C4F48;
+  --text-secondary:      #2c475d;
   --text-muted:          var(--color-stone);
   --text-inverse:        var(--color-cream);
   --text-accent:         var(--color-caramel);
@@ -37,8 +37,8 @@
   --text-link-hover:     var(--color-accent);
 
   /* Bordes */
-  --border-color:        #DDD8D0;
-  --border-color-strong: #C4BCB4;
+  --border-color:        #cfdeea;
+  --border-color-strong: #9eb4c7;
   --border-focus:        var(--color-caramel);
 
   /* Brand */
@@ -47,13 +47,13 @@
   --brand-accent:        var(--color-accent);
 
   /* Semáforo UI */
-  --color-success:       #3D6B44;
-  --color-error:         #B83232;
-  --color-warning:       #B87332;
+  --color-success:       #198b61;
+  --color-error:         #cf3b3b;
+  --color-warning:       #cf8b2d;
 
   /* ── TIPOGRAFÍA ───────────────────────────────────────── */
-  --font-display:        "Cormorant Garamond", Georgia, serif;
-  --font-body:           "Cabinet Grotesk", system-ui, sans-serif;
+  --font-display:        "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body:           "Manrope", system-ui, sans-serif;
   --font-mono:           "Departure Mono", "Courier New", monospace;
 
   /* Escala tipográfica (modular scale 1.25) */
@@ -69,7 +69,7 @@
   --text-4xl:            3rem;       /* 48px */
   --text-5xl:            3.75rem;    /* 60px */
   --text-6xl:            4.5rem;     /* 72px */
-  --text-hero:           clamp(3rem, 8vw, 6rem);  /* fluid hero */
+  --text-hero:           clamp(2.8rem, 7.3vw, 5.8rem);  /* fluid hero */
 
   /* Pesos */
   --font-light:          300;
@@ -106,12 +106,12 @@
   --space-32:  8rem;       /* 128px */
 
   /* ── BORDES Y RADIOS ──────────────────────────────────── */
-  --radius-sm:     0.25rem;    /* 4px  */
-  --radius-md:     0.5rem;     /* 8px  */
-  --radius-lg:     0.75rem;    /* 12px */
-  --radius-xl:     1rem;       /* 16px */
-  --radius-2xl:    1.5rem;     /* 24px */
-  --radius-3xl:    2rem;       /* 32px */
+  --radius-sm:     0.5rem;     /* 8px  */
+  --radius-md:     0.75rem;    /* 12px */
+  --radius-lg:     1rem;       /* 16px */
+  --radius-xl:     1.25rem;    /* 20px */
+  --radius-2xl:    1.75rem;    /* 28px */
+  --radius-3xl:    2.5rem;     /* 40px */
   --radius-pill:   999px;
   --radius-circle: 50%;
 
@@ -120,12 +120,12 @@
   --border-style:       solid;
 
   /* ── SOMBRAS ──────────────────────────────────────────── */
-  --shadow-xs:  0 1px 3px rgba(26, 15, 10, 0.08);
-  --shadow-sm:  0 2px 8px rgba(26, 15, 10, 0.10);
-  --shadow-md:  0 4px 16px rgba(26, 15, 10, 0.12);
-  --shadow-lg:  0 8px 32px rgba(26, 15, 10, 0.15);
-  --shadow-xl:  0 16px 56px rgba(26, 15, 10, 0.20);
-  --shadow-inner: inset 0 2px 4px rgba(26, 15, 10, 0.06);
+  --shadow-xs:  0 2px 4px rgba(14, 26, 36, 0.06);
+  --shadow-sm:  0 4px 12px rgba(14, 26, 36, 0.10);
+  --shadow-md:  0 10px 24px rgba(14, 26, 36, 0.14);
+  --shadow-lg:  0 18px 40px rgba(14, 26, 36, 0.18);
+  --shadow-xl:  0 26px 62px rgba(14, 26, 36, 0.22);
+  --shadow-inner: inset 0 2px 6px rgba(14, 26, 36, 0.08);
 
   /* ── TRANSICIONES ─────────────────────────────────────── */
   --duration-fast:    150ms;

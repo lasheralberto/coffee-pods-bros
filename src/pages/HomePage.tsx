@@ -23,15 +23,19 @@ export const HomePage: React.FC = () => {
       
       {/* Final CTA */}
       <motion.div variants={childVariants}>
-        <Section size="lg" bg="roast" className="text-center text-cream">
+        <Section
+          size="lg"
+          bg="roast"
+          className="text-center text-cream bg-[linear-gradient(135deg,var(--color-roast),var(--color-espresso))]"
+        >
           <Container size="md">
-            <h2 className="font-display text-4xl md:text-5xl mb-6">
+            <h2 className="font-display text-5xl md:text-6xl uppercase tracking-[0.02em] mb-6">
               {t('homeCta.heading')}
             </h2>
-            <p className="body-lg text-cream/80 mb-8 max-w-2xl mx-auto">
+            <p className="body-lg text-cream/85 mb-8 max-w-2xl mx-auto">
               {t('homeCta.text')}
             </p>
-            <Button variant="inverse" size="xl" onClick={actions.openQuiz}>
+            <Button variant="inverse" size="lg" onClick={actions.openQuiz}>
               {t('homeCta.button')}
             </Button>
           </Container>

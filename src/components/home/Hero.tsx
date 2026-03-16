@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { Gauge, Mountain, Timer } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Container } from '../ui/Container';
 import { AwardSeal } from '../ui/AwardSeal';
@@ -13,9 +14,8 @@ export const Hero: React.FC = () => {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      {/* Background Image */}
-      <div className="absolute inset-4 sm:inset-6 lg:inset-8 z-0 overflow-hidden rounded-[2.5rem] border border-stone-200/50 shadow-2xl bg-stone-100">
+    <section className="relative min-h-[92vh] flex items-center justify-center p-3 sm:p-5 lg:p-8">
+      <div className="absolute inset-3 sm:inset-5 lg:inset-8 z-0 overflow-hidden rounded-[2.75rem] border border-white/35 shadow-2xl bg-slate-900">
         <motion.img
           src={img3}
           alt="Hero Background"
@@ -23,69 +23,64 @@ export const Hero: React.FC = () => {
           initial={{
             opacity: reduceMotion ? 1 : 0,
             scale: reduceMotion ? 1 : 1.08,
-            filter: reduceMotion ? 'brightness(1) saturate(1)' : 'brightness(0.2) saturate(0.65)'
+            filter: reduceMotion ? 'brightness(1) saturate(1)' : 'brightness(0.36) saturate(0.75)'
           }}
           animate={{ opacity: 1, scale: 1, filter: 'brightness(1) saturate(1)' }}
           transition={{
-            opacity: { duration: reduceMotion ? 0 : 2.4, ease: "easeOut" },
+            opacity: { duration: reduceMotion ? 0 : 1.6, ease: 'easeOut' },
             scale: { duration: reduceMotion ? 0 : 5.2, ease: [0.22, 1, 0.36, 1] },
-            filter: { duration: reduceMotion ? 0 : 6.4, ease: [0.22, 1, 0.36, 1] }
+            filter: { duration: reduceMotion ? 0 : 4.8, ease: [0.22, 1, 0.36, 1] }
           }}
-        />
-
-        <motion.div
-          className="absolute inset-0 bg-black z-10"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: reduceMotion ? 0 : 0 }}
-          transition={{ duration: reduceMotion ? 0 : 36.8, ease: [0.16, 1, 0.3, 1] }}
         />
 
         <motion.div
           className="absolute inset-0 z-10"
-          style={{ background: 'radial-gradient(circle at 50% 42%, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.78) 70%)' }}
-          initial={{ opacity: reduceMotion ? 0.35 : 1 }}
-          animate={{ opacity: 0.35 }}
-          transition={{ duration: reduceMotion ? 0 : 17.4, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            background:
+              'radial-gradient(circle at 60% 32%, rgba(20,209,255,0.12) 0%, rgba(3,10,18,0.84) 68%), linear-gradient(165deg, rgba(5,14,24,0.6) 0%, rgba(6,14,25,0.88) 65%)',
+          }}
+          initial={{ opacity: reduceMotion ? 1 : 0.7 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: reduceMotion ? 0 : 1.8, ease: [0.16, 1, 0.3, 1] }}
         />
 
-        <div className="absolute inset-0 bg-black/35 backdrop-blur-[1.5px] z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-stone-900/35 to-stone-900/65 z-20" />
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(217,255,72,0.10),transparent_35%),linear-gradient(0deg,rgba(0,0,0,0.38),transparent_55%)] z-20" />
       </div>
 
-      <Container size="xl" className="relative z-20 flex flex-col md:items-center md:text-center w-full max-w-4xl mx-auto py-20 px-4">
-        <div className="flex flex-col gap-8 w-full md:items-center">
+      <Container size="xl" className="relative z-20 flex flex-col md:items-center md:text-center w-full max-w-5xl mx-auto py-16 md:py-20 px-2">
+        <div className="flex flex-col gap-6 w-full md:items-center">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-sm font-mono uppercase tracking-widest text-[var(--color-highlight)]"
+            transition={{ delay: 0.15 }}
+            className="text-xs sm:text-sm font-mono uppercase tracking-[0.3em] text-[var(--color-highlight)]"
           >
             {t('hero.subtitle')}
           </motion.span>
 
-          <h1 className="font-display font-light text-5xl md:text-7xl lg:text-8xl leading-[0.9] tracking-tight text-espresso">
+          <h1 className="font-display font-semibold text-[3.1rem] sm:text-[4.1rem] md:text-[5.2rem] lg:text-[6rem] leading-[0.9] tracking-tight text-espresso uppercase">
             <motion.span
-              className="block font-bold text-white drop-shadow-md"
+              className="block text-white drop-shadow-md"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8, ease: [0.2, 0.65, 0.3, 0.9] }}
+              transition={{ delay: 0.2, duration: 0.6, ease: [0.2, 0.65, 0.3, 0.9] }}
             >
               {t('hero.headingLine1')}
             </motion.span>
             <motion.span
-              className="block italic drop-shadow-sm"
-              style={{ color: 'var(--color-highlight)' }}
+              className="block drop-shadow-sm"
+              style={{ color: 'var(--color-accent)' }}
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8, ease: [0.2, 0.65, 0.3, 0.9] }}
+              transition={{ delay: 0.3, duration: 0.6, ease: [0.2, 0.65, 0.3, 0.9] }}
             >
               {t('hero.headingLine2')}
             </motion.span>
             <motion.span
-              className="block font-bold text-white drop-shadow-md"
+              className="block text-white drop-shadow-md"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8, ease: [0.2, 0.65, 0.3, 0.9] }}
+              transition={{ delay: 0.4, duration: 0.6, ease: [0.2, 0.65, 0.3, 0.9] }}
             >
               {t('hero.headingLine3')}
             </motion.span>
@@ -94,42 +89,45 @@ export const Hero: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-6 mt-4 items-center justify-center"
+            transition={{ delay: 0.5 }}
+            className="flex flex-col sm:flex-row gap-4 mt-2 items-center justify-center"
           >
             <Button
               variant="primary"
-              size="xl"
+              size="lg"
               onClick={actions.openQuiz}
-              className="border-2 border-[var(--color-highlight)]"
+              className="border-2 border-[var(--color-highlight)] animate-cadence-pulse"
             >
               {t('hero.cta')}
             </Button>
-            <div className="flex flex-row gap-4 text-sm text-stone-600 font-medium">
-              <div className="flex items-center gap-1 bg-white/50 px-3 py-1.5 rounded-full backdrop-blur-md">
-                <span className="font-bold text-espresso">50+</span> <span className="hidden sm:inline">{t('hero.statRoasters')}</span>
+            <div className="flex flex-row flex-wrap gap-2 text-xs sm:text-sm text-white/80 font-medium justify-center">
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15">
+                <Mountain size={14} />
+                <span className="font-bold text-white">900m</span> <span>{t('hero.statRoasters')}</span>
               </div>
-              <div className="flex items-center gap-1 bg-white/50 px-3 py-1.5 rounded-full backdrop-blur-md">
-                <span className="font-bold text-espresso">10k</span> <span className="hidden sm:inline">{t('hero.statSubscribers')}</span>
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15">
+                <Gauge size={14} />
+                <span className="font-bold text-white">245w</span> <span>{t('hero.statSubscribers')}</span>
               </div>
-              <div className="flex items-center gap-1 bg-white/50 px-3 py-1.5 rounded-full backdrop-blur-md">
-                <span className="font-bold text-espresso">4.9★</span> <span className="hidden sm:inline">{t('hero.statRating')}</span>
+              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15">
+                <Timer size={14} />
+                <span className="font-bold text-white">48h</span> <span>{t('hero.statRating')}</span>
               </div>
             </div>
           </motion.div>
         </div>
 
-        <motion.div 
-          className="absolute -bottom-16 md:-bottom-24 right-4 md:-right-12 z-20"
+        <motion.div
+          className="absolute -bottom-12 md:-bottom-20 right-4 md:right-8 z-20 animate-peloton-float"
           initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
+          transition={{ delay: 0.7, duration: 0.7, ease: 'easeOut' }}
         >
           <AwardSeal
             text={t('hero.awardText')}
             centerText={t('hero.awardCenter')}
             size="sm"
-            className="bg-cream shadow-2xl"
+            className="bg-cream/95 shadow-2xl border border-white/30"
           />
         </motion.div>
       </Container>
