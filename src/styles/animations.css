@@ -16,10 +16,29 @@
     100% { background-position:  400px 0; }
   }
 
+  /* Nebula appearance: combined scale, fade, and slight blur lift */
+  @keyframes nebulaAppear {
+    0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(10px);
+      filter: blur(8px);
+    }
+    50% {
+      opacity: 0.5;
+      filter: blur(4px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      filter: blur(0);
+    }
+  }
+
   .animate-fade-in  { animation: fadeIn  var(--duration-base) var(--ease-out) both; }
   .animate-slide-up { animation: slideUp var(--duration-slow) var(--ease-out) both; }
   .animate-scale-in { animation: scaleIn var(--duration-slow) var(--ease-spring) both; }
   .animate-spin-slow { animation: spinSlow 20s linear infinite; }
+  .animate-nebula { animation: nebulaAppear var(--duration-slow) var(--ease-out) both; }
 
   /* Skeleton shimmer */
   .skeleton {

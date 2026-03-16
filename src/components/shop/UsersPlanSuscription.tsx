@@ -1,5 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect, type CSSProperties } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import { Check, Sparkles, ArrowRight, Zap } from 'lucide-react';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
 import { useQuizStore } from '../../stores/quizStore';
@@ -174,7 +174,8 @@ const PlanCard: React.FC<{
   isSelected: boolean;
   onSelect: () => void;
   isMobile: boolean;
-}> = ({ plan, index, isSelected, onSelect, isMobile }) => {
+  reduceMotion: boolean;
+}> = ({ plan, index, isSelected, onSelect, isMobile, reduceMotion }) => {
   const hl = !!plan.highlighted;
   const { ref, rotateX, rotateY, onMouseMove, onMouseLeave } = useMagneticHover(hl ? 6 : 4);
 
@@ -272,9 +273,19 @@ const PlanCard: React.FC<{
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       onClick={onSelect}
-      initial={{ opacity: 0, y: 40, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.1, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      aria-label={`${plan.name} ${plan.price},${plan.priceCents} ${plan.interval}`}
+      initial={reduceMotion ? false : { opacity: 0, y: 40, scale: 0.96 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+      transition={reduceMotion ? { duration: 0 } : { delay: index * 0.1, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
       style={{
         rotateX,
         rotateY,
@@ -287,7 +298,8 @@ const PlanCard: React.FC<{
         cursor: 'pointer',
         userSelect: 'none',
       }}
-      whileHover={{ y: hl ? -10 : -6 }}
+      whileHover={isMobile || reduceMotion ? undefined : { y: hl ? -10 : -6 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.99 }}
     >
       {/* Outer glow (highlighted only) */}
       {hl && (
@@ -302,7 +314,7 @@ const PlanCard: React.FC<{
             transform: 'scale(1.08) translateZ(-1px)',
           }}
           animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         />
       )}
 
@@ -324,10 +336,27 @@ const PlanCard: React.FC<{
             style={badgeStyle}
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 + 0.3 }}
+            transition={reduceMotion ? { duration: 0 } : { delay: index * 0.1 + 0.3 }}
           >
             {plan.badge}
           </motion.span>
+
+          {isSelected && (
+            <span
+              style={{
+                alignSelf: 'flex-start',
+                marginTop: isMobile ? 8 : 10,
+                marginBottom: isMobile ? 12 : 16,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: hl ? C.caramel : C.roast,
+              }}
+            >
+              Seleccionado
+            </span>
+          )}
 
           {/* Plan name */}
           <h3 style={nameStyle}>{plan.name}</h3>
@@ -350,7 +379,7 @@ const PlanCard: React.FC<{
               }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 + 0.2, duration: 0.5 }}
+              transition={reduceMotion ? { duration: 0 } : { delay: index * 0.1 + 0.2, duration: 0.5 }}
             >
               {plan.price}
             </motion.span>
@@ -375,7 +404,7 @@ const PlanCard: React.FC<{
                 style={{ display: 'flex', alignItems: 'center', gap: 12 }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08 + fi * 0.05 + 0.4 }}
+                transition={reduceMotion ? { duration: 0 } : { delay: index * 0.08 + fi * 0.05 + 0.4 }}
               >
                 <span
                   style={{
@@ -401,6 +430,8 @@ const PlanCard: React.FC<{
 
           {/* CTA */}
           <motion.button
+            type="button"
+            aria-label={`${plan.subscribeCta} ${plan.name}`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -419,11 +450,11 @@ const PlanCard: React.FC<{
    QUIZ CTA BANNER
 ═══════════════════════════════════════════════════════════ */
 
-const QuizCtaBanner: React.FC<{ onOpenQuiz: () => void; isMobile: boolean }> = ({ onOpenQuiz, isMobile }) => (
+const QuizCtaBanner: React.FC<{ onOpenQuiz: () => void; isMobile: boolean; reduceMotion: boolean }> = ({ onOpenQuiz, isMobile, reduceMotion }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20, scale: 0.98 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+    initial={reduceMotion ? false : { opacity: 0, y: 20, scale: 0.98 }}
+    animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+    transition={reduceMotion ? { duration: 0 } : { duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
     style={{
       position: 'relative',
       marginBottom: isMobile ? 24 : 40,
@@ -490,7 +521,7 @@ const QuizCtaBanner: React.FC<{ onOpenQuiz: () => void; isMobile: boolean }> = (
           }}
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={reduceMotion ? { duration: 0 } : { delay: 0.15 }}
         >
           <Sparkles size={10} />
           {t('subs.quizBadge')}
@@ -507,7 +538,7 @@ const QuizCtaBanner: React.FC<{ onOpenQuiz: () => void; isMobile: boolean }> = (
           }}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={reduceMotion ? { duration: 0 } : { delay: 0.2 }}
         >
           {t('subs.quizCtaTitle')}
         </motion.h3>
@@ -522,7 +553,7 @@ const QuizCtaBanner: React.FC<{ onOpenQuiz: () => void; isMobile: boolean }> = (
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={reduceMotion ? { duration: 0 } : { delay: 0.3 }}
         >
           {t('subs.quizCtaText')}
         </motion.p>
@@ -532,12 +563,13 @@ const QuizCtaBanner: React.FC<{ onOpenQuiz: () => void; isMobile: boolean }> = (
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.5 }}
+        transition={reduceMotion ? { duration: 0 } : { delay: 0.35, duration: 0.5 }}
       >
         <motion.button
+          type="button"
           onClick={onOpenQuiz}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
+          whileHover={reduceMotion ? undefined : { scale: 1.04 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.96 }}
           transition={{ type: 'spring', stiffness: 380, damping: 22 }}
           style={{
             display: 'flex',
@@ -588,14 +620,16 @@ const MobileDots: React.FC<{
     {Array.from({ length: count }).map((_, idx) => (
       <motion.button
         key={idx}
+        type="button"
         onClick={() => onDotClick(idx)}
         aria-label={`Plan ${idx + 1}`}
+        aria-current={idx === active}
         animate={{
           width: idx === active ? 24 : 8,
           backgroundColor: idx === active ? C.roast : C.borderStrong,
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        style={{ height: 8, borderRadius: 999, border: 'none', padding: 0, cursor: 'pointer' }}
+        style={{ height: 8, minWidth: 44, borderRadius: 999, border: 'none', padding: 0, cursor: 'pointer' }}
       />
     ))}
   </div>
@@ -616,6 +650,7 @@ export const UsersPlanSuscription: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string>('connoisseur');
   const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
   const isMobile = useIsMobile();
+  const reduceMotion = useReducedMotion();
 
   /* Fetch plans from Firestore `suscriptionPlans`, fallback to DEFAULT_PLANS */
   useEffect(() => {
@@ -668,7 +703,7 @@ export const UsersPlanSuscription: React.FC = () => {
   }, []);
 
   if (!quizDone) {
-    return <QuizCtaBanner onOpenQuiz={actions.openQuiz} isMobile={isMobile} />;
+    return <QuizCtaBanner onOpenQuiz={actions.openQuiz} isMobile={isMobile} reduceMotion={Boolean(reduceMotion)} />;
   }
 
   return (
@@ -738,6 +773,8 @@ export const UsersPlanSuscription: React.FC = () => {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
+        role="region"
+        aria-label="Planes de suscripcion"
         className="
           flex gap-5 overflow-x-auto snap-x snap-mandatory scrollbar-hide
           md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:snap-none
@@ -771,6 +808,7 @@ export const UsersPlanSuscription: React.FC = () => {
               isSelected={selectedPlan === plan.id}
               onSelect={() => setSelectedPlan(plan.id)}
               isMobile={isMobile}
+              reduceMotion={Boolean(reduceMotion)}
             />
           </div>
         ))}

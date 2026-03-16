@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { CalendarClock, LogOut, MessageSquare, Package, ShoppingBag, Sparkles } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
@@ -16,12 +17,15 @@ import {
   type QuizDoc,
   type PurchaseDoc,
 } from '../providers/firebaseProvider';
-import { UserPurchasingHistory } from '../components/shop/UserPurchasingHistory';
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { ProfileChat } from '../components/profile/ProfileChat';
 import { AdminDashboard } from '../components/profile/AdminDashboard';
 import { t } from '../data/texts';
-import { LogOut, MessageSquare } from 'lucide-react';
+
+const UserPurchasingHistory = React.lazy(async () => {
+  const mod = await import('../components/shop/UserPurchasingHistory');
+  return { default: mod.UserPurchasingHistory };
+});
 
 export const ProfilePage: React.FC = () => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
@@ -53,6 +57,7 @@ export const ProfilePage: React.FC = () => {
       setIsAdmin(false);
       return;
     }
+
     let mounted = true;
     getAdminUserId()
       .then((adminUid) => {
@@ -63,6 +68,7 @@ export const ProfilePage: React.FC = () => {
         if (!mounted) return;
         setIsAdmin(false);
       });
+
     return () => {
       mounted = false;
     };
@@ -77,6 +83,7 @@ export const ProfilePage: React.FC = () => {
     setLoading(true);
     setError(null);
     let loadCount = 0;
+
     const checkDone = () => {
       loadCount += 1;
       if (loadCount >= 3) setLoading(false);
@@ -131,15 +138,22 @@ export const ProfilePage: React.FC = () => {
     return sum + orderItems + bundleItems;
   }, 0);
 
-  const memberSince = userDoc?.createdAt
+  const memberDate = userDoc?.createdAt
     ? (() => {
-      const ts = userDoc.createdAt as unknown;
-      if (ts && typeof ts === 'object' && 'toDate' in (ts as object)) {
-        return (ts as { toDate: () => Date }).toDate().toLocaleDateString();
-      }
-      return '';
-    })()
-    : '';
+        const ts = userDoc.createdAt as unknown;
+        if (ts && typeof ts === 'object' && 'toDate' in (ts as object)) {
+          return (ts as { toDate: () => Date }).toDate();
+        }
+        return null;
+      })()
+    : null;
+
+  const memberSince = memberDate ? memberDate.toLocaleDateString() : '';
+  const membershipDays = memberDate
+    ? Math.max(1, Math.floor((Date.now() - memberDate.getTime()) / (1000 * 60 * 60 * 24)))
+    : null;
+  const canOpenChat = !isAdmin || !isDesktop;
+  const quizActionLabel = hasQuiz ? t('profile.customizePack') : t('profile.takeQuiz');
 
   return (
     <PageTransition>
@@ -148,7 +162,12 @@ export const ProfilePage: React.FC = () => {
           {loading && <div className="profile-loader" />}
 
           {error && !loading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center" style={{ marginBottom: 'var(--space-6)' }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center"
+              style={{ marginBottom: 'var(--space-6)' }}
+            >
               <p style={{ color: 'var(--color-error)', marginBottom: 'var(--space-4)' }}>{error}</p>
               <Button variant="secondary" size="sm" onClick={() => window.location.reload()}>
                 Reintentar
@@ -157,68 +176,105 @@ export const ProfilePage: React.FC = () => {
           )}
 
           {!loading && !error && (
-            <>
+            <div className="profile-shell">
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0 }}
-                className="profile-header"
+                className="profile-hero"
               >
-                <div className="profile-header__avatar">
-                  {authUser?.photoURL ? (
-                    <img src={authUser.photoURL} alt="" />
-                  ) : (
-                    <span className="profile-header__initials">{(displayName[0] ?? '').toUpperCase()}</span>
-                  )}
-                </div>
-                <div className="profile-header__info">
-                  <div className="profile-header__top-row">
-                    <h1 className="heading-display" style={{ fontSize: 'var(--text-3xl)' }}>
-                      {t('profile.heading')}
-                    </h1>
-                    {(!isAdmin || !isDesktop) && (
-                      <button className="profile-chat-trigger" onClick={() => setChatOpen(true)} aria-label={t('chat.open')}>
-                        <MessageSquare size={18} />
-                      </button>
+                <div className="profile-header">
+                  <div className="profile-header__avatar">
+                    {authUser?.photoURL ? (
+                      <img src={authUser.photoURL} alt="" />
+                    ) : (
+                      <span className="profile-header__initials">{(displayName[0] ?? '').toUpperCase()}</span>
                     )}
                   </div>
-                  <p className="body-lg">{displayName}</p>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{displayEmail}</p>
-                  {memberSince && (
-                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-                      {t('profile.memberSince')} {memberSince}
-                    </p>
+
+                  <div className="profile-header__info">
+                    <div>
+                      <p className="label-caps profile-header__kicker">{t('profile.heading')}</p>
+                      <h1 className="heading-display profile-header__title">{displayName}</h1>
+                    </div>
+                    <p className="profile-header__email">{displayEmail}</p>
+                    {memberSince && (
+                      <p className="profile-header__member">
+                        {t('profile.memberSince')} {memberSince}
+                        {membershipDays ? <span> • {membershipDays} dias</span> : null}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="profile-hero__actions" role="group" aria-label="Acciones rapidas del perfil">
+                  {canOpenChat && (
+                    <Button variant="secondary" size="sm" onClick={() => setChatOpen(true)}>
+                      <MessageSquare size={16} />
+                      {t('chat.open')}
+                    </Button>
                   )}
+
+                  {!isAdmin && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        if (hasQuiz) {
+                          setNewPackOpen(true);
+                          return;
+                        }
+                        quizActions.openQuiz();
+                      }}
+                    >
+                      <Sparkles size={16} />
+                      {quizActionLabel}
+                    </Button>
+                  )}
+
+                  <Button variant="ghost" size="sm" onClick={authActions.logout}>
+                    <LogOut size={16} />
+                    {t('profile.logout')}
+                  </Button>
                 </div>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.12 }}
+                transition={{ duration: 0.35, delay: 0.1 }}
                 className="profile-overview-grid"
               >
                 <article className="profile-overview-card">
+                  <div className="profile-overview-card__icon" aria-hidden="true">
+                    <ShoppingBag size={16} />
+                  </div>
                   <p className="profile-overview-card__label">{t('purchase.historyHeading')}</p>
                   <p className="profile-overview-card__value">{totalOrders}</p>
-                  <p className="profile-overview-card__meta">{totalItemsPurchased} {t('purchase.items')}</p>
+                  <p className="profile-overview-card__meta">
+                    {totalItemsPurchased} {t('purchase.items')}
+                  </p>
                 </article>
 
                 <article className="profile-overview-card">
+                  <div className="profile-overview-card__icon" aria-hidden="true">
+                    <Package size={16} />
+                  </div>
                   <p className="profile-overview-card__label">{t('profile.quizHeading')}</p>
-                  <p className="profile-overview-card__value">{hasQuiz ? t('profile.quizCompleted') : t('profile.quizNotCompleted')}</p>
+                  <p className="profile-overview-card__value">
+                    {hasQuiz ? t('profile.quizCompleted') : t('profile.quizNotCompleted')}
+                  </p>
+                  <p className="profile-overview-card__meta">{hasQuiz ? t('profile.customizePack') : t('profile.takeQuiz')}</p>
                 </article>
 
-                {!isAdmin && (
-                  <article className="profile-overview-card">
-                    <p className="profile-overview-card__label">{t('chat.title')}</p>
-                    <p className="profile-overview-card__value">{t('chat.empty')}</p>
-                    <Button variant="secondary" size="sm" onClick={() => setChatOpen(true)}>
-                      <MessageSquare size={16} />
-                      {t('chat.open')}
-                    </Button>
-                  </article>
-                )}
+                <article className="profile-overview-card">
+                  <div className="profile-overview-card__icon" aria-hidden="true">
+                    <CalendarClock size={16} />
+                  </div>
+                  <p className="profile-overview-card__label">{t('profile.memberSince')}</p>
+                  <p className="profile-overview-card__value">{memberSince || '-'}</p>
+                  <p className="profile-overview-card__meta">{membershipDays ? `${membershipDays} dias` : displayEmail}</p>
+                </article>
               </motion.div>
 
               {isAdmin ? (
@@ -246,25 +302,17 @@ export const ProfilePage: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: 0.2 }}
                   >
-                    <UserPurchasingHistory purchases={purchases} />
+                    <Suspense fallback={<div className="purchase-history__lazy-loader" aria-label={t('profile.loading')} />}>
+                      <UserPurchasingHistory purchases={purchases} />
+                    </Suspense>
                   </motion.div>
 
                   <ProfileChat uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
                 </>
               )}
 
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.24 }}
-                className="profile-logout"
-              >
-                <Button variant="ghost" size="sm" onClick={authActions.logout}>
-                  <LogOut size={16} />
-                  {t('profile.logout')}
-                </Button>
-              </motion.div>
-            </>
+              <p className="profile-footer-note">{t('chat.title')}</p>
+            </div>
           )}
         </Container>
       </Section>

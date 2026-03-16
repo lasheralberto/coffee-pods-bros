@@ -121,23 +121,29 @@ export const ProfileChat: React.FC<ProfileChatProps> = ({ uid, open, onOpenChang
                       <p className="profile-chat__empty">{t('chat.empty')}</p>
                     )}
 
-                    {!loading && messages.map((message) => {
-                      const isOwn = message.senderId === uid;
-                      const createdAt = toDate(message.createdAt);
-                      const timestamp = createdAt ? createdAt.toLocaleString() : null;
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      {!loading && messages.map((message) => {
+                        const isOwn = message.senderId === uid;
+                        const createdAt = toDate(message.createdAt);
+                        const timestamp = createdAt ? createdAt.toLocaleString() : null;
 
-                      return (
-                        <div
-                          key={message.id}
-                          className={`profile-chat__message ${isOwn ? 'is-own' : 'is-other'}`}
-                        >
-                          <p className="profile-chat__message-text">{message.text}</p>
-                          {timestamp && (
-                            <span className="profile-chat__message-time">{timestamp}</span>
-                          )}
-                        </div>
-                      );
-                    })}
+                        return (
+                          <motion.div
+                            key={message.id}
+                            initial={{ opacity: 0, scale: 0.9, y: 10, filter: 'blur(8px)' }}
+                            animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                            className={`profile-chat__message ${isOwn ? 'is-own' : 'is-other'}`}
+                          >
+                            <p className="profile-chat__message-text">{message.text}</p>
+                            {timestamp && (
+                              <span className="profile-chat__message-time">{timestamp}</span>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                   </div>
 
                   {errorLabel && (

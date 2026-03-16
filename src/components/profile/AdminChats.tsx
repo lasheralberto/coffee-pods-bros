@@ -187,23 +187,29 @@ const AdminChatsContent: React.FC<{ uid: string; hideHeader?: boolean }> = ({ ui
 
                     {thread.messages.length > 0 && (
                       <div className="admin-chats__messages">
-                        {thread.messages.map((message) => {
-                          const createdAt = toDate(message.createdAt);
-                          const timestamp = createdAt ? createdAt.toLocaleString() : null;
-                          const isOwn = message.senderId === uid;
+                        <AnimatePresence mode="popLayout" initial={false}>
+                          {thread.messages.map((message) => {
+                            const createdAt = toDate(message.createdAt);
+                            const timestamp = createdAt ? createdAt.toLocaleString() : null;
+                            const isOwn = message.senderId === uid;
 
-                          return (
-                            <div
-                              key={message.id}
-                              className={`profile-chat__message ${isOwn ? 'is-own' : 'is-other'}`}
-                            >
-                              <p className="profile-chat__message-text">{message.text}</p>
-                              {timestamp && (
-                                <span className="profile-chat__message-time">{timestamp}</span>
-                              )}
-                            </div>
-                          );
-                        })}
+                            return (
+                              <motion.div
+                                key={message.id}
+                                initial={{ opacity: 0, scale: 0.9, y: 10, filter: 'blur(8px)' }}
+                                animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                                className={`profile-chat__message ${isOwn ? 'is-own' : 'is-other'}`}
+                              >
+                                <p className="profile-chat__message-text">{message.text}</p>
+                                {timestamp && (
+                                  <span className="profile-chat__message-time">{timestamp}</span>
+                                )}
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
                       </div>
                     )}
                   </div>
