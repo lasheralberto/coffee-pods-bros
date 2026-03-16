@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect, type CSSProperties } from 'react';
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
-import { Check, Sparkles, ArrowRight, Zap } from 'lucide-react';
+import { Check, Sparkles, ArrowRight, Zap, Info } from 'lucide-react';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
 import { useQuizStore } from '../../stores/quizStore';
 import { t } from '../../data/texts';
@@ -177,7 +177,33 @@ const PlanCard: React.FC<{
   reduceMotion: boolean;
 }> = ({ plan, index, isSelected, onSelect, isMobile, reduceMotion }) => {
   const hl = !!plan.highlighted;
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const { ref, rotateX, rotateY, onMouseMove, onMouseLeave } = useMagneticHover(hl ? 6 : 4);
+
+  useEffect(() => {
+    if (!popoverOpen) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const node = cardRef.current;
+      if (!node) return;
+      if (!node.contains(event.target as Node)) {
+        setPopoverOpen(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPopoverOpen(false);
+    };
+
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [popoverOpen]);
 
   const shellStyle: CSSProperties = {
     position: 'relative',
@@ -269,7 +295,10 @@ const PlanCard: React.FC<{
 
   return (
     <motion.div
-      ref={ref}
+      ref={(node) => {
+        cardRef.current = node;
+        ref.current = node;
+      }}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       onClick={onSelect}
@@ -331,15 +360,92 @@ const PlanCard: React.FC<{
 
         {/* Inner content */}
         <div style={innerStyle}>
-          {/* Badge */}
-          <motion.span
-            style={badgeStyle}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={reduceMotion ? { duration: 0 } : { delay: index * 0.1 + 0.3 }}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              marginBottom: isMobile ? 12 : 20,
+              position: 'relative',
+            }}
           >
-            {plan.badge}
-          </motion.span>
+            {/* Badge */}
+            <motion.span
+              style={{ ...badgeStyle, marginBottom: 0 }}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={reduceMotion ? { duration: 0 } : { delay: index * 0.1 + 0.3 }}
+            >
+              {plan.badge}
+            </motion.span>
+
+            <button
+              type="button"
+              aria-label={`Detalles de ${plan.name}`}
+              aria-expanded={popoverOpen}
+              onClick={(e) => {
+                e.stopPropagation();
+                setPopoverOpen((prev) => !prev);
+              }}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 999,
+                border: hl ? '1px solid rgba(250,247,242,0.26)' : `1px solid ${C.border}`,
+                background: hl ? 'rgba(250,247,242,0.08)' : '#FFFFFF',
+                color: hl ? C.cream : C.secondary,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <Info size={14} />
+            </button>
+
+            {popoverOpen && (
+              <div
+                role="dialog"
+                aria-label={`Detalles del plan ${plan.name}`}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: isMobile ? 34 : 36,
+                  zIndex: 30,
+                  width: isMobile ? 'min(88vw, 260px)' : 270,
+                  borderRadius: 12,
+                  border: hl ? '1px solid rgba(196,119,59,0.34)' : '1px solid #DAD4CC',
+                  background: hl ? 'rgba(26,15,10,0.98)' : '#FFFFFF',
+                  color: hl ? C.cream : C.espresso,
+                  boxShadow: '0 12px 28px rgba(26,15,10,0.18)',
+                  padding: 12,
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: hl ? 'rgba(250,247,242,0.65)' : C.stone,
+                    marginBottom: 8,
+                  }}
+                >
+                  Detalles del plan
+                </p>
+                <p style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 8 }}>{plan.description}</p>
+                <ul style={{ listStyle: 'disc', margin: '0 0 0 18px', padding: 0, display: 'grid', gap: 4 }}>
+                  {plan.features.slice(0, 4).map((feature) => (
+                    <li key={`${plan.id}-popover-${feature}`} style={{ fontSize: 12, lineHeight: 1.4 }}>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
 
           {isSelected && (
             <span
