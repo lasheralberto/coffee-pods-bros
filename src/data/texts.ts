@@ -59,10 +59,10 @@ export const TEXTS = {
     headingLine1: { es: 'Rinde mas.', en: 'Ride stronger.' },
     headingLine2: { es: 'Recupera mejor.', en: 'Recover cleaner.' },
     headingLine3: { es: 'Cafe real.', en: 'Real coffee.' },
-    cta: { es: 'CONFIGURA MI FUELING ->', en: 'BUILD MY FUELING ->' },
-    statRoasters: { es: 'desnivel medio', en: 'avg elevation' },
-    statSubscribers: { es: 'potencia de grupo', en: 'group wattage' },
-    statRating: { es: 'entrega rapida', en: 'fast delivery' },
+    cta: { es: 'DESCUBRE MI CAFE IDEAL', en: 'DISCOVER MY IDEAL COFFEE' },
+    statRoasters: { es: 'altitud media', en: 'average altitude' },
+    statSubscribers: { es: 'potencia de grupo', en: 'group power output' },
+    statRating: { es: 'entrega en 48h', en: '48h delivery' },
     imgAlt: { es: 'Cafe servido para salida ciclista', en: 'Coffee prepared for a group ride' },
     awardText: {
       es: 'FUELING LAB 2026 · CYCLIST COFFEE ·',
@@ -73,7 +73,7 @@ export const TEXTS = {
 
   /* ── How It Works ── */
   howItWorks: {
-    badge: { es: 'COMO FUNCIONA', en: 'HOW IT WORKS' },
+    badge: { es: '3 PASOS PARA TU CAFE IDEAL', en: '3 STEPS TO YOUR IDEAL COFFEE' },
     step1: {
       es: 'Cuentanos tu volumen de entrenamiento, horario y gustos de cafe.',
       en: 'Share your training volume, schedule, and coffee preferences.',
@@ -92,7 +92,7 @@ export const TEXTS = {
   origins: {
     badge: { es: 'RUTAS Y ORIGENES', en: 'ROUTES AND ORIGINS' },
     heading: { es: 'De la montana a tu bidon', en: 'From mountain origin to your bottle' },
-    exploreOrigin: { es: 'Ver Perfil', en: 'View Profile' },
+    exploreOrigin: { es: 'Descubrir origen', en: 'Discover origin' },
     ethiopia: { es: 'Etiopía', en: 'Ethiopia' },
     colombia: { es: 'Colombia', en: 'Colombia' },
     brazil: { es: 'Brasil', en: 'Brazil' },
@@ -103,8 +103,8 @@ export const TEXTS = {
   difference: {
     badge: { es: 'POR QUE ALMA RIDE', en: 'WHY ALMA RIDE' },
     heading: {
-      es: 'Nutricion de cafe disena para entrenar y competir',
-      en: 'Coffee nutrition built for training and race days',
+      es: 'Por que elegir ALMA RIDE para tu rendimiento',
+      en: 'Why choose ALMA RIDE for your performance',
     },
     pillar1: {
       title: {
@@ -367,12 +367,12 @@ export const TEXTS = {
 
   /* ── Home Page CTA ── */
   homeCta: {
-    heading: { es: 'Listo para tu mejor bloque?', en: 'Ready for your strongest block?' },
+    heading: { es: 'Listo para tu cafe perfecto?', en: 'Ready for your perfect coffee?' },
     text: {
-      es: 'Une cafe de especialidad y estrategia de entrenamiento. Sin permanencia y con ajustes cada semana.',
-      en: 'Combine specialty coffee with ride strategy. No lock-in, weekly adjustments included.',
+      es: 'Combina cafe de especialidad con estrategia de entrenamiento. Sin permanencia y con ajustes semanales.',
+      en: 'Combine specialty coffee with training strategy. No lock-in, with weekly adjustments.',
     },
-    button: { es: 'EMPEZAR BLOQUE', en: 'START BLOCK' },
+    button: { es: 'EMPEZAR MI QUIZ', en: 'START MY QUIZ' },
   },
 
   /* ── Shop Page ── */

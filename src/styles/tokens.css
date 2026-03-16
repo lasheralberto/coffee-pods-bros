@@ -6,39 +6,42 @@
 
 :root {
 
-  /* ── COLORES BASE ─────────────────────────────────────── */
-  --color-cream:         #f4f8fb;
-  --color-espresso:      #0e1a24;
-  --color-roast:         #14324a;
-  --color-caramel:       #3e88c4;
-  --color-foam:          #e6edf4;
-  --color-accent:        #14d1ff;
-  --color-accent-rgb:    20, 209, 255;
-  --color-highlight:     #d9ff48;
-  --color-leaf:          #0e7c86;
-  --color-mist:          #f8fbfd;
-  --color-stone:         #6c8192;
+  /* ── COLORES BASE — Glopet (paleta mediterránea cálida) ── */
+  --color-cream:         #faf6ef;   /* fondo principal crema */
+  --color-espresso:      #1c1410;   /* texto oscuro */
+  --color-roast:         #1a3a5c;   /* azul marino profundo */
+  --color-caramel:       #c4763a;   /* naranja terracota / acento */
+  --color-foam:          #f0e8d8;   /* superficie suave */
+  --color-accent:        #c4763a;   /* acento principal */
+  --color-accent-rgb:    196, 118, 58;
+  --color-highlight:     #f0c87a;   /* amarillo dorado suave */
+  --color-leaf:          #3f6b3a;   /* verde mediterráneo */
+  --color-mist:          #fdf9f4;   /* blanco cálido */
+  --color-stone:         #7a6a5a;   /* gris cálido / texto muted */
+  --color-sand:          #d7c4a1;   /* borde arena */
+  --color-deep-blue:     #1a3a5c;   /* azul marino */
+  --color-warm-brown:    #3f342d;   /* marrón párrafo */
 
   /* ── COLORES SEMÁNTICOS (los que usan los componentes) ── */
   /* Fondo */
   --bg-page:             var(--color-cream);
   --bg-surface:          var(--color-foam);
-  --bg-surface-hover:    #E5E0D8;
+  --bg-surface-hover:    #e8dcc8;
   --bg-inverse:          var(--color-espresso);
-  --bg-overlay:          rgba(14, 26, 36, 0.55);
+  --bg-overlay:          rgba(28, 20, 16, 0.55);
 
   /* Texto */
   --text-primary:        var(--color-espresso);
-  --text-secondary:      #2c475d;
+  --text-secondary:      var(--color-warm-brown);
   --text-muted:          var(--color-stone);
   --text-inverse:        var(--color-cream);
   --text-accent:         var(--color-caramel);
   --text-link:           var(--color-roast);
-  --text-link-hover:     var(--color-accent);
+  --text-link-hover:     var(--color-caramel);
 
   /* Bordes */
-  --border-color:        #cfdeea;
-  --border-color-strong: #9eb4c7;
+  --border-color:        #d7c4a1;
+  --border-color-strong: #b8a07a;
   --border-focus:        var(--color-caramel);
 
   /* Brand */

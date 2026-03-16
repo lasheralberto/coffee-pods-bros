@@ -1,0 +1,121 @@
+.glopet-page {
+  --glopet-burnt: #c4763a;
+  --glopet-sand: #e8d5b0;
+  --glopet-sea: #1a3a5c;
+  --glopet-ivory: #faf6ef;
+  --glopet-coffee: #1c1410;
+  background: var(--glopet-ivory);
+  color: var(--glopet-coffee);
+  font-family: 'Newsreader', 'Manrope', serif;
+}
+
+.glopet-grain {
+  position: relative;
+}
+
+.glopet-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(28, 20, 16, 0.07) 0.45px, transparent 0.45px);
+  background-size: 3px 3px;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+
+.glopet-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+.glopet-soft-reveal {
+  animation: glopetFade 1.2s var(--ease-default) both;
+}
+
+.glopet-soft-reveal-delay-1 {
+  animation-delay: 0.18s;
+}
+
+.glopet-soft-reveal-delay-2 {
+  animation-delay: 0.34s;
+}
+
+.glopet-soft-reveal-delay-3 {
+  animation-delay: 0.48s;
+}
+
+.glopet-tactile-btn {
+  transition: transform 260ms var(--ease-default), box-shadow 260ms var(--ease-default), background-color 260ms var(--ease-default);
+  /* Usar los tokens de la app para colores consistentes */
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  border: none;
+  box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.18);
+}
+
+.glopet-tactile-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(26, 58, 92, 0.25);
+  /* hover usa el acento secundario para contraste táctil */
+  background: var(--brand-secondary);
+}
+
+.glopet-editorial-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: clamp(1.2rem, 2.8vw, 3rem);
+}
+
+@media (max-width: 960px) {
+  .glopet-editorial-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes glopetFade {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.glopet-torn-edge-top {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40'%3E%3Cpath d='M0,40 C150,0 250,50 400,10 C550,-20 650,40 800,20 C950,-10 1050,45 1200,5 L1200,100 L0,100 Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40'%3E%3Cpath d='M0,40 C150,0 250,50 400,10 C550,-20 650,40 800,20 C950,-10 1050,45 1200,5 L1200,100 L0,100 Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 40px;
+  mask-size: 100% 40px;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: top;
+  mask-position: top;
+}
+
+.glopet-torn-edge-bottom {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40'%3E%3Cpath d='M0,0 L1200,0 L1200,30 C1050,-10 950,50 800,10 C650,-20 550,40 400,5 C250,-30 150,40 0,0 Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40'%3E%3Cpath d='M0,0 L1200,0 L1200,30 C1050,-10 950,50 800,10 C650,-20 550,40 400,5 C250,-30 150,40 0,0 Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 40px;
+  mask-size: 100% 40px;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: bottom;
+  mask-position: bottom;
+}
+
+.glopet-noise {
+  position: relative;
+}
+.glopet-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opactiy='0.1'/%3E%3C/svg%3E");
+  opacity: 0.15;
+  mix-blend-mode: multiply;
+  z-index: 10;
+}

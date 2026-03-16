@@ -119,13 +119,7 @@ const PurchaseOrderCard: React.FC<{
             <span className="purchase-order__count">{totalOrderItems} {t('purchase.items')}</span>
           </div>
 
-          <div className="purchase-order__end">
-            <Badge variant={statusBadgeVariant(status)}>{statusLabel(status)}</Badge>
-            <span className="purchase-order__price">{fmtPrice(purchase.totalPrice)}</span>
-            <div className={`purchase-order__chevron ${isExpanded ? 'purchase-order__chevron--open' : ''}`}>
-              <ChevronDown size={14} />
-            </div>
-          </div>
+          
         </button>
 
         {purchase.suscriptionName && (

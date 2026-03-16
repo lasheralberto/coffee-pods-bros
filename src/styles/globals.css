@@ -5,40 +5,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 
 /* Note: Departure Mono is a paid/custom font, substituting with Fira Code or Courier New as fallback in tokens */
 
 @import './tokens.css';
 @import './components.css';
 @import './animations.css';
+@import './glopet.css';
+
+@source "../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 
 /* Importando tema y utilidades de Tailwind sin el Preflight (reseteo global) */
 @import "tailwindcss/theme";
 @import "tailwindcss/utilities";
 
 @theme {
-  /* ── Base palette (use literal values to avoid circular var refs) ── */
-  --color-cream:    #f4f8fb;
-  --color-espresso: #0e1a24;
-  --color-roast:    #14324a;
-  --color-caramel:  #3e88c4;
-  --color-foam:     #e6edf4;
-  --color-accent:   #14d1ff;
-  --color-leaf:     #0e7c86;
-  --color-mist:     #f8fbfd;
-  --color-stone:    #6c8192;
+  /* ── Base palette — Glopet (colores cálidos mediterráneos) ── */
+  --color-cream:    #faf6ef;
+  --color-espresso: #1c1410;
+  --color-roast:    #1a3a5c;
+  --color-caramel:  #c4763a;
+  --color-foam:     #f0e8d8;
+  --color-accent:   #c4763a;
+  --color-leaf:     #3f6b3a;
+  --color-mist:     #fdf9f4;
+  --color-stone:    #7a6a5a;
 
   /* ── Semantic colors (needed by Tailwind utilities like bg-page, text-primary…) ── */
-  --color-page:      #f4f8fb;
-  --color-primary:   #0e1a24;
-  --color-secondary: #2c475d;
-  --color-muted:     #6c8192;
-  --color-inverse:   #f4f8fb;
-  --color-surface:   #e6edf4;
+  --color-page:      #faf6ef;
+  --color-primary:   #1a3a5c;
+  --color-secondary: #c4763a;
+  --color-muted:     #7a6a5a;
+  --color-inverse:   #faf6ef;
+  --color-surface:   #f0e8d8;
 
   /* ── Borders ── */
-  --color-border-color:        #cfdeea;
-  --color-border-color-strong: #9eb4c7;
+  --color-border-color:        #d7c4a1;
+  --color-border-color-strong: #b8a07a;
 
   /* ── Layout containers (override Tailwind defaults) ── */
   --container-3xs: initial;

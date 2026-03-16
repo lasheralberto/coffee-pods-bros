@@ -1,6 +1,6 @@
 # Copilot instructions for coffee-pods-bros
 
--Always ref to skill ui-ux-pro-max for UI/UX best practices and design system guidance when making changes to the app's interface or user flow. This is your go-to resource for ensuring consistency with the app's design language and delivering a polished user experience.
+-Always ref to skills: ui-ux-pro-max and hero-ui for UI/UX best practices and design system guidance when making changes to the app's interface or user flow. This is your go-to resource for ensuring consistency with the app's design language and delivering a polished user experience.
 
 ## Project scope and entrypoints
 - Work inside `coffee-pods-bros/coffee-pods-bros` (the app is nested one level below the cloned folder).
