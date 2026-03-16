@@ -69,7 +69,7 @@ export const Hero: React.FC = () => {
           }}
         >
           <img
-            src="/assets/images/hero1.png"
+            src="/images/hero1.png"
             alt="Mesa mediterranea con cafe y ceramica"
             className="h-full w-full object-cover"
             loading="eager"

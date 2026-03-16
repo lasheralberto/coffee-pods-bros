@@ -28,9 +28,9 @@ export const Navbar: React.FC = () => {
     return () => unsubscribe();
   }, [scrollY]);
 
-  const navBackground = isScrolled ? 'rgba(250, 247, 242, 0.8)' : 'transparent';
+  const navBackground = isScrolled ? 'rgba(240, 232, 216, 0.88)' : 'transparent';
   const navBackdropFilter = isScrolled ? 'blur(20px)' : 'none';
-  const navShadow = isScrolled ? 'var(--shadow-sm)' : 'none';
+  const navShadow = isScrolled ? '0 1px 0 rgba(26, 58, 92, 0.1)' : 'none';
 
   return (
     <>
@@ -44,7 +44,7 @@ export const Navbar: React.FC = () => {
       >
         <Container size="xl">
           <div className="flex items-center justify-center md:justify-between h-navbar-desktop">
-            <Link to="/" className="font-display font-bold text-2xl tracking-tight text-[var(--color-highlight)]">
+            <Link to="/" className="glopet-title text-2xl text-[#1a3a5c]">
               {t('navbar.logo')}
             </Link>
 
