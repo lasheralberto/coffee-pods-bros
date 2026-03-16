@@ -84,7 +84,7 @@ export const Hero: React.FC = () => {
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.95, ease: [0.2, 0.65, 0.2, 1] }}
-          className="relative z-20 max-w-[1280px] mx-auto px-4 md:px-10 lg:px-16 pt-10 md:pt-14"
+          className="relative z-20 max-w-[1280px] mx-auto px-4 md:px-10 lg:px-16 pt-24 md:pt-28"
         >
           <p className="uppercase tracking-[0.24em] text-xs text-[#1a3a5c] mb-6 glopet-soft-reveal glopet-soft-reveal-delay-1">
             Cafe mediterraneo de especialidad
