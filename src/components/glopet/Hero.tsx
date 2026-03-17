@@ -8,7 +8,7 @@ export const Hero: React.FC = () => {
     <header className="relative overflow-hidden px-4 pt-4 md:px-10 lg:px-16">
      
       {/* Hero stack: imagen de fondo + texto encima */}
-      <div className="mt-8 md:mt-14 -mx-4 md:-mx-10 lg:-mx-16 relative h-[480px] sm:h-[560px] lg:h-[640px]">
+      <div className="mt-10 sm:mt-6 md:mt-10 -mx-4 md:-mx-10 lg:-mx-16 relative h-[clamp(520px,145vw,820px)] sm:h-[clamp(560px,115vw,780px)] lg:h-[clamp(560px,60vw,700px)]">
 
         {/* Imagen apaisada de fondo con bordes difuminados */}
         <motion.div
@@ -19,25 +19,33 @@ export const Hero: React.FC = () => {
           style={{
             maskImage: [
               'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
-              'linear-gradient(to bottom, transparent 0%, black 10%, black 88%, transparent 100%)',
+              'linear-gradient(to bottom, transparent 0%, black 6%, black 96%, transparent 100%)',
             ].join(', '),
             maskComposite: 'intersect',
             WebkitMaskImage: [
               'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
-              'linear-gradient(to bottom, transparent 0%, black 10%, black 88%, transparent 100%)',
+              'linear-gradient(to bottom, transparent 0%, black 6%, black 96%, transparent 100%)',
             ].join(', '),
             WebkitMaskComposite: 'source-in',
           }}
         >
-          <img
-            src="/images/hero1.png"
-            alt="Mesa mediterranea con cafe y ceramica"
-            className="h-full w-full object-cover"
-            loading="eager"
-            decoding="async"
-          />
+          <picture>
+            <source
+              media="(max-width: 639px)"
+              srcSet="/assets/images/hero1-mobile.png"
+            />
+            <img
+              src="/images/hero1.png"
+              alt="Mesa mediterranea con cafe y ceramica"
+              className="h-full w-full object-cover object-[center_30%] sm:object-center"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
           {/* Gradiente superior para legibilidad del texto */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#faf6ef]/80 via-[#faf6ef]/30 to-transparent" />
+          {/* Difuminado inferior más marcado para transición con la siguiente sección */}
+          <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/70 to-[#faf6ef]" />
         </motion.div>
 
         {/* Contenido sobre la imagen */}
@@ -71,7 +79,7 @@ export const Hero: React.FC = () => {
             initial={{ opacity: 0, y: 48 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.25, ease: [0.2, 0.65, 0.2, 1] }}
-            className="max-w-[1280px] mx-auto w-full flex flex-wrap gap-3 pb-2"
+            className="max-w-[1280px] mx-auto w-full flex flex-wrap gap-3 pb-2 absolute left-4 right-4 bottom-1 sm:static sm:left-auto sm:right-auto sm:bottom-auto"
           >
             <Button
               as={RouterLink}
