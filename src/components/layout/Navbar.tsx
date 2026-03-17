@@ -3,7 +3,7 @@ import { motion, useScroll } from 'framer-motion';
 import { Home, ShoppingBag, Sparkles, Store, UserRound } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Container } from '../ui/Container';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useQuizStore } from '../../stores/quizStore';
 import { useCartStore, selectCartCount } from '../../stores/cartStore';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
@@ -11,6 +11,8 @@ import { useAdminAccess } from '../../hooks/useAdminAccess';
 import { t } from '../../data/texts';
 
 export const Navbar: React.FC = () => {
+  const location = useLocation();
+  const isLandingRoute = location.pathname === '/';
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
   const { actions } = useQuizStore();
@@ -31,6 +33,37 @@ export const Navbar: React.FC = () => {
   const navBackground = isScrolled ? 'rgba(240, 232, 216, 0.88)' : 'transparent';
   const navBackdropFilter = isScrolled ? 'blur(20px)' : 'none';
   const navShadow = isScrolled ? '0 1px 0 rgba(26, 58, 92, 0.1)' : 'none';
+
+  if (isLandingRoute) {
+    return (
+      <motion.nav
+        className="fixed top-4 left-0 right-0 z-navbar"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <Container size="xl">
+          <div className="bg-[rgba(250,246,239,0.86)] backdrop-blur-xl rounded-2xl border border-[#d7c4a1] glopet-soft-reveal h-[3.8rem] px-4 md:px-6 flex items-center justify-between">
+            <Link to="/" className="glopet-title text-2xl text-[#1a3a5c]">
+              {t('navbar.logo')}
+            </Link>
+
+            <div className="flex items-center gap-4">
+              <NavLink
+                to="/contact"
+                className="text-[#1c1410] hover:text-[#1a3a5c] text-sm tracking-wide transition-colors hidden sm:inline"
+              >
+                Contactar
+              </NavLink>
+              <Button variant="primary" size="sm" as="link" to="/shop" className="font-semibold text-white">
+                Comprar
+              </Button>
+            </div>
+          </div>
+        </Container>
+      </motion.nav>
+    );
+  }
 
   return (
     <>

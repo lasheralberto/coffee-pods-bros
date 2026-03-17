@@ -1,51 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Button, Link, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@heroui/react';
+import { Button, Link } from '@heroui/react';
 import { Link as RouterLink } from 'react-router-dom';
-
-const navItems = [
-  { label: 'Manifiesto', href: '#manifiesto' },
-  { label: 'El cafe', href: '#cafe' },
-  { label: 'Ritual', href: '#ritual' },
-];
 
 export const Hero: React.FC = () => {
   return (
     <header className="relative overflow-hidden px-4 pt-4 md:px-10 lg:px-16">
-      <Navbar
-        maxWidth="2xl"
-        className="bg-[rgba(250,246,239,0.86)] backdrop-blur-xl rounded-2xl border border-[#d7c4a1] glopet-soft-reveal"
-        height="3.8rem"
-      >
-        <NavbarBrand>
-          <p className="glopet-title text-2xl text-[#1a3a5c]">GLOPET</p>
-        </NavbarBrand>
-
-        <NavbarContent className="hidden md:flex" justify="center">
-          {navItems.map((item) => (
-            <NavbarItem key={item.href}>
-              <Link href={item.href} className="text-[#1c1410] hover:text-[#1a3a5c] text-sm tracking-wide">
-                {item.label}
-              </Link>
-            </NavbarItem>
-          ))}
-        </NavbarContent>
-
-        <NavbarContent justify="end">
-          <NavbarItem>
-            <Button
-              as={RouterLink}
-              to="/shop"
-              color="primary"
-              radius="full"
-              className="glopet-tactile-btn font-semibold text-white"
-            >
-              Comprar
-            </Button>
-          </NavbarItem>
-        </NavbarContent>
-      </Navbar>
-
+     
       {/* Hero stack: imagen de fondo + texto encima */}
       <div className="mt-8 md:mt-14 -mx-4 md:-mx-10 lg:-mx-16 relative h-[480px] sm:h-[560px] lg:h-[640px]">
 
@@ -79,24 +40,39 @@ export const Hero: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-[#faf6ef]/80 via-[#faf6ef]/30 to-transparent" />
         </motion.div>
 
-        {/* Texto encima */}
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.95, ease: [0.2, 0.65, 0.2, 1] }}
-          className="relative z-20 max-w-[1280px] mx-auto px-4 md:px-10 lg:px-16 pt-24 md:pt-28"
-        >
-          <p className="uppercase tracking-[0.24em] text-xs text-[#1a3a5c] mb-6 glopet-soft-reveal glopet-soft-reveal-delay-1">
-            Cafe mediterraneo de especialidad
-          </p>
-          <h1 className="glopet-title text-[2.7rem] leading-[0.95] sm:text-[3.5rem] lg:text-[5.2rem] text-[#1c1410] max-w-[14ch] glopet-soft-reveal glopet-soft-reveal-delay-2">
-            Nacido entre el mar y la sobremesa.
-          </h1>
-          <p className="mt-6 text-[1.1rem] text-[#3f342d] max-w-[34ch] leading-relaxed glopet-soft-reveal glopet-soft-reveal-delay-3">
-            Glopet nace en tardes largas con sal en el aire. Un cafe lento, calido y honesto para volver a respirar sin prisa.
-          </p>
+        {/* Contenido sobre la imagen */}
+        <div className="absolute inset-0 z-20 flex flex-col px-4 md:px-10 lg:px-16 py-8">
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          {/* Texto — entra desde arriba, queda centrado verticalmente */}
+          <motion.div
+            initial={{ opacity: 0, y: -48 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.2, 0.65, 0.2, 1] }}
+            className="flex-1 flex flex-col justify-center max-w-[1280px] mx-auto w-full"
+          >
+            <p className="uppercase tracking-[0.24em] text-xs text-[#1a3a5c] mb-6">
+              Cafe mediterraneo de especialidad
+            </p>
+            <h1
+              className="glopet-title text-[2.7rem] leading-[0.95] sm:text-[3.5rem] lg:text-[5.2rem] text-white max-w-[14ch]"
+              style={{ WebkitTextStroke: '0.25px #1a7ab5' }}
+            >
+              <span style={{ color: '#ffffff' }}>Entre el{' '}</span>
+              <span style={{ color: '#1a7ab5', WebkitTextStroke: '1.5px #dfe4e7' }}>mar</span>
+              <span style={{ color: '#ffffff' }}>{' '}y la sobremesa.</span>
+            </h1>
+            <p className="mt-6 text-[1.1rem] text-[#3f342d] max-w-[34ch] leading-relaxed">
+              Glopet nace en tardes largas con sal en el aire. Un café lento, cálido y honesto para volver a respirar sin prisa.
+            </p>
+          </motion.div>
+
+          {/* Botones — entran desde abajo, quedan en el fondo */}
+          <motion.div
+            initial={{ opacity: 0, y: 48 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.25, ease: [0.2, 0.65, 0.2, 1] }}
+            className="max-w-[1280px] mx-auto w-full flex flex-wrap gap-3 pb-2"
+          >
             <Button
               as={RouterLink}
               to="/shop"
@@ -117,10 +93,9 @@ export const Hero: React.FC = () => {
             >
               Descubrir origen
             </Button>
-          </div>
-        </motion.div>
+          </motion.div>
 
-   
+        </div>
       </div>
     </header>
   );

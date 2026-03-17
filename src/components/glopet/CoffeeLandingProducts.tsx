@@ -4,8 +4,11 @@ import { getLocale } from '../../data/texts';
 
 /* ── Constants ─────────────────────────────────────────── */
 
-const CARD_W = 260;
-const GAP = 20;
+const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
+
+const CARD_W = isMobile() ? 180 : 260;
+const CARD_H = isMobile() ? 240 : 340;
+const GAP = isMobile() ? 12 : 20;
 const STEP = CARD_W + GAP;
 const REPS = 3;
 /** px per ms — drift barely perceptible, like a slow tide */
@@ -45,6 +48,11 @@ export default function CoffeeLandingProducts() {
   const [products, setProducts] = useState<ProductCatalogFirestore[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+
+  const mobile = isMobile();
+  const cardW = CARD_W;
+  const cardH = CARD_H;
+  const gap = GAP;
 
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -96,7 +104,7 @@ export default function CoffeeLandingProducts() {
     const unsub = onProductsCatalog((docs) => {
       const sorted = [...docs]
         .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-        .slice(0, 4);
+        .slice(0, 5);
       setProducts(sorted);
       setLoading(false);
     });
@@ -254,12 +262,12 @@ export default function CoffeeLandingProducts() {
         >
           Nuestra selección
         </p>
-        <div className="flex gap-5 px-[10%]">
+        <div className="flex gap-3 sm:gap-5 px-[10%]">
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className="flex-none rounded-[22px] animate-pulse"
-              style={{ width: CARD_W, height: 340, background: 'var(--color-foam)' }}
+              className="flex-none rounded-[18px] sm:rounded-[22px] animate-pulse"
+              style={{ width: cardW, height: cardH, background: 'var(--color-foam)' }}
             />
           ))}
         </div>
@@ -288,8 +296,8 @@ export default function CoffeeLandingProducts() {
 
         <div
           ref={trackRef}
-          className="flex py-6 pb-8"
-          style={{ gap: GAP, paddingLeft: '10%', cursor: 'grab', willChange: 'transform', userSelect: 'none' }}
+          className="flex py-4 sm:py-6 pb-6 sm:pb-8"
+          style={{ gap, paddingLeft: '8%', cursor: 'grab', willChange: 'transform', userSelect: 'none' }}
           onMouseDown={onMouseDown}
         >
           {allCards.map((product, i) => {
@@ -301,10 +309,10 @@ export default function CoffeeLandingProducts() {
             return (
               <div
                 key={i}
-                className="flex-none rounded-[22px] overflow-hidden relative group"
+                className="flex-none rounded-[18px] sm:rounded-[22px] overflow-hidden relative group"
                 style={{
-                  width: CARD_W,
-                  height: 340,
+                  width: cardW,
+                  height: cardH,
                   boxShadow: '0 8px 24px rgba(0,0,0,0.12), 0 24px 48px rgba(0,0,0,0.08)',
                 }}
               >
@@ -361,7 +369,7 @@ export default function CoffeeLandingProducts() {
                   </div>
                 )}
 
-                <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
                   <span
                     className="block mb-2 text-[10px] tracking-[0.18em] uppercase"
                     style={{ fontFamily: 'var(--font-body)', color: 'rgba(255,255,255,0.55)' }}
@@ -369,10 +377,10 @@ export default function CoffeeLandingProducts() {
                     {tag}
                   </span>
                   <h3
-                    className="mb-2 leading-[1.1]"
+                    className="mb-1 sm:mb-2 leading-[1.1]"
                     style={{
                       fontFamily: 'var(--font-display)',
-                      fontSize: 26,
+                      fontSize: mobile ? 17 : 26,
                       fontWeight: 600,
                       color: '#fff',
                       letterSpacing: '0.01em',
@@ -384,7 +392,7 @@ export default function CoffeeLandingProducts() {
                     className="leading-relaxed line-clamp-2"
                     style={{
                       fontFamily: 'var(--font-body)',
-                      fontSize: 12.5,
+                      fontSize: mobile ? 10.5 : 12.5,
                       fontWeight: 300,
                       color: 'rgba(255,255,255,0.72)',
                     }}
