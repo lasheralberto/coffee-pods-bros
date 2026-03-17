@@ -24,9 +24,10 @@ export const cardVariants = {
 
 interface ProductCardProps {
   product: ShopProduct;
+  onAddToCart?: () => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const { actions } = useCartStore();
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -57,6 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               ...product,
               selectedFormatQuantity: product.formatQuantities[0] ?? undefined,
             });
+            onAddToCart?.();
           }}
           aria-label={`${t('cart.addToCart')} ${product.name} ${t('cart.toCart')}`}
         >
@@ -84,7 +86,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
     </motion.article>
 
-    <ProductDetail product={detailOpen ? product : null} onClose={closeDetail} />
+    <ProductDetail
+      product={detailOpen ? product : null}
+      onClose={closeDetail}
+      onAddToCart={onAddToCart}
+    />
     </>
   );
 };

@@ -1,6 +1,9 @@
-﻿import { useRef, useState, useEffect } from 'react';
+﻿import { useRef, useState, useEffect, useMemo } from 'react';
 import { onProductsCatalog, type ProductCatalogFirestore } from '../../providers/firebaseProvider';
 import { getLocale } from '../../data/texts';
+import { ProductCard } from '../shop/ProductCard';
+import type { ShopProduct } from '../../data/shopProducts';
+import { useNavigate } from 'react-router-dom';
 
 /* ── Constants ─────────────────────────────────────────── */
 
@@ -14,19 +17,8 @@ const REPS = 3;
 /** px per ms — drift barely perceptible, like a slow tide */
 const DRIFT = 0.028;
 const SNAP_MS = 400;
-
-const CARD_GRADIENTS = [
-  'linear-gradient(135deg, #1c1410 0%, #3f342d 40%, #7a4f2d 70%, #c4763a 100%)',
-  'linear-gradient(145deg, #1a3a5c 0%, #1e5080 45%, #2a77b5 75%, #5aa0d0 100%)',
-  'linear-gradient(130deg, #3f6b3a 0%, #4e8547 40%, #72ad62 70%, #a0c885 100%)',
-  'linear-gradient(140deg, #1c1410 0%, #3d2010 40%, #7a3b15 70%, #c4763a 100%)',
-];
-
-const ROAST_LABEL: Record<string, string> = {
-  light: 'Tueste · Suave',
-  medium: 'Tueste · Medio',
-  dark: 'Tueste · Intenso',
-};
+const DRAG_THRESHOLD = 7;
+const SUPPRESS_CLICK_MS = 220;
 
 /* ── Pure helpers ─────────────────────────────────────── */
 
@@ -42,17 +34,46 @@ function wrapOffset(x: number, N: number): number {
   return x;
 }
 
+function toNumericId(value: string, fallback: number): number {
+  const parsed = Number(value);
+  if (Number.isFinite(parsed)) return parsed;
+
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash || fallback;
+}
+
 /* ── Component ─────────────────────────────────────────── */
 
 export default function CoffeeLandingProducts() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<ProductCatalogFirestore[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
 
-  const mobile = isMobile();
   const cardW = CARD_W;
   const cardH = CARD_H;
   const gap = GAP;
+  const locale = getLocale();
+
+  const shopProducts = useMemo<ShopProduct[]>(
+    () =>
+      products.map((product, idx) => ({
+        id: toNumericId(product.id, idx + 1),
+        brand: product.brand,
+        name: product.name[locale] ?? product.name.en ?? '',
+        description: product.description[locale] ?? product.description.en ?? '',
+        price: product.price,
+        image: product.image,
+        isNew: product.isNew,
+        roast: product.roast,
+        tastesLike: product.tastesLike,
+        formatQuantities: product.formatQuantities,
+      })),
+    [products, locale],
+  );
 
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +87,8 @@ export default function CoffeeLandingProducts() {
     velX: 0,
     lastPX: 0,
     lastT: 0,
+    movedDuringDrag: false,
+    suppressClicksUntil: 0,
     isSnapping: false,
     snapFrom: 0,
     snapTo: 0,
@@ -159,22 +182,30 @@ export default function CoffeeLandingProducts() {
 
   /* ── Mouse drag ── */
   const onMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
     const c = s.current;
     c.isDragging = true;
     c.isSnapping = false;
+    c.movedDuringDrag = false;
     c.dragStartX = e.clientX;
     c.dragStartOff = c.x;
     c.velX = 0;
     c.lastPX = e.clientX;
     c.lastT = performance.now();
-    e.preventDefault();
   };
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       const c = s.current;
       if (!c.isDragging) return;
-      c.x = c.dragStartOff + (e.clientX - c.dragStartX);
+
+      const delta = e.clientX - c.dragStartX;
+      if (!c.movedDuringDrag && Math.abs(delta) > DRAG_THRESHOLD) {
+        c.movedDuringDrag = true;
+      }
+      if (!c.movedDuringDrag) return;
+
+      c.x = c.dragStartOff + delta;
       applyX(c.x);
       const now = performance.now();
       const dt = now - c.lastT;
@@ -185,7 +216,15 @@ export default function CoffeeLandingProducts() {
     const onUp = () => {
       const c = s.current;
       if (!c.isDragging) return;
-      snapToX(nearestSnap());
+
+      if (c.movedDuringDrag) {
+        c.suppressClicksUntil = performance.now() + SUPPRESS_CLICK_MS;
+        snapToX(nearestSnap());
+        return;
+      }
+
+      c.isDragging = false;
+      c.velX = 0;
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -204,6 +243,7 @@ export default function CoffeeLandingProducts() {
       const c = s.current;
       c.isDragging = true;
       c.isSnapping = false;
+      c.movedDuringDrag = false;
       c.dragStartX = e.touches[0].clientX;
       c.dragStartOff = c.x;
       c.velX = 0;
@@ -213,7 +253,14 @@ export default function CoffeeLandingProducts() {
     const onMove = (e: TouchEvent) => {
       const c = s.current;
       if (!c.isDragging) return;
-      c.x = c.dragStartOff + (e.touches[0].clientX - c.dragStartX);
+
+      const delta = e.touches[0].clientX - c.dragStartX;
+      if (!c.movedDuringDrag && Math.abs(delta) > DRAG_THRESHOLD) {
+        c.movedDuringDrag = true;
+      }
+      if (!c.movedDuringDrag) return;
+
+      c.x = c.dragStartOff + delta;
       applyX(c.x);
       const now = performance.now();
       const dt = now - c.lastT;
@@ -224,7 +271,15 @@ export default function CoffeeLandingProducts() {
     const onEnd = () => {
       const c = s.current;
       if (!c.isDragging) return;
-      snapToX(nearestSnap());
+
+      if (c.movedDuringDrag) {
+        c.suppressClicksUntil = performance.now() + SUPPRESS_CLICK_MS;
+        snapToX(nearestSnap());
+        return;
+      }
+
+      c.isDragging = false;
+      c.velX = 0;
     };
     el.addEventListener('touchstart', onStart, { passive: true });
     el.addEventListener('touchmove', onMove, { passive: true });
@@ -250,8 +305,14 @@ export default function CoffeeLandingProducts() {
 
   /* ── Render ── */
 
-  const allCards = Array.from({ length: REPS }, () => products).flat();
-  const locale = getLocale();
+  const allCards = Array.from({ length: REPS }, () => shopProducts).flat();
+
+  const onTrackClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (performance.now() < s.current.suppressClicksUntil) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
 
   if (loading) {
     return (
@@ -299,110 +360,13 @@ export default function CoffeeLandingProducts() {
           className="flex py-4 sm:py-6 pb-6 sm:pb-8"
           style={{ gap, paddingLeft: '8%', cursor: 'grab', willChange: 'transform', userSelect: 'none' }}
           onMouseDown={onMouseDown}
+          onClickCapture={onTrackClickCapture}
         >
-          {allCards.map((product, i) => {
-            const gradientIdx = products.indexOf(product) % CARD_GRADIENTS.length;
-            const name = product.name[locale] ?? product.name['en'] ?? '';
-            const description = product.description[locale] ?? product.description['en'] ?? '';
-            const tag = ROAST_LABEL[product.roast] ?? product.roast;
-
-            return (
-              <div
-                key={i}
-                className="flex-none rounded-[18px] sm:rounded-[22px] overflow-hidden relative group"
-                style={{
-                  width: cardW,
-                  height: cardH,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.12), 0 24px 48px rgba(0,0,0,0.08)',
-                }}
-              >
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={name}
-                    draggable={false}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                  />
-                ) : (
-                  <div
-                    className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.04]"
-                    style={{ background: CARD_GRADIENTS[gradientIdx] }}
-                  />
-                )}
-
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(to bottom, rgba(0,0,0,0) 25%, rgba(0,0,0,0.50) 65%, rgba(0,0,0,0.82) 100%)',
-                  }}
-                />
-
-                <div
-                  className="absolute top-5 right-5 text-xs px-3 py-1 rounded-full"
-                  style={{
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 400,
-                    letterSpacing: '0.04em',
-                    color: 'rgba(255,255,255,0.9)',
-                    background: 'rgba(255,255,255,0.15)',
-                    backdropFilter: 'blur(10px)',
-                    border: '0.5px solid rgba(255,255,255,0.25)',
-                  }}
-                >
-                  {product.price} €
-                </div>
-
-                {product.isNew && (
-                  <div
-                    className="absolute top-5 left-5 text-[10px] px-2.5 py-1 rounded-full"
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontWeight: 500,
-                      letterSpacing: '0.06em',
-                      textTransform: 'uppercase',
-                      color: 'var(--color-espresso)',
-                      background: 'var(--color-highlight)',
-                    }}
-                  >
-                    Nuevo
-                  </div>
-                )}
-
-                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                  <span
-                    className="block mb-2 text-[10px] tracking-[0.18em] uppercase"
-                    style={{ fontFamily: 'var(--font-body)', color: 'rgba(255,255,255,0.55)' }}
-                  >
-                    {tag}
-                  </span>
-                  <h3
-                    className="mb-1 sm:mb-2 leading-[1.1]"
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: mobile ? 17 : 26,
-                      fontWeight: 600,
-                      color: '#fff',
-                      letterSpacing: '0.01em',
-                    }}
-                  >
-                    {name}
-                  </h3>
-                  <p
-                    className="leading-relaxed line-clamp-2"
-                    style={{
-                      fontFamily: 'var(--font-body)',
-                      fontSize: mobile ? 10.5 : 12.5,
-                      fontWeight: 300,
-                      color: 'rgba(255,255,255,0.72)',
-                    }}
-                  >
-                    {description}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+          {allCards.map((product, i) => (
+            <div key={`${product.id}-${i}`} className="flex-none" style={{ width: cardW }}>
+              <ProductCard product={product} onAddToCart={() => navigate('/shop')} />
+            </div>
+          ))}
         </div>
       </div>
 

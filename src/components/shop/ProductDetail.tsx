@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import type { ShopProduct } from '../../data/shopProducts';
@@ -57,9 +58,10 @@ const ROAST_LABELS: Record<string, string> = {
 interface ProductDetailProps {
   product: ShopProduct | null;
   onClose: () => void;
+  onAddToCart?: () => void;
 }
 
-export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
+export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose, onAddToCart }) => {
   const { actions } = useCartStore();
   const [selectedFormat, setSelectedFormat] = useState('');
 
@@ -79,9 +81,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }
       selectedFormatQuantity: selectedFormat || undefined,
     });
     onClose();
-  }, [product, selectedFormat, actions, onClose]);
+    onAddToCart?.();
+  }, [product, selectedFormat, actions, onClose, onAddToCart]);
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {product && (
         <div
@@ -208,6 +211,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') {
+    return modalContent;
+  }
+
+  return createPortal(modalContent, document.body);
 };
 
 /* ── Shared mobile content ── */
