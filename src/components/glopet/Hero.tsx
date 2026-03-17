@@ -32,7 +32,7 @@ export const Hero: React.FC = () => {
           <picture>
             <source
               media="(max-width: 639px)"
-              srcSet="/assets/images/hero1-mobile.png"
+              srcSet="/images/hero1-mobile.png"
             />
             <img
               src="/images/hero1.png"
