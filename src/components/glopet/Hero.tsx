@@ -44,8 +44,8 @@ export const Hero: React.FC = () => {
           </picture>
           {/* Gradiente superior para legibilidad del texto */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#faf6ef]/80 via-[#faf6ef]/30 to-transparent" />
-          {/* Difuminado inferior más marcado para transición con la siguiente sección */}
-          <div className="absolute inset-x-0 bottom-0 h-28 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/70 to-[#faf6ef]" />
+          {/* Difuminado inferior: más intenso en móvil para evitar corte recto en hero1-mobile */}
+          <div className="absolute inset-x-0 bottom-0 h-44 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/88 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
         </motion.div>
 
         {/* Contenido sobre la imagen */}
@@ -87,7 +87,7 @@ export const Hero: React.FC = () => {
               size="lg"
               color="secondary"
               radius="full"
-              className="glopet-tactile-btn font-bold px-10 text-white tracking-wide shadow-[0_6px_28px_rgba(196,118,58,0.45)] hover:shadow-[0_8px_36px_rgba(196,118,58,0.6)] hover:scale-[1.04] active:scale-[0.98] transition-all duration-200"
+              className="glopet-tactile-btn font-bold px-10 text-white tracking-wide hover:scale-[1.04] active:scale-[0.98] transition-all duration-200"
             >
               Comenzar
             </Button>
@@ -99,7 +99,7 @@ export const Hero: React.FC = () => {
               radius="full"
               className="border-[#1a3a5c] text-[#1a3a5c] bg-transparent"
             >
-              Descubrir origen
+              Personaliza tu pack
             </Button>
           </motion.div>
 
