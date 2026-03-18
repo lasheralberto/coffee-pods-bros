@@ -140,7 +140,7 @@ export const TEXTS = {
 
   /* ── Footer ── */
   footer: {
-    brand: { es: 'ORIGEN', en: 'ORIGEN' },
+    brand: { es: 'GLOPET', en: 'GLOPET' },
     brandDesc: {
       es: 'Café de especialidad seleccionado a mano, tostado con precisión y entregado fresco a tu puerta.',
       en: 'Hand-selected specialty coffee, precision roasted and delivered fresh to your door.',

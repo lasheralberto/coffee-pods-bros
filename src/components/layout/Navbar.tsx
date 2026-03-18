@@ -48,15 +48,29 @@ export const Navbar: React.FC = () => {
               {t('navbar.logo')}
             </Link>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-3">
               <NavLink
                 to="/contact"
-                className="text-[#1c1410] hover:text-[#1a3a5c] text-sm tracking-wide transition-colors hidden sm:inline"
+                className="glopet-nav-cta glopet-nav-cta--contact hidden sm:inline-flex"
               >
                 Contactar
               </NavLink>
-              <Button variant="primary" size="sm" as="link" to="/shop" className="font-semibold text-white">
+              <Button
+                variant="primary"
+                size="sm"
+                as="link"
+                to="/shop"
+                className="glopet-nav-cta glopet-nav-cta--shop"
+              >
                 Comprar
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                className="glopet-nav-cta glopet-nav-cta--account"
+                onClick={() => authActions.openAuth('login')}
+              >
+                Área cliente
               </Button>
             </div>
           </div>

@@ -22,10 +22,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className={isLandingRoute ? 'flex-1 pt-navbar-desktop' : 'flex-1 pt-navbar-desktop pb-mobile-bottom-nav'}>
         {children}
       </main>
-      {!isLandingRoute && <Footer />}
+      <Footer />
       <QuizModal />
       {!isLandingRoute && <CartDrawer />}
-      {!isLandingRoute && <AuthModal />}
+      <AuthModal />
     </div>
   );
 };
