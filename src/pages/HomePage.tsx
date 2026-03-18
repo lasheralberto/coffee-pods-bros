@@ -5,6 +5,7 @@ import { Product } from '../components/glopet/Product';
 import { Ritual } from '../components/glopet/Ritual';
 import { CallToAction } from '../components/glopet/CallToAction';
 import CoffeeLandingProducts from '../components/glopet/CoffeeLandingProducts';
+import { ChatFloatingContactUs } from '../components/glopet/ChatFloatingContactUs';
 
 export const HomePage: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ export const HomePage: React.FC = () => {
       <CoffeeLandingProducts />
       <Product />
       <CallToAction />
+      <ChatFloatingContactUs />
     </div>
   );
 };

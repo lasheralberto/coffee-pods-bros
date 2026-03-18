@@ -73,26 +73,41 @@ export const ChatFloatingContactUs: React.FC<ChatFloatingContactUsProps> = ({
     setDraft('');
     setLoading(true);
 
-    // Simulación de respuesta automática
-    // En producción, reemplaza este timeout por una llamada al LLM o servicio de soporte
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch('https://coffee-bros-assistant-776866624516.us-central1.run.app/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: text }),
+      });
 
-    const botReplies: string[] = [
-      'Gracias por tu mensaje. Nuestro equipo te responderá en breve.',
-      '¡Buena pregunta! Puedes explorar nuestro catálogo en la sección Tienda.',
-      'Ofrecemos envíos 48 h a toda España. ¿Tienes alguna otra pregunta?',
-      'Puedes cancelar tu suscripción en cualquier momento desde tu perfil.',
-    ];
-    const replyText = botReplies[Math.floor(Math.random() * botReplies.length)];
+      if (!response.ok) {
+        throw new Error('Error en la comunicación con el asistente');
+      }
 
-    const botMsg: Message = {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      text: replyText,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, botMsg]);
-    setLoading(false);
+      const data = await response.json();
+      const replyText = data.response || 'Lo siento, no he podido procesar tu solicitud.';
+
+      const botMsg: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: replyText,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMsg: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: 'Lo siento, ha ocurrido un error al conectar con el asistente. Por favor, inténtalo de nuevo más tarde.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
