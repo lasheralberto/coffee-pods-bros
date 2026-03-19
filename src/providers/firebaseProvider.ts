@@ -549,6 +549,7 @@ export async function deleteUserPackDraft(uid: string): Promise<void> {
  */
 export interface ProductCatalogFirestore {
   id:          string;
+  qrId:        string;
   brand:       string;
   name:        Record<string, string>;
   description: Record<string, string>;
@@ -563,6 +564,7 @@ export interface ProductCatalogFirestore {
 }
 
 interface ProductCatalogFirestoreRaw {
+  qrId?: string;
   brand: string;
   name: Record<string, string>;
   description: Record<string, string>;
@@ -574,6 +576,11 @@ interface ProductCatalogFirestoreRaw {
   tastesLike: string[];
   formatQuantities?: string[];
   order?: number;
+}
+
+interface QrUriDocRaw {
+  qrId?: unknown;
+  productId?: unknown;
 }
 
 export interface AdminProductCatalogPayload {
@@ -618,8 +625,12 @@ const isStoragePath = (value: string): boolean => {
 function normalizeProductCatalogDoc(id: string, data: ProductCatalogFirestoreRaw, resolvedImage: string): ProductCatalogFirestore {
   const rawImage = typeof data.image === 'string' ? data.image : '';
   const fallbackStoragePath = isStoragePath(rawImage) ? rawImage : null;
+  const qrId = typeof data.qrId === 'string' && data.qrId.trim().length > 0
+    ? normalizeProductNameToQrRoute(data.qrId)
+    : '';
   return {
     id,
+    qrId,
     brand: data.brand,
     name: data.name,
     description: data.description,
@@ -681,6 +692,26 @@ function buildCatalogImageStoragePath(productId: string, fileName: string): stri
   return `${PRODUCT_CATALOG_STORAGE_PREFIX}/${productId}/${timestamp}_${sanitizedName}`;
 }
 
+export function normalizeProductNameToQrRoute(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z]/g, '');
+}
+
+function toAlphabetSuffix(index: number): string {
+  let n = index;
+  let suffix = '';
+  while (n > 0) {
+    const mod = (n - 1) % 26;
+    suffix = String.fromCharCode(97 + mod) + suffix;
+    n = Math.floor((n - 1) / 26);
+  }
+  return suffix || 'a';
+}
+
 /**
  * Resolves a Storage path to a download URL.
  * If the value already starts with "http", returns it as-is.
@@ -733,6 +764,124 @@ export async function getProductCatalogProductById(productId: string): Promise<P
 }
 
 /**
+ * Fetches one route mapping from `qrUri/{route}` and returns its `productId`.
+ */
+export async function getQrUriProductId(route: string): Promise<string | null> {
+  const rawRoute = route.trim();
+  if (!rawRoute) return null;
+
+  let cleanedRoute = rawRoute;
+
+  // Handles cases where scanners append full URL or query/hash payloads.
+  const qrPathMarker = '/qr/';
+  const markerIndex = cleanedRoute.toLowerCase().lastIndexOf(qrPathMarker);
+  if (markerIndex >= 0) {
+    cleanedRoute = cleanedRoute.slice(markerIndex + qrPathMarker.length);
+  }
+
+  cleanedRoute = cleanedRoute.split('?')[0]?.split('#')[0] ?? cleanedRoute;
+  cleanedRoute = cleanedRoute.replace(/^\/+|\/+$/g, '');
+  cleanedRoute = cleanedRoute.replace(/^['"`]|['"`]$/g, '');
+
+  try {
+    cleanedRoute = decodeURIComponent(cleanedRoute);
+  } catch {
+    // Keep original cleaned value when URI decoding fails.
+  }
+
+  const exactRoute = cleanedRoute.trim();
+  const normalizedRoute = normalizeProductNameToQrRoute(exactRoute);
+  const routeCandidates = Array.from(new Set([
+    exactRoute,
+    exactRoute.toLowerCase(),
+    normalizedRoute,
+  ].filter(Boolean)));
+
+  for (const candidateRoute of routeCandidates) {
+    const qrUriRef = doc(db, 'qrUri', candidateRoute);
+    const snap = await getDoc(qrUriRef);
+    if (!snap.exists()) continue;
+
+    const data = snap.data() as QrUriDocRaw;
+    if (typeof data.productId === 'string' && data.productId.trim().length > 0) {
+      return data.productId.trim();
+    }
+    if (typeof data.productId === 'number' && Number.isFinite(data.productId)) {
+      return String(data.productId);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resolves a QR route by doc ID in `qrUri`, then fetches
+ * `productsCatalog/{productId}` by doc ID.
+ */
+export async function getProductCatalogProductByQrRoute(route: string): Promise<ProductCatalogFirestore | null> {
+  const productId = await getQrUriProductId(route);
+  if (!productId) return null;
+  return getProductCatalogProductById(productId);
+}
+
+/**
+ * Ensures a product has a persistent `qrId` and a matching `qrUri/{qrId}` mapping.
+ * If the product has no QR route yet, it will be generated automatically.
+ */
+export async function ensureProductCatalogQrRoute(productId: string): Promise<string> {
+  await assertCurrentUserIsAdmin();
+
+  const productRef = doc(db, 'productsCatalog', productId);
+  const snap = await getDoc(productRef);
+  if (!snap.exists()) {
+    throw new Error('Producto no encontrado.');
+  }
+
+  const data = snap.data() as ProductCatalogFirestoreRaw;
+  const existingQrId = typeof data.qrId === 'string' && data.qrId.trim().length > 0
+    ? normalizeProductNameToQrRoute(data.qrId)
+    : '';
+  const fallbackName = data.name?.es ?? data.name?.en ?? '';
+  const baseFromProductId = normalizeProductNameToQrRoute(productId);
+  const baseQrId = existingQrId || normalizeProductNameToQrRoute(fallbackName) || baseFromProductId || 'qr';
+
+  let nextQrId = baseQrId;
+  let suffix = 1;
+  while (true) {
+    const candidateRef = doc(db, 'qrUri', nextQrId);
+    const candidateSnap = await getDoc(candidateRef);
+    if (!candidateSnap.exists()) break;
+
+    const candidateData = candidateSnap.data() as QrUriDocRaw;
+    const candidateProductId = typeof candidateData.productId === 'string'
+      ? candidateData.productId.trim()
+      : typeof candidateData.productId === 'number' && Number.isFinite(candidateData.productId)
+        ? String(candidateData.productId)
+        : '';
+    if (candidateProductId === productId) break;
+
+    nextQrId = `${baseQrId}${toAlphabetSuffix(suffix)}`;
+    suffix += 1;
+  }
+
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'qrUri', nextQrId), {
+    qrId: nextQrId,
+    productId,
+  }, { merge: true });
+
+  if (existingQrId !== nextQrId) {
+    batch.update(productRef, { qrId: nextQrId });
+    if (existingQrId) {
+      batch.delete(doc(db, 'qrUri', existingQrId));
+    }
+  }
+
+  await batch.commit();
+  return nextQrId;
+}
+
+/**
  * Uploads a product catalog image to Firebase Storage and returns URL + storage path.
  */
 export async function uploadProductCatalogImage(
@@ -772,7 +921,34 @@ export async function createProductCatalogProduct(
   const productRef = doc(colRef);
   const { imageUrl, imageStoragePath } = await uploadProductCatalogImage(productRef.id, imageFile);
 
+  const routeBaseName = payload.name.es.trim() || payload.name.en.trim();
+  const baseFromProductId = normalizeProductNameToQrRoute(productRef.id);
+  const baseQrId = normalizeProductNameToQrRoute(routeBaseName) || baseFromProductId || 'qr';
+  if (!baseQrId) {
+    throw new Error('No se pudo generar una ruta QR válida para el producto.');
+  }
+
+  let qrId = baseQrId;
+  let suffix = 1;
+  while (true) {
+    const candidateRef = doc(db, 'qrUri', qrId);
+    const candidateSnap = await getDoc(candidateRef);
+    if (!candidateSnap.exists()) break;
+
+    const candidateData = candidateSnap.data() as QrUriDocRaw;
+    const candidateProductId = typeof candidateData.productId === 'string'
+      ? candidateData.productId.trim()
+      : typeof candidateData.productId === 'number' && Number.isFinite(candidateData.productId)
+        ? String(candidateData.productId)
+        : '';
+    if (candidateProductId === productRef.id) break;
+
+    qrId = `${baseQrId}${toAlphabetSuffix(suffix)}`;
+    suffix += 1;
+  }
+
   const data: ProductCatalogFirestoreRaw = {
+    qrId,
     brand: payload.brand.trim(),
     name: {
       es: payload.name.es.trim(),
@@ -792,7 +968,15 @@ export async function createProductCatalogProduct(
     order: payload.order,
   };
 
-  await setDoc(productRef, data);
+  const qrRef = doc(db, 'qrUri', qrId);
+  const batch = writeBatch(db);
+  batch.set(productRef, data);
+  batch.set(qrRef, {
+    qrId,
+    productId: productRef.id,
+  });
+  await batch.commit();
+
   return productRef.id;
 }
 
@@ -815,6 +999,11 @@ export async function updateProductCatalogProduct(
   }
 
   const currentData = snap.data() as ProductCatalogFirestoreRaw;
+  const fallbackName = payload.name.es.trim() || payload.name.en.trim();
+  const normalizedCurrentQrId = typeof currentData.qrId === 'string' && currentData.qrId.trim().length > 0
+    ? normalizeProductNameToQrRoute(currentData.qrId)
+    : normalizeProductNameToQrRoute(fallbackName);
+  const qrId = normalizedCurrentQrId || normalizeProductNameToQrRoute(productId) || 'qr';
   const currentImageRaw = typeof currentData.image === 'string' ? currentData.image : '';
   const currentStoragePath = currentData.imageStoragePath ?? (isStoragePath(currentImageRaw) ? currentImageRaw : null);
 
@@ -837,6 +1026,7 @@ export async function updateProductCatalogProduct(
   }
 
   const data: ProductCatalogFirestoreRaw = {
+    qrId,
     brand: payload.brand.trim(),
     name: {
       es: payload.name.es.trim(),
@@ -856,7 +1046,14 @@ export async function updateProductCatalogProduct(
     order: payload.order,
   };
 
-  await updateDoc(productRef, data as unknown as Record<string, unknown>);
+  const qrRef = doc(db, 'qrUri', qrId);
+  const batch = writeBatch(db);
+  batch.update(productRef, data as unknown as Record<string, unknown>);
+  batch.set(qrRef, {
+    qrId,
+    productId,
+  }, { merge: true });
+  await batch.commit();
 }
 
 /**
@@ -869,13 +1066,23 @@ export async function deleteProductCatalogProduct(productId: string): Promise<vo
   if (!snap.exists()) return;
 
   const data = snap.data() as ProductCatalogFirestoreRaw;
+  const fallbackName = data.name?.es ?? data.name?.en ?? '';
+  const normalizedCurrentQrId = typeof data.qrId === 'string' && data.qrId.trim().length > 0
+    ? normalizeProductNameToQrRoute(data.qrId)
+    : normalizeProductNameToQrRoute(fallbackName);
+  const qrId = normalizedCurrentQrId || null;
   const imageRaw = typeof data.image === 'string' ? data.image : '';
   const storagePath = data.imageStoragePath ?? (isStoragePath(imageRaw) ? imageRaw : null);
   if (storagePath) {
     await deleteObject(ref(storage, storagePath));
   }
 
-  await deleteDoc(productRef);
+  const batch = writeBatch(db);
+  batch.delete(productRef);
+  if (qrId) {
+    batch.delete(doc(db, 'qrUri', qrId));
+  }
+  await batch.commit();
 }
 
 /* ── User Purchases ──────────────────────────────────────── */

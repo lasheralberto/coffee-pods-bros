@@ -39,7 +39,7 @@ export const TEXTS = {
     logo: { es: 'GLOPET', en: 'GLOPET' },
     home: { es: 'Inicio', en: 'Home' },
     shop: { es: 'Tienda', en: 'Shop' },
-    adminDashboard: { es: 'Admin Dashboard', en: 'Admin Dashboard' },
+    adminDashboard: { es: 'Admin', en: 'Admin' },
     about: { es: 'Nosotros', en: 'About Us' },
     ourStory: { es: 'Nuestra historia', en: 'Our Story' },
     contact: { es: 'Contacto', en: 'Contact' },
@@ -261,6 +261,33 @@ export const TEXTS = {
     light: { es: 'Claro', en: 'Light' },
     medium: { es: 'Medio', en: 'Medium' },
     dark: { es: 'Oscuro', en: 'Dark' },
+  },
+
+  /* ── QR Product Visor ── */
+  qrProductVisor: {
+    badge: { es: 'ACCESO QR', en: 'QR ACCESS' },
+    heading: { es: 'Tu café recomendado', en: 'Your recommended coffee' },
+    subtitle: {
+      es: 'Escaneaste un código QR. Aquí tienes el producto asociado listo para añadir al carrito.',
+      en: 'You scanned a QR code. Here is the mapped product ready to add to cart.',
+    },
+    loading: { es: 'Cargando producto...', en: 'Loading product...' },
+    missingRoute: { es: 'Ruta QR inválida o incompleta.', en: 'QR route is invalid or incomplete.' },
+    notFound: { es: 'No encontramos ese QR en la colección qrUri.', en: 'We could not find that QR in the qrUri collection.' },
+    missingProductId: {
+      es: 'Este QR no tiene un productId válido configurado.',
+      en: 'This QR does not have a valid configured productId.',
+    },
+    missingProduct: {
+      es: 'El producto asociado ya no existe en productsCatalog.',
+      en: 'The mapped product no longer exists in productsCatalog.',
+    },
+    genericError: {
+      es: 'No se pudo cargar el producto. Inténtalo de nuevo en unos segundos.',
+      en: 'The product could not be loaded. Please try again in a few seconds.',
+    },
+    formatLabel: { es: 'Formato', en: 'Format' },
+    backToShop: { es: 'Ir a tienda', en: 'Go to shop' },
   },
 
   /* ── Shop Product Descriptions ── */

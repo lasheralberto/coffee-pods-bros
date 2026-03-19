@@ -10,6 +10,7 @@ import { AboutPage } from './pages/AboutPage';
 import { OurStoryPage } from './pages/OurStoryPage';
 import { ContactPage } from './pages/ContactPage';
 import { SubscriptionsPage } from './pages/SubscriptionsPage';
+import { QrProductVisor } from './pages/QrProductVisor';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -25,6 +26,7 @@ function AnimatedRoutes() {
         <Route path="/our-story" element={<OurStoryPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/subscriptions" element={<SubscriptionsPage />} />
+        <Route path="/qr/:route" element={<QrProductVisor />} />
       </Routes>
     </AnimatePresence>
   );

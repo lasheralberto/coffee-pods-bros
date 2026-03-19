@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import * as Popover from '@radix-ui/react-popover';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, Package, Plus, RefreshCw, X } from 'lucide-react';
+import { Check, ChevronDown, Download, ExternalLink, Package, Plus, RefreshCw, X } from 'lucide-react';
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -11,6 +13,7 @@ import {
   createProductCatalogProduct,
   updateProductCatalogProduct,
   deleteProductCatalogProduct,
+  ensureProductCatalogQrRoute,
   PRODUCT_FORMAT_OPTIONS,
   type ProductCatalogFirestore,
   type AdminProductCatalogPayload,
@@ -44,6 +47,18 @@ const EMPTY_FORM: ProductFormState = {
   isNew: false,
 };
 
+const getProductDisplayName = (product: ProductCatalogFirestore): string => (
+  product.name?.es?.trim() || product.name?.en?.trim() || product.id
+);
+
+const getProductQrRoute = (product: ProductCatalogFirestore): string => product.qrId?.trim() || '';
+
+const getProductQrUrl = (route: string): string => {
+  const path = `/qr/${route}`;
+  if (typeof window === 'undefined') return path;
+  return `${window.location.origin}${path}`;
+};
+
 export const AdminProductsCatalogEditor: React.FC = () => {
   const [products, setProducts] = useState<ProductCatalogFirestore[]>([]);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
@@ -55,6 +70,7 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [addingQrId, setAddingQrId] = useState<string | null>(null);
   const [reindexing, setReindexing] = useState(false);
   const [formatMenuOpen, setFormatMenuOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -294,6 +310,73 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     }
   };
 
+  const downloadQr = (displayName: string, qrId: string) => {
+    const qrCanvas = document.getElementById(`qr-canvas-${qrId}`) as HTMLCanvasElement | null;
+    if (!qrCanvas) return;
+
+    try {
+      const outputSize = 1024;
+      const footerHeight = 260;
+      const outputCanvas = document.createElement('canvas');
+      outputCanvas.width = outputSize;
+      outputCanvas.height = outputSize + footerHeight;
+
+      const ctx = outputCanvas.getContext('2d', { alpha: false });
+      if (!ctx) return;
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(qrCanvas, 0, 0, outputSize, outputSize);
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Marca con estilo visual del navbar: serif elegante y azul corporativo
+      ctx.fillStyle = '#1A3A5C';
+      ctx.font = "700 64px 'Playfair Display', Georgia, serif";
+      ctx.fillText('GLOPET', outputSize / 2, outputSize + 78);
+
+      const productName = displayName.trim();
+      const maxTextWidth = outputSize - 120;
+      let productFontSize = 44;
+      ctx.fillStyle = '#1A3A5C';
+
+      // Ajusta tipografía para nombres largos sin desbordar
+      do {
+        ctx.font = `600 ${productFontSize}px 'Playfair Display', Georgia, serif`;
+        productFontSize -= 2;
+      } while (ctx.measureText(productName).width > maxTextWidth && productFontSize > 28);
+
+      ctx.fillText(productName, outputSize / 2, outputSize + 164);
+
+      const pngUrl = outputCanvas.toDataURL('image/png', 1.0);
+      const link = document.createElement('a');
+      link.href = pngUrl;
+      link.download = `QR-${displayName.toLocaleLowerCase().replace(/\s+/g, '-')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Error al generar el PNG:', err);
+    }
+  };
+
+  const handleAddQr = async (productId: string) => {
+    if (addingQrId) return;
+    setAddingQrId(productId);
+    setError(null);
+    setSuccess(null);
+    try {
+      const qrId = await ensureProductCatalogQrRoute(productId);
+      setSuccess(`QR creado correctamente: ${qrId}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'No se pudo crear la ruta QR.');
+    } finally {
+      setAddingQrId(null);
+    }
+  };
+
   return (
     <section className="purchase-history admin-catalog" aria-label="Catálogo de productos">
       <div className="purchase-history__header">
@@ -332,14 +415,19 @@ export const AdminProductsCatalogEditor: React.FC = () => {
         </div>
       ) : (
         <div className="purchase-history__list">
-          {products.map((product) => (
+          {products.map((product) => {
+            const displayName = getProductDisplayName(product);
+            const qrRoute = getProductQrRoute(product);
+            const qrUrl = qrRoute ? getProductQrUrl(qrRoute) : '';
+
+            return (
             <Card key={product.id} variant="flat" className="admin-catalog__item !p-4">
-              <div className="admin-catalog__item-row">
+              <div className="admin-catalog__item-row gap-4 md:gap-5 items-start">
                 <div className="admin-catalog__item-main">
                   {product.image ? (
                     <img
                       src={product.image}
-                      alt={product.name?.es ?? product.name?.en ?? product.id}
+                      alt={displayName}
                       className="admin-catalog__thumb"
                     />
                   ) : (
@@ -347,13 +435,81 @@ export const AdminProductsCatalogEditor: React.FC = () => {
                   )}
 
                   <div className="admin-catalog__item-copy">
-                    <p className="admin-catalog__item-title">{product.name?.es || product.name?.en || product.id}</p>
+                    <p className="admin-catalog__item-title">{displayName}</p>
                     <p className="admin-catalog__item-meta">{product.brand}</p>
                     <p className="admin-catalog__item-meta">€{product.price.toFixed(2)} · {product.roast}</p>
                   </div>
                 </div>
 
                 <div className="admin-catalog__item-actions">
+                  {qrUrl ? (
+                    <Popover.Root>
+                      <Popover.Trigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="!px-2.5 !gap-1.5"
+                        >
+                          <div id={`qr-container-${product.qrId}`}>
+                            <QRCodeSVG
+                              value={qrUrl}
+                              size={16}
+                              level="M"
+                              bgColor="var(--color-cream)"
+                              fgColor="var(--color-espresso)"
+                            />
+                            <span className="hidden" aria-hidden>
+                              <QRCodeCanvas
+                                id={`qr-canvas-${product.qrId}`}
+                                value={qrUrl}
+                                size={1024}
+                                level="M"
+                                bgColor="#FFFFFF"
+                                fgColor="#1A0F0A"
+                                includeMargin
+                              />
+                            </span>
+                          </div>
+                          QR
+                        </Button>
+                      </Popover.Trigger>
+                      <Popover.Portal>
+                        <Popover.Content
+                          className="z-50 min-w-[140px] rounded-lg border border-chestnut-100 bg-cream p-1.5 shadow-lg animate-in fade-in zoom-in duration-200"
+                          sideOffset={5}
+                          align="end"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => window.open(qrUrl, '_blank', 'noopener,noreferrer')}
+                              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-espresso hover:bg-chestnut-100 transition-colors"
+                            >
+                              <ExternalLink size={14} />
+                              Ver página
+                            </button>
+                            <button
+                              onClick={() => downloadQr(displayName, product.qrId || '')}
+                              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-espresso hover:bg-chestnut-100 transition-colors"
+                            >
+                              <Download size={14} />
+                              Descargar QR
+                            </button>
+                          </div>
+                          <Popover.Arrow className="fill-cream border-t border-l border-chestnut-100" />
+                        </Popover.Content>
+                      </Popover.Portal>
+                    </Popover.Root>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      loading={addingQrId === product.id}
+                      onClick={() => handleAddQr(product.id)}
+                      className="!px-2.5"
+                    >
+                      Añadir QR
+                    </Button>
+                  )}
                   <Button variant="secondary" size="sm" onClick={() => startEdit(product)}>
                     Editar
                   </Button>
@@ -368,7 +524,8 @@ export const AdminProductsCatalogEditor: React.FC = () => {
                 </div>
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
