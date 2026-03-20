@@ -1,0 +1,11 @@
+{
+  "name": "GLOPET",
+  "short_name": "GLOPET",
+  "description": "Cafe mediterraneo de especialidad con tienda online, packs personalizados y experiencia premium.",
+  "lang": "es-ES",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf6ef",
+  "theme_color": "#1a3a5c"
+}

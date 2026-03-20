@@ -11,6 +11,7 @@ import { OurStoryPage } from './pages/OurStoryPage';
 import { ContactPage } from './pages/ContactPage';
 import { SubscriptionsPage } from './pages/SubscriptionsPage';
 import { QrProductVisor } from './pages/QrProductVisor';
+import { SiteSeo } from './seo/SiteSeo';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -35,6 +36,7 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <Router>
+      <SiteSeo />
       <Layout>
         <AnimatedRoutes />
       </Layout>
