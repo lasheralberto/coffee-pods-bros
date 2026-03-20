@@ -240,6 +240,28 @@
   box-shadow: 0 12px 28px rgba(196, 118, 58, 0.45);
 }
 
+/* Override: remove any global white vignette/edge gradients added via pseudo-elements */
+html::before,
+html::after,
+body::before,
+body::after,
+.glopet-page::before,
+.glopet-page::after {
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* If the vignette is applied by a high-level wrapper, ensure hero container fully covers edges */
+.glopet-hero-override {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
 .glopet-nav-cta--account {
   border-color: rgba(26, 58, 92, 0.85);
   background: linear-gradient(130deg, #142d49 0%, #1a3a5c 52%, #29527e 100%);

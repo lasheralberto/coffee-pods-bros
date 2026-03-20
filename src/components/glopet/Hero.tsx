@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button, Link } from '@heroui/react';
 import { Plus, X } from 'lucide-react';
@@ -120,6 +120,8 @@ const mobileVariants = {
 
 export const Hero: React.FC = () => {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [mobileHeroHeight, setMobileHeroHeight] = useState<number | null>(null);
+  const heroContainerRef = useRef<HTMLDivElement | null>(null);
 
   const heroImageNumber = useMemo(() => Math.floor(Math.random() * 3) + 1, []);
 
@@ -128,11 +130,45 @@ export const Hero: React.FC = () => {
     [activeSectionId],
   );
 
+  useEffect(() => {
+    const updateMobileHeroHeight = () => {
+      if (window.innerWidth >= 640) {
+        setMobileHeroHeight(null);
+        return;
+      }
+
+      const heroContainer = heroContainerRef.current;
+
+      if (!heroContainer) {
+        return;
+      }
+
+      const { top } = heroContainer.getBoundingClientRect();
+      const availableHeight = window.innerHeight - top - 16;
+      const nextHeight = Math.max(520, Math.min(820, Math.round(availableHeight)));
+
+      setMobileHeroHeight(nextHeight);
+    };
+
+    updateMobileHeroHeight();
+    window.addEventListener('resize', updateMobileHeroHeight);
+    window.addEventListener('orientationchange', updateMobileHeroHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateMobileHeroHeight);
+      window.removeEventListener('orientationchange', updateMobileHeroHeight);
+    };
+  }, []);
+
   return (
-    <header className="relative overflow-hidden px-4 pt-4 md:px-10 lg:px-16">
+    <header className="relative overflow-hidden px-4 pt-0 md:px-10 lg:px-16 -mt-6 md:-mt-8">
      
       {/* Hero stack: imagen de fondo + texto encima */}
-      <div className="mt-10 sm:mt-6 md:mt-10 -mx-4 md:-mx-10 lg:-mx-16 relative h-[clamp(520px,145vw,820px)] sm:h-[clamp(560px,115vw,780px)] lg:h-[clamp(560px,60vw,700px)]">
+      <div
+        ref={heroContainerRef}
+        className="mt-10 sm:mt-6 md:mt-10 -mx-4 md:-mx-10 lg:-mx-16 relative h-[clamp(520px,145vw,820px)] sm:h-[clamp(560px,115vw,780px)] lg:h-[clamp(560px,60vw,700px)]"
+        style={mobileHeroHeight ? { height: `${mobileHeroHeight}px` } : undefined}
+      >
 
         {/* Imagen apaisada de fondo con bordes difuminados */}
         <motion.div
@@ -166,8 +202,16 @@ export const Hero: React.FC = () => {
               decoding="async"
             />
           </picture>
-          {/* Gradiente superior para legibilidad del texto */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#faf6ef]/80 via-[#faf6ef]/30 to-transparent" />
+          {/* Gradiente superior suavizado para legibilidad del texto (difuminado más amplio) */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to bottom, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0.2) 14%, rgba(0,0,0,0.08) 32%, rgba(0,0,0,0) 70%)',
+              pointerEvents: 'none',
+              filter: 'blur(8px)'
+            }}
+          />
           {/* Difuminado inferior: más intenso en móvil para evitar corte recto en hero1-mobile */}
           <div className="absolute inset-x-0 bottom-0 h-44 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/88 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
         </motion.div>
@@ -182,19 +226,20 @@ export const Hero: React.FC = () => {
             transition={{ duration: 0.9, ease: [0.2, 0.65, 0.2, 1] }}
             className="flex-1 flex flex-col justify-center max-w-[1280px] mx-auto w-full"
           >
-            <p className="uppercase tracking-[0.24em] text-xs text-[#1a3a5c] mb-6">
-              Cafe mediterraneo de especialidad
+            <p className="uppercase tracking-[0.24em] text-xs text-white/90 mb-6">
+              Café mediterráneo de especialidad
             </p>
             <h1
-              className="glopet-title text-[2.7rem] leading-[0.95] sm:text-[3.5rem] lg:text-[5.2rem] text-white max-w-[14ch]"
-              style={{ WebkitTextStroke: '0.25px #1a7ab5' }}
+              className="glopet-title text-[2.7rem] leading-[0.95] sm:text-[3.5rem] lg:text-[5.2rem] text-white max-w-[20ch]"
+              style={{ textShadow: '0 8px 30px rgba(0,0,0,0.6)' }}
             >
-              <span style={{ color: '#ffffff' }}>Entre el{' '}</span>
-              <span style={{ color: '#1a7ab5', WebkitTextStroke: '1.5px #dfe4e7' }}>mar</span>
-              <span style={{ color: '#ffffff' }}>{' '}y la sobremesa.</span>
+              Nacido entre el mar y la sobremesa.
             </h1>
-            <p className="mt-6 text-[1.1rem] text-[#3f342d] max-w-[34ch] leading-relaxed">
-              Glopet nace en tardes largas con sal en el aire. Un café lento, cálido y honesto para volver a respirar sin prisa.
+            <p
+              className="mt-6 text-[1.05rem] text-white max-w-[44ch] leading-relaxed"
+              style={{ textShadow: '0 6px 18px rgba(0,0,0,0.55)' }}
+            >
+              Glopet nace en tardes salinas y sobremesas que se alargan. Es un café para detenerse: lento, cálido y honesto, que invita a respirar sin prisa.
             </p>
           </motion.div>
 
@@ -235,7 +280,7 @@ export const Hero: React.FC = () => {
             initial={{ opacity: 0, y: 48 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.25, ease: [0.2, 0.65, 0.2, 1] }}
-            className="max-w-[1280px] mx-auto w-full flex flex-wrap gap-3 pb-2 absolute left-4 right-4 bottom-1 sm:static sm:left-auto sm:right-auto sm:bottom-auto"
+            className="max-w-[1280px] flex flex-wrap gap-3 absolute left-4 right-4 bottom-4 z-30 sm:static sm:mx-auto sm:w-full sm:left-auto sm:right-auto sm:bottom-auto"
           >
             <Button
               as={RouterLink}
