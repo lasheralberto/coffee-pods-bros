@@ -86,8 +86,7 @@ body {
   line-height:        var(--leading-normal);
   color:              var(--text-primary);
   background-color:   var(--bg-page);
-  background-image: radial-gradient(circle at 15% -10%, rgba(20, 209, 255, 0.14), transparent 35%),
-                    radial-gradient(circle at 80% 0%, rgba(217, 255, 72, 0.16), transparent 36%);
+  background-image: none;
   -webkit-font-smoothing: antialiased;
   min-height:         100dvh;
 }

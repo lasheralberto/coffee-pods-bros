@@ -303,3 +303,56 @@ body::after,
   border-color: rgba(240, 200, 122, 0.62);
   box-shadow: inset 0 1px 0 rgba(247, 233, 209, 0.2), 0 14px 32px rgba(26, 58, 92, 0.32);
 }
+
+.glopet-home-nav__shell {
+  border: 1px solid rgba(215, 196, 161, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.94), rgba(250, 246, 239, 0.92)),
+    linear-gradient(135deg, rgba(240, 232, 216, 0.72), rgba(250, 246, 239, 0.86));
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 28px rgba(120, 82, 43, 0.12);
+}
+
+.glopet-home-nav__logo {
+  color: #1a3a5c;
+  text-shadow: 0 8px 22px rgba(250, 246, 239, 0.35);
+}
+
+.glopet-home-nav__cta.glopet-nav-cta--contact,
+.glopet-home-nav__cta.glopet-nav-cta--account {
+  color: #1a3a5c !important;
+  border-color: rgba(26, 58, 92, 0.14);
+  background: rgba(255, 255, 255, 0.46);
+  box-shadow: none;
+}
+
+.glopet-home-nav__cta.glopet-nav-cta--contact::before,
+.glopet-home-nav__cta.glopet-nav-cta--account::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
+}
+
+.glopet-home-nav__cta.glopet-nav-cta--contact:hover,
+.glopet-home-nav__cta.glopet-nav-cta--account:hover {
+  color: #1a3a5c !important;
+  border-color: rgba(196, 118, 58, 0.42);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+.glopet-home-nav__cta.glopet-nav-cta--shop {
+  box-shadow: 0 10px 24px rgba(196, 118, 58, 0.22);
+}
+
+@media (max-width: 767px) {
+  .glopet-home-nav__shell {
+    border-color: transparent;
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .glopet-home-nav__logo {
+    color: #1a3a5c;
+    text-shadow: none;
+  }
+}

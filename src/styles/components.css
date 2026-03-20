@@ -551,6 +551,20 @@
   background: rgba(196, 118, 58, 0.45);
 }
 
+.mobile-bottom-nav--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mobile-bottom-nav--compact .mobile-bottom-nav__item {
+  min-height: 52px;
+  padding: 0;
+}
+
+.mobile-bottom-nav--compact .mobile-bottom-nav__item svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* ── DESKTOP NAVBAR ─────────────────────────────────────── */
 
 .desktop-nav {

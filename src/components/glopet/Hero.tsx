@@ -118,10 +118,20 @@ const mobileVariants = {
   exit: { y: '100%', transition: { duration: 0.2, ease: [0.4, 0, 1, 1] as const } },
 };
 
+const HERO_VERTICAL_MASK_MOBILE =
+  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 1.5%, rgba(0,0,0,0.18) 3.5%, rgba(0,0,0,0.34) 6.5%, rgba(0,0,0,0.56) 10%, rgba(0,0,0,0.78) 14%, rgba(0,0,0,0.92) 18%, black 22%, black 95%, rgba(0,0,0,0.88) 97%, transparent 100%)';
+
+const HERO_VERTICAL_MASK_DESKTOP =
+  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.06) 1.2%, rgba(0,0,0,0.14) 2.8%, rgba(0,0,0,0.28) 5.2%, rgba(0,0,0,0.46) 8.5%, rgba(0,0,0,0.68) 12.5%, rgba(0,0,0,0.86) 16.5%, black 20%, black 95%, rgba(0,0,0,0.9) 97%, transparent 100%)';
+
+const HERO_HORIZONTAL_MASK_DESKTOP =
+  'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.16) 3%, rgba(0,0,0,0.42) 6%, rgba(0,0,0,0.74) 9%, black 12%, black 88%, rgba(0,0,0,0.74) 91%, rgba(0,0,0,0.42) 94%, rgba(0,0,0,0.16) 97%, transparent 100%)';
+
 export const Hero: React.FC = () => {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [mobileHeroHeight, setMobileHeroHeight] = useState<number | null>(null);
   const heroContainerRef = useRef<HTMLDivElement | null>(null);
+  const isMobileViewport = mobileHeroHeight !== null;
 
   const heroImageNumber = useMemo(() => Math.floor(Math.random() * 3) + 1, []);
 
@@ -177,16 +187,20 @@ export const Hero: React.FC = () => {
           transition={{ duration: 1.2, ease: [0.2, 0.65, 0.2, 1] }}
           className="absolute inset-0 overflow-hidden"
           style={{
-            maskImage: [
-              'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
-              'linear-gradient(to bottom, transparent 0%, black 6%, black 96%, transparent 100%)',
-            ].join(', '),
-            maskComposite: 'intersect',
-            WebkitMaskImage: [
-              'linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)',
-              'linear-gradient(to bottom, transparent 0%, black 6%, black 96%, transparent 100%)',
-            ].join(', '),
-            WebkitMaskComposite: 'source-in',
+            maskImage: isMobileViewport
+              ? HERO_VERTICAL_MASK_MOBILE
+              : [
+                  HERO_HORIZONTAL_MASK_DESKTOP,
+                  HERO_VERTICAL_MASK_DESKTOP,
+                ].join(', '),
+            maskComposite: isMobileViewport ? undefined : 'intersect',
+            WebkitMaskImage: isMobileViewport
+              ? HERO_VERTICAL_MASK_MOBILE
+              : [
+                  HERO_HORIZONTAL_MASK_DESKTOP,
+                  HERO_VERTICAL_MASK_DESKTOP,
+                ].join(', '),
+            WebkitMaskComposite: isMobileViewport ? undefined : 'source-in',
           }}
         >
           <picture>
@@ -206,10 +220,12 @@ export const Hero: React.FC = () => {
           <div
             className="absolute inset-0"
             style={{
-              background:
-                'linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.34) 14%, rgba(0,0,0,0.16) 32%, rgba(0,0,0,0.04) 70%)',
+              background: [
+                'linear-gradient(to bottom, rgba(250,246,239,0.96) 0%, rgba(250,246,239,0.82) 5%, rgba(250,246,239,0.56) 11%, rgba(250,246,239,0.24) 18%, rgba(250,246,239,0.08) 26%, rgba(250,246,239,0) 36%)',
+                'radial-gradient(120% 48% at 50% 0%, rgba(250,246,239,0.3) 0%, rgba(250,246,239,0) 68%)',
+                'linear-gradient(to bottom, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.3) 14%, rgba(0,0,0,0.14) 30%, rgba(0,0,0,0.04) 56%, rgba(0,0,0,0) 76%)',
+              ].join(', '),
               pointerEvents: 'none',
-              filter: 'blur(8px)'
             }}
           />
           <div className="absolute inset-0 bg-[#07111a]/18 sm:bg-transparent" />
@@ -281,7 +297,7 @@ export const Hero: React.FC = () => {
             initial={{ opacity: 0, y: 48 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.25, ease: [0.2, 0.65, 0.2, 1] }}
-            className="max-w-[1280px] flex flex-wrap gap-3 absolute left-4 right-4 bottom-4 z-30 sm:static sm:mx-auto sm:w-full sm:left-auto sm:right-auto sm:bottom-auto"
+            className="hidden max-w-[1280px] flex-wrap gap-3 absolute left-4 right-4 bottom-4 z-30 sm:flex sm:static sm:mx-auto sm:w-full sm:left-auto sm:right-auto sm:bottom-auto"
           >
             <Button
               as={RouterLink}

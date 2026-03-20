@@ -20,28 +20,27 @@ export const Navbar: React.FC = () => {
   const authUser = useAuthStore(selectAuthUser);
   const authActions = useAuthStore((s) => s.actions);
   const { isAdmin } = useAdminAccess();
+  const mobileNavItemCount = isAuthenticated ? (isAdmin ? 3 : 2) : 3;
+  const useCompactMobileNav = mobileNavItemCount > 2;
 
   if (isLandingRoute) {
     return (
       <motion.nav
-        style={{
-          backgroundColor: '#ffffff',
-        }}
-        className="fixed top-0 left-0 right-0 z-navbar"
+        className="glopet-home-nav fixed top-0 left-0 right-0 z-navbar bg-transparent"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
         <Container size="xl">
-          <div className="bg-white rounded-2xl border border-[#d7c4a1] glopet-soft-reveal h-[3.8rem] mt-4 px-4 md:px-6 flex items-center justify-between">
-            <Link to="/" className="glopet-title text-2xl text-[#1a3a5c]">
+          <div className="glopet-home-nav__shell rounded-2xl glopet-soft-reveal h-[3.8rem] mt-4 px-4 md:px-6 flex items-center justify-between">
+            <Link to="/" className="glopet-home-nav__logo glopet-title text-2xl">
               {t('navbar.logo')}
             </Link>
 
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="glopet-home-nav__actions flex items-center gap-2 md:gap-3">
               <NavLink
                 to="/contact"
-                className="glopet-nav-cta glopet-nav-cta--contact hidden sm:inline-flex"
+                className="glopet-home-nav__cta glopet-nav-cta glopet-nav-cta--contact hidden sm:inline-flex"
               >
                 Contactar
               </NavLink>
@@ -50,14 +49,14 @@ export const Navbar: React.FC = () => {
                 size="sm"
                 as="link"
                 to="/shop"
-                className="glopet-nav-cta glopet-nav-cta--shop"
+                className="glopet-home-nav__cta glopet-nav-cta glopet-nav-cta--shop"
               >
                 Comprar
               </Button>
               <Button
                 variant="primary"
                 size="sm"
-                className="glopet-nav-cta glopet-nav-cta--account"
+                className="glopet-home-nav__cta glopet-nav-cta glopet-nav-cta--account"
                 onClick={() => authActions.openAuth('login')}
               >
                 Área cliente
@@ -72,10 +71,7 @@ export const Navbar: React.FC = () => {
   return (
     <>
       <motion.nav
-        style={{
-          backgroundColor: '#ffffff',
-        }}
-        className="fixed top-0 left-0 right-0 z-navbar transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-navbar bg-transparent transition-all duration-300"
       >
         <Container size="xl">
           <div className="flex items-center justify-center md:justify-between h-navbar-desktop">
@@ -178,33 +174,36 @@ export const Navbar: React.FC = () => {
         </Container>
       </motion.nav>
 
-      <nav className={`mobile-bottom-nav md:hidden ${isAuthenticated ? '' : 'mobile-bottom-nav--guest'}`} aria-label="Navegación móvil principal">
+      <nav className={`mobile-bottom-nav md:hidden ${isAuthenticated ? '' : 'mobile-bottom-nav--guest'} ${useCompactMobileNav ? 'mobile-bottom-nav--compact' : ''}`} aria-label="Navegación móvil principal">
         {isAuthenticated ? (
           <>
             <NavLink
               to="/shop"
+              aria-label={t('navbar.shop')}
               className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? 'is-active' : ''}`}
             >
               <Store size={18} />
-              <span>{t('navbar.shop')}</span>
+              {!useCompactMobileNav && <span>{t('navbar.shop')}</span>}
             </NavLink>
 
             {isAdmin && (
               <NavLink
                 to="/admin"
+                aria-label={t('navbar.adminDashboard')}
                 className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? 'is-active' : ''}`}
               >
                 <Sparkles size={18} />
-                <span>{t('navbar.adminDashboard')}</span>
+                {!useCompactMobileNav && <span>{t('navbar.adminDashboard')}</span>}
               </NavLink>
             )}
 
             <NavLink
               to="/profile"
+              aria-label={t('navProfile.myProfile')}
               className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? 'is-active' : ''}`}
             >
               <UserRound size={18} />
-              <span>{t('navProfile.myProfile')}</span>
+              {!useCompactMobileNav && <span>{t('navProfile.myProfile')}</span>}
             </NavLink>
           </>
         ) : (
@@ -212,27 +211,30 @@ export const Navbar: React.FC = () => {
             <NavLink
               to="/"
               end
+              aria-label="Inicio"
               className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? 'is-active' : ''}`}
             >
               <Home size={18} />
-              <span>Inicio</span>
+              {!useCompactMobileNav && <span>Inicio</span>}
             </NavLink>
 
             <NavLink
               to="/shop"
+              aria-label="Tienda"
               className={({ isActive }) => `mobile-bottom-nav__item ${isActive ? 'is-active' : ''}`}
             >
               <Store size={18} />
-              <span>Tienda</span>
+              {!useCompactMobileNav && <span>Tienda</span>}
             </NavLink>
 
             <button
               type="button"
+              aria-label={t('auth.loginBtn')}
               className="mobile-bottom-nav__item mobile-bottom-nav__item--cta"
               onClick={() => authActions.openAuth('login')}
             >
               <Sparkles size={18} />
-              <span>{t('auth.loginBtn')}</span>
+              {!useCompactMobileNav && <span>{t('auth.loginBtn')}</span>}
             </button>
           </>
         )}
