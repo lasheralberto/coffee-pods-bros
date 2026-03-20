@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { motion, useScroll } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { Home, ShoppingBag, Sparkles, Store, UserRound } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Container } from '../ui/Container';
@@ -13,8 +13,6 @@ import { t } from '../../data/texts';
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const isLandingRoute = location.pathname === '/';
-  const [isScrolled, setIsScrolled] = useState(false);
-  const { scrollY } = useScroll();
   const { actions } = useQuizStore();
   const cartActions = useCartStore((s) => s.actions);
   const cartCount = useCartStore(selectCartCount);
@@ -23,27 +21,19 @@ export const Navbar: React.FC = () => {
   const authActions = useAuthStore((s) => s.actions);
   const { isAdmin } = useAdminAccess();
 
-  useEffect(() => {
-    const unsubscribe = scrollY.on('change', (latest) => {
-      setIsScrolled(latest > 50);
-    });
-    return () => unsubscribe();
-  }, [scrollY]);
-
-  const navBackground = isScrolled ? 'rgba(240, 232, 216, 0.88)' : 'transparent';
-  const navBackdropFilter = isScrolled ? 'blur(20px)' : 'none';
-  const navShadow = isScrolled ? '0 1px 0 rgba(26, 58, 92, 0.1)' : 'none';
-
   if (isLandingRoute) {
     return (
       <motion.nav
-        className="fixed top-4 left-0 right-0 z-navbar"
+        style={{
+          backgroundColor: '#ffffff',
+        }}
+        className="fixed top-0 left-0 right-0 z-navbar"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
         <Container size="xl">
-          <div className="bg-[rgba(250,246,239,0.86)] backdrop-blur-xl rounded-2xl border border-[#d7c4a1] glopet-soft-reveal h-[3.8rem] px-4 md:px-6 flex items-center justify-between">
+          <div className="bg-white rounded-2xl border border-[#d7c4a1] glopet-soft-reveal h-[3.8rem] mt-4 px-4 md:px-6 flex items-center justify-between">
             <Link to="/" className="glopet-title text-2xl text-[#1a3a5c]">
               {t('navbar.logo')}
             </Link>
@@ -83,9 +73,7 @@ export const Navbar: React.FC = () => {
     <>
       <motion.nav
         style={{
-          backgroundColor: navBackground,
-          backdropFilter: navBackdropFilter,
-          boxShadow: navShadow,
+          backgroundColor: '#ffffff',
         }}
         className="fixed top-0 left-0 right-0 z-navbar transition-all duration-300"
       >

@@ -194,14 +194,23 @@
 }
 
 .glopet-nav-cta {
-  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
   border-radius: 999px;
   border-width: 1px;
   border-style: solid;
-  letter-spacing: 0.04em;
+  padding: 0.68rem 1.1rem;
+  font-family: 'Manrope', 'Helvetica Neue', sans-serif;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  font-size: 0.69rem;
+  font-size: 0.68rem;
   font-weight: 700;
+  line-height: 1;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   transition:
     transform var(--duration-base) var(--ease-default),
     box-shadow var(--duration-base) var(--ease-default),
@@ -210,34 +219,53 @@
     color var(--duration-base) var(--ease-default);
 }
 
+.glopet-nav-cta::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0));
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: -1;
+}
+
 .glopet-nav-cta:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+
+.glopet-nav-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.12), 0 10px 22px rgba(26, 58, 92, 0.16);
 }
 
 .glopet-nav-cta--contact {
-  color: #1c1410;
-  border-color: rgba(196, 118, 58, 0.55);
-  background: linear-gradient(130deg, rgba(250, 246, 239, 0.92), rgba(240, 232, 216, 0.76));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-  padding: 0.52rem 0.96rem;
+  color: #4d392d;
+  border-color: rgba(196, 118, 58, 0.34);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 246, 239, 0.94)),
+    linear-gradient(130deg, rgba(250, 246, 239, 0.92), rgba(240, 232, 216, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 5px 16px rgba(120, 82, 43, 0.08);
 }
 
 .glopet-nav-cta--contact:hover {
   color: #1a3a5c;
-  border-color: rgba(196, 118, 58, 0.85);
-  box-shadow: 0 8px 18px rgba(26, 58, 92, 0.16);
+  border-color: rgba(196, 118, 58, 0.58);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 10px 22px rgba(26, 58, 92, 0.12);
 }
 
 .glopet-nav-cta--shop {
-  border-color: rgba(196, 118, 58, 0.82);
-  background: linear-gradient(130deg, #b96d36 0%, #c4763a 48%, #d48b4d 100%);
+  border-color: rgba(171, 97, 38, 0.84);
+  background:
+    radial-gradient(circle at top left, rgba(255, 231, 192, 0.22), transparent 34%),
+    linear-gradient(135deg, #aa5f30 0%, #c4763a 42%, #df9654 100%);
   color: #fff7ea !important;
-  box-shadow: 0 8px 22px rgba(196, 118, 58, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 244, 224, 0.24), 0 10px 24px rgba(196, 118, 58, 0.28);
 }
 
 .glopet-nav-cta--shop:hover {
-  border-color: rgba(255, 221, 172, 0.85);
-  box-shadow: 0 12px 28px rgba(196, 118, 58, 0.45);
+  border-color: rgba(255, 226, 184, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 244, 224, 0.28), 0 14px 30px rgba(196, 118, 58, 0.34);
 }
 
 /* Override: remove any global white vignette/edge gradients added via pseudo-elements */
@@ -263,13 +291,15 @@ body::after,
 }
 
 .glopet-nav-cta--account {
-  border-color: rgba(26, 58, 92, 0.85);
-  background: linear-gradient(130deg, #142d49 0%, #1a3a5c 52%, #29527e 100%);
+  border-color: rgba(26, 58, 92, 0.88);
+  background:
+    radial-gradient(circle at top left, rgba(239, 214, 171, 0.16), transparent 30%),
+    linear-gradient(135deg, #132841 0%, #1a3a5c 48%, #2b5682 100%);
   color: #f9f3e8 !important;
-  box-shadow: 0 8px 20px rgba(26, 58, 92, 0.32);
+  box-shadow: inset 0 1px 0 rgba(247, 233, 209, 0.16), 0 10px 24px rgba(26, 58, 92, 0.26);
 }
 
 .glopet-nav-cta--account:hover {
-  border-color: rgba(240, 200, 122, 0.75);
-  box-shadow: 0 12px 30px rgba(26, 58, 92, 0.42);
+  border-color: rgba(240, 200, 122, 0.62);
+  box-shadow: inset 0 1px 0 rgba(247, 233, 209, 0.2), 0 14px 32px rgba(26, 58, 92, 0.32);
 }

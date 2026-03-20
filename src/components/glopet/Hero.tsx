@@ -207,11 +207,12 @@ export const Hero: React.FC = () => {
             className="absolute inset-0"
             style={{
               background:
-                'linear-gradient(to bottom, rgba(0,0,0,0.34) 0%, rgba(0,0,0,0.2) 14%, rgba(0,0,0,0.08) 32%, rgba(0,0,0,0) 70%)',
+                'linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.34) 14%, rgba(0,0,0,0.16) 32%, rgba(0,0,0,0.04) 70%)',
               pointerEvents: 'none',
               filter: 'blur(8px)'
             }}
           />
+          <div className="absolute inset-0 bg-[#07111a]/18 sm:bg-transparent" />
           {/* Difuminado inferior: más intenso en móvil para evitar corte recto en hero1-mobile */}
           <div className="absolute inset-x-0 bottom-0 h-44 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/88 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
         </motion.div>
