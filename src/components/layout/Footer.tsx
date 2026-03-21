@@ -19,15 +19,15 @@ export const Footer: React.FC = () => {
               {t('footer.brandDesc')}
             </p>
             <div className="flex gap-4 mt-4">
-              <a href="#" className="glopet-footer-social" aria-label="Instagram">
+              <span className="glopet-footer-social opacity-60" aria-label="Instagram">
                 <Instagram size={20} />
-              </a>
-              <a href="#" className="glopet-footer-social" aria-label="Youtube">
+              </span>
+              <span className="glopet-footer-social opacity-60" aria-label="Youtube">
                 <Youtube size={20} />
-              </a>
-              <a href="#" className="glopet-footer-social" aria-label="Twitter">
+              </span>
+              <span className="glopet-footer-social opacity-60" aria-label="Twitter">
                 <Twitter size={20} />
-              </a>
+              </span>
             </div>
           </Stack>
 
@@ -36,8 +36,16 @@ export const Footer: React.FC = () => {
             <Stack gap={4}>
               <h3 className="text-xs font-mono uppercase tracking-widest text-[#d8b98e]">{t('footer.shopCol')}</h3>
               <ul className="space-y-2.5 text-sm text-[#f3e7d6]">
-                <li><a href="#" className="glopet-footer-link">{t('footer.coffeeBeans')}</a></li>
-                <li><a href="#" className="glopet-footer-link">{t('footer.subscriptions')}</a></li>
+                <li>
+                  <Link to="/shop" className="glopet-footer-link">
+                    {t('footer.coffeeBeans')}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/subscriptions" className="glopet-footer-link">
+                    {t('footer.subscriptions')}
+                  </Link>
+                </li>
                 
               </ul>
             </Stack>
@@ -66,9 +74,9 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#dcc3a0]">
           <p>{t('footer.copyright')}</p>
           <div className="flex gap-6">
-            <a href="#" className="glopet-footer-link">{t('footer.privacy')}</a>
-            <a href="#" className="glopet-footer-link">{t('footer.terms')}</a>
-            <a href="#" className="glopet-footer-link">{t('footer.cookies')}</a>
+            <Link to="/privacy" className="glopet-footer-link">{t('footer.privacy')}</Link>
+            <Link to="/terms" className="glopet-footer-link">{t('footer.terms')}</Link>
+            <Link to="/cookies" className="glopet-footer-link">{t('footer.cookies')}</Link>
           </div>
         </div>
       </Container>

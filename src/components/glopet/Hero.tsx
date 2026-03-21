@@ -310,8 +310,8 @@ export const Hero: React.FC = () => {
               Comenzar
             </Button>
             <Button
-              as={Link}
-              href="#manifiesto"
+              as={RouterLink}
+              to="/manifiesto"
               variant="bordered"
               size="lg"
               radius="full"

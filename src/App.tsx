@@ -9,6 +9,7 @@ import { AdminPage } from './pages/AdminPage';
 import { AboutPage } from './pages/AboutPage';
 import { OurStoryPage } from './pages/OurStoryPage';
 import { ContactPage } from './pages/ContactPage';
+import { CookiesPage, PrivacyPage, TermsPage } from './pages/LegalPage';
 import { SubscriptionsPage } from './pages/SubscriptionsPage';
 import { QrProductVisor } from './pages/QrProductVisor';
 import { SiteSeo } from './seo/SiteSeo';
@@ -20,12 +21,16 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/manifiesto" element={<HomePage focusSectionId="manifiesto" />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/our-story" element={<OurStoryPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/cookies" element={<CookiesPage />} />
         <Route path="/subscriptions" element={<SubscriptionsPage />} />
         <Route path="/qr/:route" element={<QrProductVisor />} />
       </Routes>

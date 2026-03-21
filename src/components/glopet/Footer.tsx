@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from '@heroui/react';
+import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   return (
@@ -11,9 +11,15 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-5 text-sm text-[#1a3a5c]">
-          <Link href="#" className="text-[#1a3a5c] hover:text-[#c4763a]">Instagram</Link>
-          <Link href="#" className="text-[#1a3a5c] hover:text-[#c4763a]">TikTok</Link>
-          <Link href="#" className="text-[#1a3a5c] hover:text-[#c4763a]">Pinterest</Link>
+          <span className="text-[#1a3a5c] opacity-70">Instagram</span>
+          <span className="text-[#1a3a5c] opacity-70">TikTok</span>
+          <span className="text-[#1a3a5c] opacity-70">Pinterest</span>
+        </div>
+
+        <div className="flex items-center gap-5 text-sm text-[#1a3a5c]">
+          <Link to="/privacy" className="text-[#1a3a5c] hover:text-[#c4763a]">Privacidad</Link>
+          <Link to="/terms" className="text-[#1a3a5c] hover:text-[#c4763a]">Terminos</Link>
+          <Link to="/cookies" className="text-[#1a3a5c] hover:text-[#c4763a]">Cookies</Link>
         </div>
       </div>
     </footer>

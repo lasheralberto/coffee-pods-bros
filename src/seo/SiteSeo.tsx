@@ -38,6 +38,21 @@ const ROUTES: Record<string, SeoRoute> = {
     schemaType: 'WebPage',
     breadcrumbName: 'Inicio',
   },
+  '/manifiesto': {
+    title: 'Manifiesto | GLOPET',
+    description:
+      'Descubre el manifiesto de GLOPET y la propuesta de cafe mediterraneo de especialidad pensada para una experiencia de marca clara, emocional y premium.',
+    keywords: [
+      'manifiesto GLOPET',
+      'cafe mediterraneo',
+      'cafe de especialidad',
+      'filosofia de marca',
+    ],
+    path: '/manifiesto',
+    ogType: 'website',
+    schemaType: 'WebPage',
+    breadcrumbName: 'Manifiesto',
+  },
   '/shop': {
     title: 'Tienda de cafe de especialidad | GLOPET',
     description:
@@ -84,6 +99,36 @@ const ROUTES: Record<string, SeoRoute> = {
     ogType: 'website',
     schemaType: 'ContactPage',
     breadcrumbName: 'Contacto',
+  },
+  '/privacy': {
+    title: 'Politica de privacidad | GLOPET',
+    description:
+      'Consulta la politica de privacidad de GLOPET y como se gestionan los datos asociados a la navegacion, consultas y pedidos en la web.',
+    keywords: ['privacidad GLOPET', 'datos personales', 'politica de privacidad'],
+    path: '/privacy',
+    ogType: 'website',
+    schemaType: 'WebPage',
+    breadcrumbName: 'Privacidad',
+  },
+  '/terms': {
+    title: 'Terminos y condiciones | GLOPET',
+    description:
+      'Consulta los terminos y condiciones de uso y compra aplicables a los productos y servicios ofrecidos por GLOPET.',
+    keywords: ['terminos GLOPET', 'condiciones de uso', 'condiciones de compra'],
+    path: '/terms',
+    ogType: 'website',
+    schemaType: 'WebPage',
+    breadcrumbName: 'Terminos',
+  },
+  '/cookies': {
+    title: 'Politica de cookies | GLOPET',
+    description:
+      'Consulta la politica de cookies de GLOPET para entender el uso de tecnologias tecnicas y de medicion dentro del sitio.',
+    keywords: ['cookies GLOPET', 'politica de cookies', 'seguimiento web'],
+    path: '/cookies',
+    ogType: 'website',
+    schemaType: 'WebPage',
+    breadcrumbName: 'Cookies',
   },
   '/subscriptions': {
     title: 'Packs personalizados y suscripciones | GLOPET',

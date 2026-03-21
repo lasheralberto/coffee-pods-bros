@@ -11,9 +11,11 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+const LANDING_PATHS = new Set(['/', '/manifiesto']);
+
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const isLandingRoute = location.pathname === '/';
+  const isLandingRoute = LANDING_PATHS.has(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen">

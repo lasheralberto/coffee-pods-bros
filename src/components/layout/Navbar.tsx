@@ -10,9 +10,11 @@ import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../store
 import { useAdminAccess } from '../../hooks/useAdminAccess';
 import { t } from '../../data/texts';
 
+const LANDING_PATHS = new Set(['/', '/manifiesto']);
+
 export const Navbar: React.FC = () => {
   const location = useLocation();
-  const isLandingRoute = location.pathname === '/';
+  const isLandingRoute = LANDING_PATHS.has(location.pathname);
   const { actions } = useQuizStore();
   const cartActions = useCartStore((s) => s.actions);
   const cartCount = useCartStore(selectCartCount);
