@@ -138,6 +138,60 @@ export const TEXTS = {
     },
   },
 
+  /* ── Why Glopet (Features) ── */
+  whyGlopet: {
+    badge: { es: 'POR QUÉ GLOPET', en: 'WHY GLOPET' },
+    heading: { es: 'El café que merece tu sobremesa.', en: 'The coffee your table deserves.' },
+    subheading: {
+      es: 'Seleccionado a mano, tostado en pequeños lotes y entregado fresco.',
+      en: 'Hand-selected, small-batch roasted and delivered fresh.',
+    },
+    feature1Title: { es: 'Café de especialidad', en: 'Specialty coffee' },
+    feature1Text: {
+      es: 'Solo granos evaluados por su perfil sensorial, origen y proceso. Sin compromisos con el volumen.',
+      en: 'Only beans graded for their sensory profile, origin and process. No compromises with volume.',
+    },
+    feature2Title: { es: 'Tueste artesanal', en: 'Artisan roasting' },
+    feature2Text: {
+      es: 'Curvas suaves adaptadas por origen para proteger el dulzor, la acidez limpia y el cuerpo de cada grano.',
+      en: 'Gentle curves adapted per origin to protect the sweetness, clean acidity and body of each bean.',
+    },
+    feature3Title: { es: 'Trazabilidad total', en: 'Full traceability' },
+    feature3Text: {
+      es: 'Conoces la finca, la altitud y el proceso de cada lote. Cadena de valor transparente de principio a fin.',
+      en: 'You know the farm, altitude and process of every batch. A transparent value chain from start to finish.',
+    },
+    feature4Title: { es: 'Ritual mediterráneo', en: 'Mediterranean ritual' },
+    feature4Text: {
+      es: 'Café diseñado para la sobremesa: lento, cálido, honesto. Un paréntesis en el día que invita a quedarse.',
+      en: 'Coffee designed for the sobremesa: slow, warm, honest. A pause in the day that invites you to stay.',
+    },
+  },
+
+  /* ── Testimonials ── */
+  testimonials: {
+    badge: { es: 'LO QUE DICEN', en: 'WHAT THEY SAY' },
+    heading: { es: 'Una taza que cuenta algo.', en: 'A cup that tells a story.' },
+    review1Quote: {
+      es: 'Desde que llegó Glopet la sobremesa en casa dura el doble. Es un café que invita a quedarse, con una acidez limpia y un final que sabe a costa.',
+      en: 'Since Glopet arrived our table stays busy twice as long. A coffee that invites you to linger, with a clean acidity and a finish that tastes of the coast.',
+    },
+    review1Name: { es: 'Marta G.', en: 'Marta G.' },
+    review1Role: { es: 'Valencia', en: 'Valencia' },
+    review2Quote: {
+      es: 'Pedí el primer lote sin muchas expectativas y me atrapó al instante. El aroma desde la molienda ya lo dice todo. Ahora no concibo el café de otra forma.',
+      en: 'I ordered the first batch without many expectations and it caught me instantly. The aroma from grinding already says it all. I can\'t imagine coffee any other way now.',
+    },
+    review2Name: { es: 'Jordi M.', en: 'Jordi M.' },
+    review2Role: { es: 'Barcelona', en: 'Barcelona' },
+    review3Quote: {
+      es: 'Lo que más me sorprende es la consistencia. Lote a lote el perfil se mantiene impecable. Es el tipo de café que recuerdas mucho después de haberlo tomado.',
+      en: 'What surprises me most is the consistency. Batch after batch the profile stays impeccable. It\'s the kind of coffee you remember long after drinking it.',
+    },
+    review3Name: { es: 'Ana P.', en: 'Ana P.' },
+    review3Role: { es: 'Madrid', en: 'Madrid' },
+  },
+
   /* ── Footer ── */
   footer: {
     brand: { es: 'GLOPET', en: 'GLOPET' },

@@ -6,6 +6,8 @@ import { Ritual } from '../components/glopet/Ritual';
 import { CallToAction } from '../components/glopet/CallToAction';
 import CoffeeLandingProducts from '../components/glopet/CoffeeLandingProducts';
 import { ChatFloatingContactUs } from '../components/glopet/ChatFloatingContactUs';
+import { WhyGlopet } from '../components/glopet/WhyGlopet';
+import { Testimonials } from '../components/glopet/Testimonials';
 
 interface HomePageProps {
   focusSectionId?: string;
@@ -33,7 +35,10 @@ export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
       <Hero />
       <Manifesto />
       <CoffeeLandingProducts />
+      <WhyGlopet />
       <Product />
+      <Ritual />
+      <Testimonials />
       <CallToAction />
       <ChatFloatingContactUs />
     </div>
