@@ -37,7 +37,6 @@ export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
       <CoffeeLandingProducts />
       <WhyGlopet />
       <Product />
-      <Ritual />
       <Testimonials />
       <CallToAction />
       <ChatFloatingContactUs />
