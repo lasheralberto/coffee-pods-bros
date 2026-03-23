@@ -124,9 +124,6 @@ const HERO_VERTICAL_MASK_MOBILE =
 const HERO_VERTICAL_MASK_DESKTOP =
   'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.06) 1.2%, rgba(0,0,0,0.14) 2.8%, rgba(0,0,0,0.28) 5.2%, rgba(0,0,0,0.46) 8.5%, rgba(0,0,0,0.68) 12.5%, rgba(0,0,0,0.86) 16.5%, black 20%, black 95%, rgba(0,0,0,0.9) 97%, transparent 100%)';
 
-const HERO_HORIZONTAL_MASK_DESKTOP =
-  'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.16) 3%, rgba(0,0,0,0.42) 6%, rgba(0,0,0,0.74) 9%, black 12%, black 88%, rgba(0,0,0,0.74) 91%, rgba(0,0,0,0.42) 94%, rgba(0,0,0,0.16) 97%, transparent 100%)';
-
 export const Hero: React.FC = () => {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [mobileHeroHeight, setMobileHeroHeight] = useState<number | null>(null);
@@ -180,7 +177,7 @@ export const Hero: React.FC = () => {
         style={mobileHeroHeight ? { height: `${mobileHeroHeight}px` } : undefined}
       >
 
-        {/* Imagen apaisada de fondo con bordes difuminados */}
+        {/* Imagen apaisada de fondo con difuminado vertical */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -189,24 +186,16 @@ export const Hero: React.FC = () => {
           style={{
             maskImage: isMobileViewport
               ? HERO_VERTICAL_MASK_MOBILE
-              : [
-                  HERO_HORIZONTAL_MASK_DESKTOP,
-                  HERO_VERTICAL_MASK_DESKTOP,
-                ].join(', '),
-            maskComposite: isMobileViewport ? undefined : 'intersect',
+              : HERO_VERTICAL_MASK_DESKTOP,
             WebkitMaskImage: isMobileViewport
               ? HERO_VERTICAL_MASK_MOBILE
-              : [
-                  HERO_HORIZONTAL_MASK_DESKTOP,
-                  HERO_VERTICAL_MASK_DESKTOP,
-                ].join(', '),
-            WebkitMaskComposite: isMobileViewport ? undefined : 'source-in',
+              : HERO_VERTICAL_MASK_DESKTOP,
           }}
         >
           <picture>
             <source
               media="(max-width: 639px)"
-              srcSet={`/images/hero1-mobile.png`}
+              srcSet={`/images/hero3.png`}
             />
             <img
               src={`/images/hero3.png`}
@@ -229,7 +218,7 @@ export const Hero: React.FC = () => {
             }}
           />
           <div className="absolute inset-0 bg-[#07111a]/18 sm:bg-transparent" />
-          {/* Difuminado inferior: más intenso en móvil para evitar corte recto en hero1-mobile */}
+          {/* Difuminado inferior para suavizar el corte con el fondo de la página */}
           <div className="absolute inset-x-0 bottom-0 h-44 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/88 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
         </motion.div>
 
