@@ -4,6 +4,7 @@ import { Button, Link } from '@heroui/react';
 import { Plus, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Link as RouterLink } from 'react-router-dom';
+import hero3Webm from '../../../assets/videos/hero3-webm.webm';
 
 type HeroInfoSection = {
   id: string;
@@ -177,7 +178,7 @@ export const Hero: React.FC = () => {
         style={mobileHeroHeight ? { height: `${mobileHeroHeight}px` } : undefined}
       >
 
-        {/* Imagen apaisada de fondo con difuminado vertical */}
+        {/* Video de fondo con difuminado vertical */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -192,19 +193,15 @@ export const Hero: React.FC = () => {
               : HERO_VERTICAL_MASK_DESKTOP,
           }}
         >
-          <picture>
-            <source
-              media="(max-width: 639px)"
-              srcSet={`/images/hero3.png`}
-            />
-            <img
-              src={`/images/hero3.png`}
-              alt="Mesa mediterranea con cafe y ceramica"
-              className="h-full w-full object-cover object-[center_30%] sm:object-center"
-              loading="eager"
-              decoding="async"
-            />
-          </picture>
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="h-full w-full object-cover object-[center_30%] sm:object-center"
+          >
+            <source src={hero3Webm} type="video/webm" />
+          </video>
           {/* Gradiente superior suavizado para legibilidad del texto (difuminado más amplio) */}
           <div
             className="absolute inset-0"
