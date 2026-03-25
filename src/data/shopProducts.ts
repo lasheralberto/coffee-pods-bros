@@ -13,6 +13,10 @@ export interface ShopProduct {
   roast: 'light' | 'medium' | 'dark';
   tastesLike: string[];
   formatQuantities: string[];
+  coffeeOriginCoordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   selectedFormatQuantity?: string;
 }
 

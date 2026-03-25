@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import * as Popover from '@radix-ui/react-popover';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, X } from 'lucide-react';
+import { ChevronDown, MapPin, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import MapCoffeeExplorer from '../maps/MapCoffeeExplorer';
 import type { ShopProduct } from '../../data/shopProducts';
 import { fmtFormatQuantities, fmtPrice } from '../../data/shopProducts';
 import { useCartStore } from '../../stores/cartStore';
@@ -200,6 +202,37 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose, 
                 ))}
               </div>
 
+              {product.coffeeOriginCoordinates && (
+                <div className="mb-6">
+                  <Popover.Root>
+                    <Popover.Trigger asChild>
+                      <Button variant="secondary" size="md">
+                        <MapPin size={16} />
+                        {t('productDetail.viewOrigin')}
+                      </Button>
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Content
+                        side="bottom"
+                        align="start"
+                        sideOffset={10}
+                        className="z-[450] w-[min(92vw,720px)] rounded-3xl bg-page p-2 shadow-xl outline-none"
+                      >
+                        <MapCoffeeExplorer
+                          embedded
+                          initialParams={{
+                            location: product.name,
+                            latitude: product.coffeeOriginCoordinates.latitude,
+                            longitude: product.coffeeOriginCoordinates.longitude,
+                          }}
+                        />
+                        <Popover.Arrow className="fill-page" />
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
+                </div>
+              )}
+
               <div className="mt-auto">
                 <Button variant="primary" size="lg" fullWidth onClick={handleAdd}>
                   {t('productDetail.addToCart')}
@@ -318,6 +351,37 @@ const ProductDetailContent: React.FC<ContentProps> = ({
           </div>
         ))}
       </div>
+
+      {product.coffeeOriginCoordinates && (
+        <div className="mb-5">
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <Button variant="secondary" size="md" fullWidth>
+                <MapPin size={16} />
+                {t('productDetail.viewOrigin')}
+              </Button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                side="top"
+                align="center"
+                sideOffset={10}
+                className="z-[450] w-[min(92vw,720px)] rounded-3xl bg-page p-2 shadow-xl outline-none"
+              >
+                <MapCoffeeExplorer
+                  embedded
+                  initialParams={{
+                    location: product.name,
+                    latitude: product.coffeeOriginCoordinates.latitude,
+                    longitude: product.coffeeOriginCoordinates.longitude,
+                  }}
+                />
+                <Popover.Arrow className="fill-page" />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>
+      )}
 
       <Button variant="primary" size="lg" fullWidth onClick={onAdd}>
         {t('productDetail.addToCart')}

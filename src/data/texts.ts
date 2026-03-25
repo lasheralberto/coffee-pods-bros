@@ -311,6 +311,7 @@ export const TEXTS = {
     view: { es: 'Ver detalle', en: 'View detail' },
     roastLevel: { es: 'Tueste', en: 'Roast' },
     tastesLike: { es: 'Sabor', en: 'Tastes like' },
+    viewOrigin: { es: 'Ver origen', en: 'View origin' },
     addToCart: { es: 'Añadir al carrito', en: 'Add to cart' },
     light: { es: 'Claro', en: 'Light' },
     medium: { es: 'Medio', en: 'Medium' },

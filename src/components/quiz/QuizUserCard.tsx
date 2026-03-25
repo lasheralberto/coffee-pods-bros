@@ -534,6 +534,7 @@ function toShopProduct(item: PackItem, catalogProduct: ProductCatalogFirestore |
       roast:       catalogProduct.roast,
       tastesLike:  catalogProduct.tastesLike,
       formatQuantities: catalogProduct.formatQuantities,
+      coffeeOriginCoordinates: catalogProduct.coffeeOriginCoordinates,
     };
   }
   return {

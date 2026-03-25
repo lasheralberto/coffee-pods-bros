@@ -1,7 +1,9 @@
 import React, { useCallback, useState } from 'react';
+import * as Popover from '@radix-ui/react-popover';
 import { motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
 import { Badge } from '../ui/Badge';
+import MapCoffeeExplorer from '../maps/MapCoffeeExplorer';
 import { ProductDetail } from './ProductDetail';
 import type { ShopProduct } from '../../data/shopProducts';
 import { fmtFormatQuantities, fmtPrice } from '../../data/shopProducts';
@@ -25,9 +27,16 @@ export const cardVariants = {
 interface ProductCardProps {
   product: ShopProduct;
   onAddToCart?: () => void;
+  alwaysShowMapButton?: boolean;
+  alwaysShowCartButton?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  onAddToCart,
+  alwaysShowMapButton = false,
+  alwaysShowCartButton = false,
+}) => {
   const { actions } = useCartStore();
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -51,7 +60,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
         {/* Add to cart quick button */}
         <button
           type="button"
-          className="cart-add-quick"
+          className={`cart-add-quick ${alwaysShowCartButton ? 'cart-add-quick--always-visible' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             actions.addItem({
@@ -64,6 +73,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
         >
           <Plus size={18} />
         </button>
+        {product.coffeeOriginCoordinates && (
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                className={`map-view-quick ${alwaysShowMapButton ? 'map-view-quick--always-visible' : ''}`}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`${t('productDetail.viewOrigin')} ${product.name}`}
+              >
+                <MapPin size={18} />
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                side="bottom"
+                align="end"
+                sideOffset={10}
+                className="z-[350] w-[min(92vw,720px)] rounded-3xl bg-page p-2 shadow-xl outline-none"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MapCoffeeExplorer
+                  embedded
+                  initialParams={{
+                    location: product.name,
+                    latitude: product.coffeeOriginCoordinates.latitude,
+                    longitude: product.coffeeOriginCoordinates.longitude,
+                  }}
+                />
+                <Popover.Arrow className="fill-page" />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+        )}
         <div className="shop-product-card__image-wrap">
           <img
             src={product.image}

@@ -26,6 +26,7 @@ import {
   serverTimestamp,
   onSnapshot,
   writeBatch,
+  GeoPoint,
   type Unsubscribe as FirestoreUnsubscribe,
 } from 'firebase/firestore';
 import { ref, getDownloadURL, uploadBytes, deleteObject } from 'firebase/storage';
@@ -560,6 +561,10 @@ export interface ProductCatalogFirestore {
   roast:       'light' | 'medium' | 'dark';
   tastesLike:  string[];
   formatQuantities: string[];
+  coffeeOriginCoordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   order?:      number;
 }
 
@@ -575,6 +580,7 @@ interface ProductCatalogFirestoreRaw {
   roast: 'light' | 'medium' | 'dark';
   tastesLike: string[];
   formatQuantities?: string[];
+  coffeeOriginCoordinates?: GeoPoint;
   order?: number;
 }
 
@@ -592,6 +598,10 @@ export interface AdminProductCatalogPayload {
   roast: 'light' | 'medium' | 'dark';
   tastesLike: string[];
   formatQuantities: string[];
+  coffeeOriginCoordinates: {
+    latitude: number;
+    longitude: number;
+  };
   order?: number;
 }
 
@@ -622,6 +632,39 @@ const isStoragePath = (value: string): boolean => {
   return !value.startsWith('http://') && !value.startsWith('https://');
 };
 
+function normalizeCoffeeOriginCoordinates(value: unknown): ProductCatalogFirestore['coffeeOriginCoordinates'] {
+  if (value instanceof GeoPoint) {
+    return {
+      latitude: value.latitude,
+      longitude: value.longitude,
+    };
+  }
+
+  if (typeof value !== 'object' || value === null) return undefined;
+
+  const candidate = value as {
+    latitude?: unknown;
+    longitude?: unknown;
+    _latitude?: unknown;
+    _longitude?: unknown;
+  };
+
+  const latitude = typeof candidate.latitude === 'number'
+    ? candidate.latitude
+    : typeof candidate._latitude === 'number'
+      ? candidate._latitude
+      : NaN;
+  const longitude = typeof candidate.longitude === 'number'
+    ? candidate.longitude
+    : typeof candidate._longitude === 'number'
+      ? candidate._longitude
+      : NaN;
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return undefined;
+
+  return { latitude, longitude };
+}
+
 function normalizeProductCatalogDoc(id: string, data: ProductCatalogFirestoreRaw, resolvedImage: string): ProductCatalogFirestore {
   const rawImage = typeof data.image === 'string' ? data.image : '';
   const fallbackStoragePath = isStoragePath(rawImage) ? rawImage : null;
@@ -641,6 +684,7 @@ function normalizeProductCatalogDoc(id: string, data: ProductCatalogFirestoreRaw
     roast: data.roast,
     tastesLike: data.tastesLike,
     formatQuantities: normalizeFormatQuantities(data.formatQuantities),
+    coffeeOriginCoordinates: normalizeCoffeeOriginCoordinates(data.coffeeOriginCoordinates),
     order: data.order,
   };
 }
@@ -683,6 +727,15 @@ function validateAdminProductPayload(payload: AdminProductCatalogPayload): void 
   }
   if (payload.order !== undefined && !Number.isFinite(payload.order)) {
     throw new Error('El orden debe ser numérico.');
+  }
+  if (!Number.isFinite(payload.coffeeOriginCoordinates.latitude) || !Number.isFinite(payload.coffeeOriginCoordinates.longitude)) {
+    throw new Error('La ubicación de origen debe incluir latitud y longitud válidas.');
+  }
+  if (payload.coffeeOriginCoordinates.latitude < -90 || payload.coffeeOriginCoordinates.latitude > 90) {
+    throw new Error('La latitud debe estar entre -90 y 90.');
+  }
+  if (payload.coffeeOriginCoordinates.longitude < -180 || payload.coffeeOriginCoordinates.longitude > 180) {
+    throw new Error('La longitud debe estar entre -180 y 180.');
   }
 }
 
@@ -965,6 +1018,10 @@ export async function createProductCatalogProduct(
     roast: payload.roast,
     tastesLike: payload.tastesLike.map((taste) => taste.trim()).filter(Boolean),
     formatQuantities: normalizeFormatQuantities(payload.formatQuantities, false),
+    coffeeOriginCoordinates: new GeoPoint(
+      payload.coffeeOriginCoordinates.latitude,
+      payload.coffeeOriginCoordinates.longitude,
+    ),
     order: payload.order,
   };
 
@@ -1043,6 +1100,10 @@ export async function updateProductCatalogProduct(
     roast: payload.roast,
     tastesLike: payload.tastesLike.map((taste) => taste.trim()).filter(Boolean),
     formatQuantities: normalizeFormatQuantities(payload.formatQuantities, false),
+    coffeeOriginCoordinates: new GeoPoint(
+      payload.coffeeOriginCoordinates.latitude,
+      payload.coffeeOriginCoordinates.longitude,
+    ),
     order: payload.order,
   };
 

@@ -26,6 +26,7 @@ interface ProductFormState {
   descriptionEs: string;
   descriptionEn: string;
   price: string;
+  coffeeOriginCoordinates: string;
   roast: 'light' | 'medium' | 'dark';
   formatQuantities: string[];
   tastesLike: string;
@@ -40,6 +41,7 @@ const EMPTY_FORM: ProductFormState = {
   descriptionEs: '',
   descriptionEn: '',
   price: '',
+  coffeeOriginCoordinates: '',
   roast: 'medium',
   formatQuantities: [],
   tastesLike: '',
@@ -158,6 +160,9 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       descriptionEs: product.description?.es ?? '',
       descriptionEn: product.description?.en ?? '',
       price: String(product.price ?? ''),
+      coffeeOriginCoordinates: product.coffeeOriginCoordinates
+        ? `${product.coffeeOriginCoordinates.latitude}, ${product.coffeeOriginCoordinates.longitude}`
+        : '',
       roast: product.roast,
       formatQuantities: product.formatQuantities ?? [],
       tastesLike: (product.tastesLike ?? []).join(', '),
@@ -179,11 +184,15 @@ export const AdminProductsCatalogEditor: React.FC = () => {
     const descriptionEs = form.descriptionEs.trim();
     const descriptionEn = form.descriptionEn.trim();
     const price = Number(form.price);
+    const coffeeOriginCoordinatesRaw = form.coffeeOriginCoordinates.trim();
     const order = form.order.trim() === '' ? undefined : Number(form.order);
     const tastesLike = form.tastesLike
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
+    const [latitudeRaw, longitudeRaw, ...extraCoordinates] = coffeeOriginCoordinatesRaw.split(',').map((item) => item.trim());
+    const latitude = Number(latitudeRaw);
+    const longitude = Number(longitudeRaw);
 
     if (!brand || !nameEs || !nameEn || !descriptionEs || !descriptionEn) {
       throw new Error('Completa marca, nombres y descripciones en ambos idiomas.');
@@ -201,6 +210,22 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       throw new Error('Selecciona al menos un formato.');
     }
 
+    if (!coffeeOriginCoordinatesRaw || !latitudeRaw || !longitudeRaw || extraCoordinates.length > 0) {
+      throw new Error('Introduce la ubicación con el formato: latitud, longitud.');
+    }
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      throw new Error('La ubicación debe contener coordenadas numéricas válidas.');
+    }
+
+    if (latitude < -90 || latitude > 90) {
+      throw new Error('La latitud debe estar entre -90 y 90.');
+    }
+
+    if (longitude < -180 || longitude > 180) {
+      throw new Error('La longitud debe estar entre -180 y 180.');
+    }
+
     return {
       brand,
       name: {
@@ -214,6 +239,10 @@ export const AdminProductsCatalogEditor: React.FC = () => {
       price,
       roast: form.roast,
       formatQuantities: form.formatQuantities,
+      coffeeOriginCoordinates: {
+        latitude,
+        longitude,
+      },
       tastesLike,
       order,
       isNew: form.isNew,
@@ -582,6 +611,12 @@ export const AdminProductsCatalogEditor: React.FC = () => {
                         <Input label="Precio (€)" type="number" step="0.01" value={form.price} onChange={(e) => onInputChange('price', e.target.value)} />
                         <Input label="Nombre (ES)" value={form.nameEs} onChange={(e) => onInputChange('nameEs', e.target.value)} />
                         <Input label="Name (EN)" value={form.nameEn} onChange={(e) => onInputChange('nameEn', e.target.value)} />
+                        <Input
+                          label="Ubicación origen (lat, long)"
+                          value={form.coffeeOriginCoordinates}
+                          onChange={(e) => onInputChange('coffeeOriginCoordinates', e.target.value)}
+                          placeholder="Ej. 4.7110, -74.0721"
+                        />
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-3 mt-3">

@@ -71,6 +71,7 @@ export default function CoffeeLandingProducts() {
         roast: product.roast,
         tastesLike: product.tastesLike,
         formatQuantities: product.formatQuantities,
+        coffeeOriginCoordinates: product.coffeeOriginCoordinates,
       })),
     [products, locale],
   );
@@ -364,7 +365,12 @@ export default function CoffeeLandingProducts() {
         >
           {allCards.map((product, i) => (
             <div key={`${product.id}-${i}`} className="flex-none" style={{ width: cardW }}>
-              <ProductCard product={product} onAddToCart={() => navigate('/shop')} />
+              <ProductCard
+                product={product}
+                onAddToCart={() => navigate('/shop')}
+                alwaysShowMapButton
+                alwaysShowCartButton
+              />
             </div>
           ))}
         </div>

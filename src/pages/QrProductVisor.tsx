@@ -46,6 +46,7 @@ function toShopProduct(doc: ProductCatalogFirestore): ShopProduct {
     roast: doc.roast,
     tastesLike: doc.tastesLike,
     formatQuantities: doc.formatQuantities,
+    coffeeOriginCoordinates: doc.coffeeOriginCoordinates,
   };
 }
 
