@@ -22,12 +22,11 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     subtitle: t('quizQuestions.q1.subtitle'),
     type: 'single',
     options: [
-      { id: 'moka', emoji: '☕', label: t('quizQuestions.q1.moka'), sublabel: t('quizQuestions.q1.mokaSub') },
-      { id: 'french_press', emoji: '🇫🇷', label: t('quizQuestions.q1.frenchPress'), sublabel: t('quizQuestions.q1.frenchPressSub') },
-      { id: 'pour_over', emoji: '💧', label: t('quizQuestions.q1.pourOver'), sublabel: t('quizQuestions.q1.pourOverSub') },
-      { id: 'drip', emoji: '🔌', label: t('quizQuestions.q1.drip'), sublabel: t('quizQuestions.q1.dripSub') },
-      { id: 'capsules', emoji: '💊', label: t('quizQuestions.q1.capsules'), sublabel: t('quizQuestions.q1.capsulesSub') },
-      { id: 'espresso', emoji: '⚡', label: t('quizQuestions.q1.espresso'), sublabel: t('quizQuestions.q1.espressoSub') },
+      { id: 'early_start', emoji: '🌅', label: t('quizQuestions.q1.earlyStart'), sublabel: t('quizQuestions.q1.earlyStartSub') },
+      { id: 'mid_morning', emoji: '💼', label: t('quizQuestions.q1.midMorning'), sublabel: t('quizQuestions.q1.midMorningSub') },
+      { id: 'sobremesa', emoji: '🍽️', label: t('quizQuestions.q1.sobremesa'), sublabel: t('quizQuestions.q1.sobremesaSub') },
+      { id: 'afternoon_reset', emoji: '🌤️', label: t('quizQuestions.q1.afternoonReset'), sublabel: t('quizQuestions.q1.afternoonResetSub') },
+      { id: 'sunset_pause', emoji: '🌙', label: t('quizQuestions.q1.sunsetPause'), sublabel: t('quizQuestions.q1.sunsetPauseSub') },
     ],
   },
   {
@@ -36,10 +35,11 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     subtitle: t('quizQuestions.q2.subtitle'),
     type: 'single',
     options: [
-      { id: 'black', emoji: '🌑', label: t('quizQuestions.q2.black'), sublabel: t('quizQuestions.q2.blackSub') },
-      { id: 'milk', emoji: '🥛', label: t('quizQuestions.q2.milk'), sublabel: t('quizQuestions.q2.milkSub') },
-      { id: 'sugar', emoji: '🍬', label: t('quizQuestions.q2.sugar'), sublabel: t('quizQuestions.q2.sugarSub') },
-      { id: 'ice', emoji: '🧊', label: t('quizQuestions.q2.ice'), sublabel: t('quizQuestions.q2.iceSub') },
+      { id: 'need_focus', emoji: '⚡', label: t('quizQuestions.q2.needFocus'), sublabel: t('quizQuestions.q2.needFocusSub') },
+      { id: 'want_comfort', emoji: '🫶', label: t('quizQuestions.q2.wantComfort'), sublabel: t('quizQuestions.q2.wantComfortSub') },
+      { id: 'social_moment', emoji: '🥂', label: t('quizQuestions.q2.socialMoment'), sublabel: t('quizQuestions.q2.socialMomentSub') },
+      { id: 'need_reset', emoji: '🧘', label: t('quizQuestions.q2.needReset'), sublabel: t('quizQuestions.q2.needResetSub') },
+      { id: 'indulgent_treat', emoji: '✨', label: t('quizQuestions.q2.indulgentTreat'), sublabel: t('quizQuestions.q2.indulgentTreatSub') },
     ],
   },
   {
@@ -48,45 +48,31 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     subtitle: t('quizQuestions.q3.subtitle'),
     type: 'single',
     options: [
-      { id: 'light', emoji: '🍋', label: t('quizQuestions.q3.light'), sublabel: t('quizQuestions.q3.lightSub') },
-      { id: 'medium', emoji: '⚖️', label: t('quizQuestions.q3.medium'), sublabel: t('quizQuestions.q3.mediumSub') },
-      { id: 'dark', emoji: '🍫', label: t('quizQuestions.q3.dark'), sublabel: t('quizQuestions.q3.darkSub') },
-      { id: 'surprise', emoji: '🎲', label: t('quizQuestions.q3.surprise'), sublabel: t('quizQuestions.q3.surpriseSub') },
+      { id: 'bold_body', emoji: '🟤', label: t('quizQuestions.q3.boldBody'), sublabel: t('quizQuestions.q3.boldBodySub') },
+      { id: 'balanced_sweet', emoji: '⚖️', label: t('quizQuestions.q3.balancedSweet'), sublabel: t('quizQuestions.q3.balancedSweetSub') },
+      { id: 'bright_fruit', emoji: '🍒', label: t('quizQuestions.q3.brightFruit'), sublabel: t('quizQuestions.q3.brightFruitSub') },
+      { id: 'milk_friendly', emoji: '🥛', label: t('quizQuestions.q3.milkFriendly'), sublabel: t('quizQuestions.q3.milkFriendlySub') },
+      { id: 'surprise_me', emoji: '🎲', label: t('quizQuestions.q3.surpriseMe'), sublabel: t('quizQuestions.q3.surpriseMeSub') },
     ],
   },
-  {
-    id: 4,
-    question: t('quizQuestions.q4.question'),
-    subtitle: t('quizQuestions.q4.subtitle'),
-    type: 'multi',
-    options: [
-      { id: 'fruity', emoji: '🍒', label: t('quizQuestions.q4.fruity') },
-      { id: 'chocolate', emoji: '🍫', label: t('quizQuestions.q4.chocolate') },
-      { id: 'nutty', emoji: '🥜', label: t('quizQuestions.q4.nutty') },
-      { id: 'floral', emoji: '🌸', label: t('quizQuestions.q4.floral') },
-      { id: 'spicy', emoji: '🌶️', label: t('quizQuestions.q4.spicy') },
-      { id: 'sweet', emoji: '🍯', label: t('quizQuestions.q4.sweet') },
-    ],
-  },
-  // {
-  //   id: 5,
-  //   question: t('quizQuestions.q5.question'),
-  //   type: 'single',
-  //   options: [
-  //     { id: 'biweekly', emoji: '🗓️', label: t('quizQuestions.q5.biweekly'), sublabel: t('quizQuestions.q5.biweeklySub') },
-  //     { id: 'monthly', emoji: '📅', label: t('quizQuestions.q5.monthly'), sublabel: t('quizQuestions.q5.monthlySub') },
-  //     { id: 'six_weeks', emoji: '📆', label: t('quizQuestions.q5.sixWeeks'), sublabel: t('quizQuestions.q5.sixWeeksSub') },
-  //     { id: 'once', emoji: '📦', label: t('quizQuestions.q5.once'), sublabel: t('quizQuestions.q5.onceSub') },
-  //   ],
-  // },
-  // {
-  //   id: 5,
-  //   question: t('quizQuestions.q6.question'),
-  //   type: 'single',
-  //   options: [
-  //     { id: 'comfort', emoji: '🏠', label: t('quizQuestions.q6.comfort'), sublabel: t('quizQuestions.q6.comfortSub') },
-  //     { id: 'explorer', emoji: '🧭', label: t('quizQuestions.q6.explorer'), sublabel: t('quizQuestions.q6.explorerSub') },
-  //     { id: 'hybrid', emoji: '⚖️', label: t('quizQuestions.q6.hybrid'), sublabel: t('quizQuestions.q6.hybridSub') },
-  //   ],
-  // },
 ];
+
+export const QUIZ_TOTAL_STEPS = QUIZ_QUESTIONS.length;
+
+export function getQuizQuestion(questionId: number): QuizQuestion | undefined {
+  return QUIZ_QUESTIONS.find((question) => question.id === questionId);
+}
+
+export function getQuizAnswerLabel(questionId: number, answerId: string): string {
+  const question = getQuizQuestion(questionId);
+  if (!question) return answerId;
+  return question.options.find((option) => option.id === answerId)?.label ?? answerId;
+}
+
+export function buildQuizAnswerHighlights(answers: Record<number, string | string[]>): string[] {
+  return QUIZ_QUESTIONS.flatMap((question) => {
+    const answer = answers[question.id];
+    const ids = Array.isArray(answer) ? answer : typeof answer === 'string' ? [answer] : [];
+    return ids.map((id) => getQuizAnswerLabel(question.id, id));
+  });
+}

@@ -120,7 +120,7 @@ const mobileVariants = {
 };
 
 const HERO_VERTICAL_MASK_MOBILE =
-  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 1.5%, rgba(0,0,0,0.18) 3.5%, rgba(0,0,0,0.34) 6.5%, rgba(0,0,0,0.56) 10%, rgba(0,0,0,0.78) 14%, rgba(0,0,0,0.92) 18%, black 22%, black 95%, rgba(0,0,0,0.88) 97%, transparent 100%)';
+  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 1.5%, rgba(0,0,0,0.18) 3.5%, rgba(0,0,0,0.34) 6.5%, rgba(0,0,0,0.56) 10%, rgba(0,0,0,0.78) 14%, rgba(0,0,0,0.92) 18%, black 22%, black 97.5%, rgba(0,0,0,0.94) 99%, transparent 100%)';
 
 const HERO_VERTICAL_MASK_DESKTOP =
   'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.06) 1.2%, rgba(0,0,0,0.14) 2.8%, rgba(0,0,0,0.28) 5.2%, rgba(0,0,0,0.46) 8.5%, rgba(0,0,0,0.68) 12.5%, rgba(0,0,0,0.86) 16.5%, black 20%, black 95%, rgba(0,0,0,0.9) 97%, transparent 100%)';
@@ -153,7 +153,12 @@ export const Hero: React.FC = () => {
 
       const { top } = heroContainer.getBoundingClientRect();
       const availableHeight = window.innerHeight - top - 16;
-      const nextHeight = Math.max(520, Math.min(820, Math.round(availableHeight)));
+      const widthBasedHeight = Math.round(window.innerWidth * 1.08);
+      const viewportBasedHeight = Math.round(window.innerHeight * 0.74);
+      const nextHeight = Math.max(
+        420,
+        Math.min(640, Math.min(Math.round(availableHeight), widthBasedHeight, viewportBasedHeight)),
+      );
 
       setMobileHeroHeight(nextHeight);
     };
@@ -174,7 +179,7 @@ export const Hero: React.FC = () => {
       {/* Hero stack: imagen de fondo + texto encima */}
       <div
         ref={heroContainerRef}
-        className="mt-10 sm:mt-6 md:mt-10 -mx-4 md:-mx-10 lg:-mx-16 relative h-[clamp(520px,145vw,820px)] sm:h-[clamp(560px,115vw,780px)] lg:h-[clamp(560px,60vw,700px)]"
+        className="mt-10 sm:mt-6 md:mt-10 -mx-4 md:-mx-10 lg:-mx-16 relative h-[clamp(420px,118vw,640px)] sm:h-[clamp(560px,115vw,780px)] lg:h-[clamp(560px,60vw,700px)]"
         style={mobileHeroHeight ? { height: `${mobileHeroHeight}px` } : undefined}
       >
 
@@ -198,7 +203,7 @@ export const Hero: React.FC = () => {
             muted
             loop
             playsInline
-            className="h-full w-full object-cover object-[center_30%] sm:object-center"
+            className="h-full w-full object-cover object-[center_22%] sm:object-center"
           >
             <source src={hero3Webm} type="video/webm" />
           </video>
@@ -216,7 +221,7 @@ export const Hero: React.FC = () => {
           />
           <div className="absolute inset-0 bg-[#07111a]/18 sm:bg-transparent" />
           {/* Difuminado inferior para suavizar el corte con el fondo de la página */}
-          <div className="absolute inset-x-0 bottom-0 h-44 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/88 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
+          <div className="absolute inset-x-0 bottom-0 h-24 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/42 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
         </motion.div>
 
         {/* Contenido sobre la imagen */}

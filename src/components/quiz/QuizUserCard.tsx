@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
+import { getQuizAnswerLabel } from '../../data/quizQuestions';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
@@ -214,6 +215,202 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const waitingForFreshPack = !pack
     && !!completedAtDate
     && Date.now() - completedAtDate.getTime() <= PACK_GENERATION_GRACE_MS;
+
+  if (quizData.recommendation) {
+    const recommendation = quizData.recommendation;
+
+    return (
+      <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <AnimatePresence>
+          {open && (
+            <Dialog.Portal forceMount>
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className="overlay backdrop-blur-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onPointerDown={onClose}
+                />
+              </Dialog.Overlay>
+
+              <Dialog.Content
+                onInteractOutside={onClose}
+                onPointerDownOutside={onClose}
+                asChild
+              >
+                <div className="fixed inset-0 flex items-end sm:items-center justify-center z-modal pointer-events-none">
+                  <motion.div
+                    className="modal-panel pointer-events-auto"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  >
+                    <VisuallyHidden.Root>
+                      <Dialog.Title>{t('profile.quizHeading')}</Dialog.Title>
+                      <Dialog.Description>{recommendation.headline}</Dialog.Description>
+                    </VisuallyHidden.Root>
+
+                    <Card variant="elevated" padding="none" className="quiz-user-card">
+                      <div className="quiz-user-card__header">
+                        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 'var(--font-medium)' }}>
+                          {t('profile.quizHeading')}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          {quizData.completedAt && (
+                            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                              {t('profile.completedAt')} {formatDate(quizData.completedAt)}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label={t('purchase.close')}
+                            className="p-2 hover:bg-foam rounded-full transition-colors"
+                          >
+                            <X size={18} className="text-muted" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ padding: 'var(--space-4)', display: 'grid', gap: 'var(--space-4)' }}>
+                        <div
+                          style={{
+                            borderRadius: 'var(--radius-2xl)',
+                            border: '1px solid rgba(26,58,92,0.12)',
+                            background: 'linear-gradient(145deg, rgba(250,246,239,0.98), rgba(244,236,223,0.86))',
+                            padding: 'var(--space-5)',
+                          }}
+                        >
+                          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: 'var(--space-2)' }}>
+                            {recommendation.timeContext}
+                          </p>
+                          <h4 style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.1, color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>
+                            {recommendation.headline}
+                          </h4>
+                          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                            {recommendation.rationale}
+                          </p>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
+                          <div style={{ border: '1px solid rgba(28,20,16,0.08)', borderRadius: 'var(--radius-2xl)', background: 'rgba(255,255,255,0.82)', padding: 'var(--space-4)' }}>
+                            <div className="grid gap-4 md:grid-cols-[112px_minmax(0,1fr)]">
+                              <img
+                                src={recommendation.recommendedProduct.image}
+                                alt={recommendation.recommendedProduct.name}
+                                style={{ width: '112px', height: '152px', objectFit: 'cover', borderRadius: '20px' }}
+                              />
+                              <div>
+                                <p className="label-caps" style={{ marginBottom: 'var(--space-1)' }}>{recommendation.recommendedProduct.brand}</p>
+                                <h5 style={{ fontSize: 'var(--text-xl)', color: 'var(--text-primary)', marginBottom: 'var(--space-2)' }}>
+                                  {recommendation.recommendedProduct.name}
+                                </h5>
+                                <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', lineHeight: 1.7, marginBottom: 'var(--space-3)' }}>
+                                  {recommendation.recommendedProduct.description}
+                                </p>
+                                <p style={{ fontWeight: 'var(--font-semibold)', color: 'var(--text-primary)' }}>
+                                  {fmtPrice(recommendation.recommendedProduct.price)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ borderRadius: 'var(--radius-2xl)', background: 'rgba(26,58,92,0.06)', padding: 'var(--space-4)' }}>
+                            <p className="label-caps" style={{ marginBottom: 'var(--space-2)' }}>{t('quiz.ritual')}</p>
+                            <p style={{ fontWeight: 'var(--font-semibold)', color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>
+                              {recommendation.ritualTitle}
+                            </p>
+                            <ol style={{ display: 'grid', gap: 'var(--space-2)' }}>
+                              {recommendation.ritualSteps.map((step, index) => (
+                                <li key={`${step}-${index}`} style={{ display: 'flex', gap: 'var(--space-2)', color: 'var(--text-muted)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+                                  <span style={{ color: 'var(--color-caramel)', fontWeight: 'var(--font-semibold)' }}>0{index + 1}</span>
+                                  <span>{step}</span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="quiz-user-card__answers-toggle" onClick={() => setAnswersOpen((value) => !value)}>
+                            <span>{answersOpen ? t('profile.hideAnswers') : t('profile.showAnswers')}</span>
+                            <motion.span
+                              animate={{ rotate: answersOpen ? 180 : 0 }}
+                              transition={{ duration: 0.25 }}
+                              style={{ display: 'inline-flex' }}
+                            >
+                              <ChevronDown size={16} />
+                            </motion.span>
+                          </div>
+                          <AnimatePresence initial={false}>
+                            {answersOpen && (
+                              <motion.div
+                                className="quiz-user-card__answers"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                style={{ overflow: 'hidden' }}
+                              >
+                                {sortedAnswers.map(({ qId, answer }) => {
+                                  const answerLabels = Array.isArray(answer)
+                                    ? answer.map((value) => getQuizAnswerLabel(qId, value)).join(', ')
+                                    : getQuizAnswerLabel(qId, answer);
+
+                                  return (
+                                    <div key={qId} className="quiz-user-card__answer-row">
+                                      <span className="quiz-user-card__question-label">{`${t('profile.question')} ${qId}`}</span>
+                                      <span className="quiz-user-card__answer-value">{answerLabels}</span>
+                                    </div>
+                                  );
+                                })}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {recommendation.alternatives.length > 0 && (
+                          <div>
+                            <p className="label-caps" style={{ marginBottom: 'var(--space-3)' }}>{t('quiz.alternatives')}</p>
+                            <div className="grid gap-3 sm:grid-cols-3">
+                              {recommendation.alternatives.map((alternative) => (
+                                <div key={alternative.productId} style={{ borderRadius: 'var(--radius-xl)', border: '1px solid rgba(28,20,16,0.08)', background: 'rgba(255,255,255,0.78)', padding: 'var(--space-3)' }}>
+                                  <img
+                                    src={alternative.image}
+                                    alt={alternative.name}
+                                    style={{ width: '100%', height: '132px', objectFit: 'cover', borderRadius: '18px', marginBottom: 'var(--space-3)' }}
+                                  />
+                                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: 'var(--space-1)' }}>
+                                    {alternative.brand}
+                                  </p>
+                                  <p style={{ fontWeight: 'var(--font-semibold)', color: 'var(--text-primary)', marginBottom: 'var(--space-1)' }}>
+                                    {alternative.name}
+                                  </p>
+                                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{fmtPrice(alternative.price)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="quiz-user-card__footer">
+                          <Button variant="secondary" size="sm" onClick={onTakeQuiz}>
+                            {t('profile.refreshRecommendation')}
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </Dialog.Root>
+    );
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>

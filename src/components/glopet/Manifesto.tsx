@@ -52,7 +52,7 @@ export const Manifesto: React.FC = () => {
       <motion.button
         type="button"
         onClick={actions.openQuiz}
-        className="btn btn-accent btn-xl"
+        className="btn btn-accent btn-xl md:hidden"
         style={{ padding: '1rem 3rem', fontSize: 'var(--text-base)', minHeight: '56px' }}
         initial={{ opacity: 0, scale: 0.95 }}
         whileInView={{ opacity: 1, scale: 1 }}

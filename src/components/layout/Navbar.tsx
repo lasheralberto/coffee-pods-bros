@@ -4,7 +4,6 @@ import { Home, ShoppingBag, Sparkles, Store, UserRound } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Container } from '../ui/Container';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { useQuizStore } from '../../stores/quizStore';
 import { useCartStore, selectCartCount } from '../../stores/cartStore';
 import { useAuthStore, selectIsAuthenticated, selectAuthUser } from '../../stores/authStore';
 import { useAdminAccess } from '../../hooks/useAdminAccess';
@@ -15,7 +14,6 @@ const LANDING_PATHS = new Set(['/', '/manifiesto']);
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const isLandingRoute = LANDING_PATHS.has(location.pathname);
-  const { actions } = useQuizStore();
   const cartActions = useCartStore((s) => s.actions);
   const cartCount = useCartStore(selectCartCount);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
@@ -163,12 +161,6 @@ export const Navbar: React.FC = () => {
                     <ShoppingBag size={20} />
                     {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
                   </button>
-
-                  {!authUser?.quizCompleted && (
-                    <Button variant="primary" size="sm" onClick={actions.openQuiz}>
-                      {t('navbar.startQuiz')}
-                    </Button>
-                  )}
                 </>
               )}
             </div>

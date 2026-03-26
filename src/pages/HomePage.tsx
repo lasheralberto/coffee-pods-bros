@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Hero } from '../components/glopet/Hero';
+import { CafeMomento } from '../components/glopet/CafeMomento';
 import { Manifesto } from '../components/glopet/Manifesto';
 import { Product } from '../components/glopet/Product';
 import { Ritual } from '../components/glopet/Ritual';
@@ -33,10 +34,14 @@ export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
   return (
     <div className="glopet-page min-h-screen pb-6">
       <Hero />
+      <div className="hidden md:block">
+        <CafeMomento />
+      </div>
       <Manifesto />
       <CoffeeLandingProducts />
       <WhyGlopet />
       <Product />
+      <Ritual />
       <Testimonials />
       <CallToAction />
       <ChatFloatingContactUs />

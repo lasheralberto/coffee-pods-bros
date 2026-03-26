@@ -13,6 +13,7 @@
  */
 
 import { getLocale } from '../data/texts';
+import { buildQuizAnswerHighlights } from '../data/quizQuestions';
 import { getProductsCatalog, getProductCatalogProductById } from '../providers/firebaseProvider';
 import type { QuizResultProduct, DefaultPackItem } from '../data/matchingRules';
 import type { ProductCatalogFirestore } from '../providers/firebaseProvider';
@@ -37,8 +38,13 @@ export function buildQueryText(answers: Record<number, string | string[]>): stri
     ? answers[QUIZ_TEXT_ANSWER_KEY].trim()
     : '';
 
-  if (freeText.length > 0) {
+  if (freeText.length > 0 && freeText.includes(' ')) {
     return freeText;
+  }
+
+  const highlights = buildQuizAnswerHighlights(answers);
+  if (highlights.length > 0) {
+    return highlights.join('. ');
   }
 
   const fallbackParts = Object.values(answers)

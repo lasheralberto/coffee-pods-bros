@@ -153,7 +153,7 @@ export const ProfilePage: React.FC = () => {
     ? Math.max(1, Math.floor((Date.now() - memberDate.getTime()) / (1000 * 60 * 60 * 24)))
     : null;
   const canOpenChat = !isAdmin || !isDesktop;
-  const quizActionLabel = hasQuiz ? t('profile.customizePack') : t('profile.takeQuiz');
+  const quizActionLabel = hasQuiz ? t('profile.refreshRecommendation') : t('profile.takeQuiz');
 
   return (
     <PageTransition>
@@ -264,7 +264,7 @@ export const ProfilePage: React.FC = () => {
                   <p className="profile-overview-card__value">
                     {hasQuiz ? t('profile.quizCompleted') : t('profile.quizNotCompleted')}
                   </p>
-                  <p className="profile-overview-card__meta">{hasQuiz ? t('profile.customizePack') : t('profile.takeQuiz')}</p>
+                  <p className="profile-overview-card__meta">{hasQuiz ? t('profile.refreshRecommendation') : t('profile.takeQuiz')}</p>
                 </article>
 
                 <article className="profile-overview-card">

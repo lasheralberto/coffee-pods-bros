@@ -31,6 +31,7 @@ import {
 } from 'firebase/firestore';
 import { ref, getDownloadURL, uploadBytes, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '../config/firebase';
+import type { ContextualCoffeeRecommendationSnapshot } from '../types/contextualCoffee';
 
 /* ── Types ───────────────────────────────────────────────── */
 
@@ -321,12 +322,36 @@ export interface QuizDoc {
   uid: string;
   answers: Record<number, string | string[]>;
   completedAt: unknown;
+  recommendation?: ContextualCoffeeRecommendationSnapshot | null;
 }
 
 export async function getUserQuizData(uid: string): Promise<QuizDoc | null> {
   const ref = doc(db, 'usersToQuiz', uid);
   const snap = await getDoc(ref);
   return snap.exists() ? (snap.data() as QuizDoc) : null;
+}
+
+export async function saveContextualQuizResults(
+  uid: string,
+  answers: Record<number, string | string[]>,
+  recommendation: ContextualCoffeeRecommendationSnapshot,
+): Promise<void> {
+  const batch = writeBatch(db);
+
+  const quizRef = doc(db, 'usersToQuiz', uid);
+  batch.set(quizRef, {
+    uid,
+    answers,
+    recommendation,
+    completedAt: serverTimestamp(),
+  }, { merge: true });
+
+  const userRef = doc(db, 'users', uid);
+  batch.update(userRef, {
+    quizCompleted: true,
+  });
+
+  await batch.commit();
 }
 
 /**
