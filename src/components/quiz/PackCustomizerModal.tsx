@@ -12,6 +12,7 @@ import {
   getSubscriptionPlans,
   type ProductCatalogFirestore,
   type PackItem,
+  type SubscriptionPlanFirestore,
 } from '../../providers/firebaseProvider';
 
 interface LocalProfile {
@@ -39,7 +40,33 @@ interface PackCustomizerModalProps {
   subtitle?: string;
   embedded?: boolean;
   hideCloseButton?: boolean;
+  showPlanSelection?: boolean;
   onSaved?: () => void;
+}
+
+function parsePositivePrice(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().replace(',', '.');
+    const parsed = Number.parseFloat(normalized);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return 0;
+}
+
+function resolvePlanTotalPrice(plan: SubscriptionPlanFirestore): number {
+  const directTotal = parsePositivePrice(plan.totalPrice);
+  if (directTotal > 0) {
+    return directTotal;
+  }
+
+  return parsePositivePrice(`${plan.price}.${plan.priceCents}`);
 }
 
 function catalogToLocal(doc: ProductCatalogFirestore): LocalProfile {
@@ -77,9 +104,11 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
   subtitle,
   embedded = false,
   hideCloseButton = false,
+  showPlanSelection = false,
   onSaved,
 }) => {
   const [profiles, setProfiles] = useState<LocalProfile[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlanFirestore[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [pack, setPack] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
@@ -97,6 +126,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
     Promise.all([getProductsCatalog(), getUserPack(uid), getSubscriptionPlans()])
       .then(([docs, existingPack, plans]) => {
         if (cancelled) return;
+        setPlans(plans);
         const suggestedIds = new Set(suggestedProductIds ?? []);
         const nextProfiles = docs
           .map(catalogToLocal)
@@ -117,8 +147,13 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
 
         setPack(nextPack);
 
-        const effectivePlanId = planId ?? existingPack?.planId ?? null;
-        const effectivePlanPrice = planPrice ?? existingPack?.planPrice ?? null;
+        const persistedPlanId = showPlanSelection ? null : existingPack?.planId ?? null;
+        const persistedPlanPrice = showPlanSelection ? null : existingPack?.planPrice ?? null;
+        const effectivePlanId = planId ?? persistedPlanId;
+        const selectedPlan = effectivePlanId
+          ? plans.find((plan) => plan.id === effectivePlanId) ?? null
+          : null;
+        const effectivePlanPrice = planPrice ?? persistedPlanPrice ?? (selectedPlan ? resolvePlanTotalPrice(selectedPlan) : null);
 
         setResolvedPlanId(effectivePlanId);
         setResolvedPlanPrice(effectivePlanPrice);
@@ -127,17 +162,22 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
         if (maxProducts && maxProducts > 0) {
           setNumberOfProducts(maxProducts);
         } else {
-          const selectedPlan = effectivePlanId
-            ? plans.find((p) => p.id === effectivePlanId)
-            : plans.find((p) => p.highlighted);
           const highlighted = plans.find((p) => p.highlighted);
-          const planLimit = selectedPlan?.numberOfProducts ?? highlighted?.numberOfProducts ?? plans[0]?.numberOfProducts ?? 0;
+          const planLimit = selectedPlan?.numberOfProducts
+            ?? (showPlanSelection ? 0 : highlighted?.numberOfProducts ?? plans[0]?.numberOfProducts ?? 0);
           setNumberOfProducts(planLimit);
         }
       })
       .finally(() => { if (!cancelled) setLoadingProfiles(false); });
     return () => { cancelled = true; };
-  }, [embedded, initialItems, maxProducts, open, planId, planPrice, preferInitialItems, suggestedProductIds, uid]);
+  }, [embedded, initialItems, maxProducts, open, planId, planPrice, preferInitialItems, showPlanSelection, suggestedProductIds, uid]);
+
+  const handleSelectPlan = useCallback((plan: SubscriptionPlanFirestore) => {
+    setResolvedPlanId(plan.id);
+    setResolvedPlanPrice(resolvePlanTotalPrice(plan));
+    setNumberOfProducts(plan.numberOfProducts ?? 0);
+    setSaved(false);
+  }, []);
 
   const addItem = useCallback((id: string) => {
     setPack((prev) => {
@@ -163,6 +203,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
 
   const totalPrice = profiles.reduce((sum, p) => sum + p.price * (pack[p.id] ?? 0), 0);
   const itemCount = Object.values(pack).reduce((a, b) => a + b, 0);
+  const hasSelectedPlan = !!resolvedPlanId;
   const isPackComplete = numberOfProducts > 0 ? itemCount === numberOfProducts : itemCount > 0;
   const isPackFull = numberOfProducts > 0 && itemCount >= numberOfProducts;
 
@@ -226,6 +267,46 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
         ))}
       </div>
 
+      {showPlanSelection && plans.length > 0 && (
+        <div className="mb-4 rounded-[24px] border border-[rgba(28,20,16,0.08)] bg-white/80 p-4 sm:p-5">
+          <p className="label-caps mb-2">{t('personalPack.choosePlan')}</p>
+          <p className="text-sm leading-relaxed text-muted mb-4">{t('personalPack.choosePlanDesc')}</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {plans.map((plan) => {
+              const isSelected = resolvedPlanId === plan.id;
+              const planName = plan.name[getLocale()] ?? plan.name.es ?? '';
+              const planBadge = plan.badge[getLocale()] ?? plan.badge.es ?? '';
+              const planInterval = plan.interval[getLocale()] ?? plan.interval.es ?? '';
+              const planDescription = plan.description[getLocale()] ?? plan.description.es ?? '';
+
+              return (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() => handleSelectPlan(plan)}
+                  className={`rounded-[20px] border p-4 text-left transition-all ${isSelected
+                    ? 'border-[var(--color-espresso)] bg-[rgba(250,246,239,0.96)] shadow-[0_8px_18px_rgba(28,20,16,0.08)]'
+                    : 'border-[rgba(28,20,16,0.08)] bg-white hover:border-[rgba(26,58,92,0.18)] hover:bg-[rgba(250,246,239,0.7)]'}`}
+                >
+                  <span className="mb-2 inline-flex rounded-full bg-[rgba(196,118,58,0.12)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-caramel)]">
+                    {planBadge}
+                  </span>
+                  <p className="text-sm font-semibold text-primary leading-tight">{planName}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">{planDescription}</p>
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="text-lg font-semibold text-primary">{resolvePlanTotalPrice(plan).toFixed(2)}€</span>
+                    <span className="text-xs text-muted">/{planInterval}</span>
+                  </div>
+                  {!!plan.numberOfProducts && (
+                    <p className="mt-2 text-xs text-[var(--text-secondary)]">{plan.numberOfProducts} {t('pack.itemCounter')}</p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="pack-modal__list">
         {loadingProfiles && (
           <p className="pack-modal__loading">{t('pack.loadingProfiles')}</p>
@@ -275,7 +356,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
                   className="pack-item__btn pack-item__btn--plus"
                   onClick={() => addItem(p.id)}
                   aria-label={t('pack.add')}
-                  disabled={isPackFull && qty === 0}
+                  disabled={!hasSelectedPlan || (isPackFull && qty === 0)}
                 >
                   <Plus size={14} />
                 </button>
@@ -314,7 +395,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
           size="md"
           fullWidth
           loading={saving}
-          disabled={saving || !isPackComplete}
+          disabled={saving || !hasSelectedPlan || !isPackComplete}
           onClick={handleSave}
         >
           {saving ? t('pack.saving') : t('pack.savePack')}

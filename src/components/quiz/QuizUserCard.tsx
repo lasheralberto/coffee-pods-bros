@@ -213,6 +213,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
       ? completedAt
       : null;
   const waitingForFreshPack = !pack
+    && !existingSub
     && !!completedAtDate
     && Date.now() - completedAtDate.getTime() <= PACK_GENERATION_GRACE_MS;
 

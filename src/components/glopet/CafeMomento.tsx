@@ -6,7 +6,7 @@ import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { t } from '../../data/texts';
 import { onProductsCatalog } from '../../providers/firebaseProvider';
 import { useAuthStore } from '../../stores/authStore';
-import { useQuizStore } from '../../stores/quizStore';
+import { QUIZ_PLAN_ANSWER_KEY, useQuizStore } from '../../stores/quizStore';
 import { Button } from '../ui/Button';
 import { PackCustomizerModal } from '../quiz/PackCustomizerModal';
 import { QuizAuthGate } from '../quiz/QuizAuthGate';
@@ -83,6 +83,11 @@ export const CafeMomento: React.FC<CafeMomentoProps> = ({ surface = 'inline' }) 
     }));
   }, [result]);
 
+  const selectedPlanIdFromQuiz = useMemo(() => {
+    const selectedPlanAnswer = answers[QUIZ_PLAN_ANSWER_KEY];
+    return typeof selectedPlanAnswer === 'string' ? selectedPlanAnswer : null;
+  }, [answers]);
+
   const activeQuestion = QUIZ_QUESTIONS[currentStep] ?? null;
   const hasResult = !!result;
   const shouldExpandInline = !isModal && isDesktopInline && (currentStep > 0 || loading || hasStoredAnswers(answers) || hasResult);
@@ -150,10 +155,12 @@ export const CafeMomento: React.FC<CafeMomentoProps> = ({ surface = 'inline' }) 
             uid={user.uid}
             embedded
             hideCloseButton
+            planId={selectedPlanIdFromQuiz}
             title={t('quiz.customizePackTitle')}
             subtitle={t('quiz.customizePackSubtitle')}
             initialItems={suggestedPackItems}
             preferInitialItems
+            showPlanSelection={!selectedPlanIdFromQuiz}
             suggestedProductIds={suggestedProductIds}
             onSaved={handlePackSaved}
           />

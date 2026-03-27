@@ -144,6 +144,7 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
       ? completedAt
       : null;
   const waitingForFreshPack = !draftPack
+    && !sub
     && !!completedAtDate
     && Date.now() - completedAtDate.getTime() <= PACK_GENERATION_GRACE_MS;
   const isLoadingSubscriptionSection = loading || packLoading || waitingForFreshPack;
@@ -156,6 +157,7 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
         ? draftTotalPrice
         : (draftPack.planId ? planPriceById[draftPack.planId] : undefined) ?? 0))
     : 0;
+  const hasSelectedDraftPlan = !!draftPack?.planId;
   const hasValidDraftPlanPrice = resolvedDraftPrice > 0;
 
   const handleSubscribeDraftPack = useCallback(() => {
@@ -244,10 +246,12 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
 
             {hasDraftPack && (
               <div className="mt-4 space-y-3">
-                <div className="user-subscription__total justify-start">
-                  <span className="text-sm text-muted">{t('userSubscription.total')}</span>
-                  <span className="text-lg font-bold text-primary">{hasValidDraftPlanPrice ? fmtPrice(resolvedDraftPrice) : '—'}</span>
-                </div>
+                {hasSelectedDraftPlan && hasValidDraftPlanPrice && (
+                  <div className="user-subscription__total justify-start">
+                    <span className="text-sm text-muted">{t('userSubscription.total')}</span>
+                    <span className="text-lg font-bold text-primary">{fmtPrice(resolvedDraftPrice)}</span>
+                  </div>
+                )}
                 <Button
                   variant="primary"
                   size="sm"
@@ -357,10 +361,12 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
 
                       <div className="user-subscription__footer user-subscription__footer--draft">
                         <div className="flex flex-col items-start gap-2">
-                          <div className="user-subscription__total justify-start">
-                            <span className="text-sm text-muted">{t('userSubscription.total')}</span>
-                            <span className="text-lg font-bold text-primary">{hasValidDraftPlanPrice ? fmtPrice(resolvedDraftPrice) : '—'}</span>
-                          </div>
+                          {hasSelectedDraftPlan && hasValidDraftPlanPrice && (
+                            <div className="user-subscription__total justify-start">
+                              <span className="text-sm text-muted">{t('userSubscription.total')}</span>
+                              <span className="text-lg font-bold text-primary">{fmtPrice(resolvedDraftPrice)}</span>
+                            </div>
+                          )}
                         </div>
                         <div className="user-subscription__draft-actions">
                           <Button
