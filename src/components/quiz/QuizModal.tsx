@@ -3,7 +3,6 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { t } from '../../data/texts';
 import { useAuthStore } from '../../stores/authStore';
 import { useQuizStore } from '../../stores/quizStore';
@@ -12,18 +11,10 @@ import { Button } from '../ui/Button';
 
 export const QuizModal: React.FC = () => {
   const { isOpen, result, packSaving, actions } = useQuizStore();
-  const { closeQuiz } = actions;
+  const { closeQuiz, requestResumeAfterAuth } = actions;
   const user = useAuthStore((state) => state.user);
   const authActions = useAuthStore((state) => state.actions);
-  const navigate = useNavigate();
   const [pendingSignupOpen, setPendingSignupOpen] = useState(false);
-
-  useEffect(() => {
-    if (result && user && isOpen && !packSaving) {
-      closeQuiz();
-      navigate('/profile');
-    }
-  }, [closeQuiz, isOpen, navigate, packSaving, result, user]);
 
   useEffect(() => {
     if (isOpen || !pendingSignupOpen) return undefined;
@@ -38,6 +29,7 @@ export const QuizModal: React.FC = () => {
 
   const handleOpenSignup = () => {
     setPendingSignupOpen(true);
+    requestResumeAfterAuth();
     closeQuiz();
   };
 

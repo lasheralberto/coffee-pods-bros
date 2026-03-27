@@ -1,8 +1,13 @@
 import React from 'react';
 import { Hero } from '../components/glopet/Hero';
 import { Manifesto } from '../components/glopet/Manifesto';
+import { TrustBar } from '../components/glopet/TrustBar';
+import { CoffeePaths } from '../components/glopet/CoffeePaths';
 import { Product } from '../components/glopet/Product';
-import { Ritual } from '../components/glopet/Ritual';
+import { CoffeeComparison } from '../components/glopet/CoffeeComparison';
+import { OriginTraceability } from '../components/glopet/OriginTraceability';
+import { SubscriptionHowItWorks } from '../components/glopet/SubscriptionHowItWorks';
+import { Testimonials } from '../components/glopet/Testimonials';
 import { CallToAction } from '../components/glopet/CallToAction';
 import CoffeeLandingProducts from '../components/glopet/CoffeeLandingProducts';
 import { ChatFloatingContactUs } from '../components/glopet/ChatFloatingContactUs';
@@ -24,9 +29,15 @@ export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
   return (
     <div className="glopet-page min-h-screen pb-6">
       <Hero />
-      <Manifesto />
+      <TrustBar />
+   
+      <CoffeePaths />
       <CoffeeLandingProducts />
+      <CoffeeComparison />
       <Product />
+    
+      <SubscriptionHowItWorks />
+      <Testimonials />
       <CallToAction />
       <ChatFloatingContactUs />
     </div>

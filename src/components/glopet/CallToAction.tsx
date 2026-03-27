@@ -30,7 +30,7 @@ export const CallToAction: React.FC = () => {
             radius="full"
             className="border-[#e8d5b0] text-[#faf6ef]"
           >
-            Suscribirme
+            Encontrar mi suscripcion
           </Button>
         </div>
       </div>

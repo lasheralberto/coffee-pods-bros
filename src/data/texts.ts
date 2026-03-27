@@ -296,6 +296,15 @@ export const TEXTS = {
     yourSignals: { es: 'Tus señales', en: 'Your signals' },
     ritual: { es: 'Ritual sugerido', en: 'Suggested ritual' },
     alternatives: { es: 'También te encajan', en: 'Also fitting this moment' },
+    customizePackTitle: {
+      es: 'Personaliza tu pack sugerido',
+      en: 'Customize your suggested pack',
+    },
+    customizePackSubtitle: {
+      es: 'Partimos de tu recomendación y puedes añadir o quitar cafés del catálogo antes de guardarlo.',
+      en: 'We start from your recommendation and you can add or remove coffees from the catalog before saving it.',
+    },
+    suggestedCoffee: { es: 'Sugerido por tu quiz', en: 'Suggested by your quiz' },
     restart: { es: 'Volver a empezar', en: 'Start over' },
     saveToProfile: { es: 'Guárdalo en tu perfil para recuperarlo cuando quieras.', en: 'Save it to your profile so you can revisit it anytime.' },
   },

@@ -2,14 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
-import { Button } from '../components/ui/Button';
-import { useQuizStore } from '../stores/quizStore';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
+import { UsersPlanSuscription } from '../components/shop/UsersPlanSuscription';
 import { t } from '../data/texts';
 
 export const SubscriptionsPage: React.FC = () => {
-  const { actions } = useQuizStore();
-
   return (
     <PageTransition>
       <Section size="lg">
@@ -19,14 +16,7 @@ export const SubscriptionsPage: React.FC = () => {
             {t('subscriptions.intro')}
           </motion.p>
           <motion.div variants={childVariants}>
-            <Button
-              variant="primary"
-              size="xl"
-              onClick={actions.openQuiz}
-              className="px-12 py-4 rounded-full font-bold tracking-wide shadow-[0_6px_28px_rgba(196,118,58,0.4)] hover:shadow-[0_8px_36px_rgba(196,118,58,0.6)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
-            >
-              {t('subscriptions.startQuiz')}
-            </Button>
+            <UsersPlanSuscription forceShowPlans showHeader={false} />
           </motion.div>
         </Container>
       </Section>

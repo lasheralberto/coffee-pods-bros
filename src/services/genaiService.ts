@@ -10,6 +10,7 @@ import type {
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 const QUIZ_TEXT_ANSWER_KEY = 1;
+const QUIZ_PLAN_ANSWER_KEY = 100;
 
 let aiInstance: GoogleGenAI | null = null;
 
@@ -46,7 +47,9 @@ function buildQuizSummary(answers: Record<number, string | string[]>): string {
     return highlights.join('. ');
   }
 
-  const fallback = Object.values(answers)
+  const fallback = Object.entries(answers)
+    .filter(([key]) => Number(key) !== QUIZ_PLAN_ANSWER_KEY)
+    .map(([, value]) => value)
     .flatMap((value) => (Array.isArray(value) ? value : [value]))
     .map((value) => (typeof value === 'string' ? value.trim() : ''))
     .filter((value) => value.length > 0);

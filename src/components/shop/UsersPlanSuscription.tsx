@@ -40,6 +40,7 @@ interface Plan {
   description: string;
   price: string;
   priceCents: string;
+  totalPrice: number;
   interval: string;
   badge: string;
   subscribeCta: string;
@@ -47,6 +48,7 @@ interface Plan {
   highlighted?: boolean;
   accentColor: string;
   glowColor: string;
+  numberOfProducts?: number;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -60,11 +62,13 @@ const DEFAULT_PLANS: Plan[] = [
     description: t('subs.explorerDesc'),
     price: '12',
     priceCents: '90',
+    totalPrice: 12.9,
     interval: t('subs.perMonth'),
     badge: t('subs.explorerBadge'),
     subscribeCta: t('subs.subscribeCta'),
     accentColor: C.leaf,
     glowColor: 'rgba(74, 94, 58, 0.18)',
+    numberOfProducts: 6,
     features: [
       t('subs.feat250g'),
       t('subs.featMonthly'),
@@ -78,11 +82,13 @@ const DEFAULT_PLANS: Plan[] = [
     description: t('subs.connoisseurDesc'),
     price: '19',
     priceCents: '90',
+    totalPrice: 19.9,
     interval: t('subs.perMonth'),
     badge: t('subs.connoisseurBadge'),
     subscribeCta: t('subs.subscribeCta'),
     accentColor: C.caramel,
     glowColor: 'rgba(196, 119, 59, 0.22)',
+    numberOfProducts: 6,
     features: [
       t('subs.feat500g'),
       t('subs.featBiweekly'),
@@ -98,11 +104,13 @@ const DEFAULT_PLANS: Plan[] = [
     description: t('subs.roasterDesc'),
     price: '29',
     priceCents: '90',
+    totalPrice: 29.9,
     interval: t('subs.perMonth'),
     badge: t('subs.roasterBadge'),
     subscribeCta: t('subs.subscribeCta'),
     accentColor: C.roast,
     glowColor: 'rgba(123, 45, 0, 0.18)',
+    numberOfProducts: 6,
     features: [
       t('subs.feat1kg'),
       t('subs.featBiweekly'),
@@ -173,9 +181,10 @@ const PlanCard: React.FC<{
   index: number;
   isSelected: boolean;
   onSelect: () => void;
+  onSubscribe: () => void;
   isMobile: boolean;
   reduceMotion: boolean;
-}> = ({ plan, index, isSelected, onSelect, isMobile, reduceMotion }) => {
+}> = ({ plan, index, isSelected, onSelect, onSubscribe, isMobile, reduceMotion }) => {
   const hl = !!plan.highlighted;
   const [popoverOpen, setPopoverOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -538,6 +547,10 @@ const PlanCard: React.FC<{
           <motion.button
             type="button"
             aria-label={`${plan.subscribeCta} ${plan.name}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSubscribe();
+            }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -747,9 +760,27 @@ const MobileDots: React.FC<{
 
 const CARD_GAP = 20;
 
-export const UsersPlanSuscription: React.FC = () => {
+function parsePlanTotalPrice(plan: Pick<Plan, 'totalPrice' | 'price' | 'priceCents'>): number {
+  if (Number.isFinite(plan.totalPrice) && plan.totalPrice > 0) {
+    return plan.totalPrice;
+  }
+
+  const parsed = Number.parseFloat(`${plan.price}.${plan.priceCents}`);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+interface UsersPlanSuscriptionProps {
+  forceShowPlans?: boolean;
+  showHeader?: boolean;
+}
+
+export const UsersPlanSuscription: React.FC<UsersPlanSuscriptionProps> = ({
+  forceShowPlans = false,
+  showHeader = true,
+}) => {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const authUser = useAuthStore(selectAuthUser);
+  const authActions = useAuthStore((state) => state.actions);
   const { actions } = useQuizStore();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(1);
@@ -768,6 +799,9 @@ export const UsersPlanSuscription: React.FC = () => {
         name:         p.name[l]         ?? p.name['es']         ?? '',
         description:  p.description[l]  ?? p.description['es']  ?? '',
         badge:        p.badge[l]        ?? p.badge['es']        ?? '',
+        totalPrice:   typeof p.totalPrice === 'number' && p.totalPrice > 0
+          ? p.totalPrice
+          : Number.parseFloat(`${p.price}.${p.priceCents}`),
         price:        p.price,
         priceCents:   p.priceCents,
         interval:     p.interval[l]     ?? p.interval['es']     ?? '',
@@ -776,6 +810,7 @@ export const UsersPlanSuscription: React.FC = () => {
         highlighted:  p.highlighted ?? false,
         accentColor:  p.accentColor,
         glowColor:    p.glowColor,
+        numberOfProducts: p.numberOfProducts ?? 6,
       }));
       setPlans(mapped);
     });
@@ -783,6 +818,7 @@ export const UsersPlanSuscription: React.FC = () => {
   }, []);
 
   const quizDone = isAuthenticated && authUser?.quizCompleted;
+  const shouldShowPlans = forceShowPlans || quizDone;
 
   const scrollTo = useCallback((idx: number) => {
     const el = scrollRef.current;
@@ -808,7 +844,25 @@ export const UsersPlanSuscription: React.FC = () => {
     setActiveIdx(closest);
   }, []);
 
-  if (!quizDone) {
+  const handleSubscribe = useCallback((plan: Plan) => {
+    setSelectedPlan(plan.id);
+    actions.setSubscriptionSelection({
+      id: plan.id,
+      name: plan.name,
+      totalPrice: parsePlanTotalPrice(plan),
+      numberOfProducts: plan.numberOfProducts ?? 6,
+    });
+
+    if (!isAuthenticated || !authUser?.uid) {
+      actions.requestResumeAfterAuth();
+      authActions.openAuth('login');
+      return;
+    }
+
+    actions.openQuiz();
+  }, [actions, authActions, authUser?.uid, isAuthenticated]);
+
+  if (!shouldShowPlans) {
     return <QuizCtaBanner onOpenQuiz={actions.openQuiz} isMobile={isMobile} reduceMotion={Boolean(reduceMotion)} />;
   }
 
@@ -820,60 +874,62 @@ export const UsersPlanSuscription: React.FC = () => {
       transition={{ duration: 0.4 }}
     >
       {/* Section header */}
-      <motion.div
-        style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 48 }}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: [0.23, 1, 0.32, 1] }}
-      >
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            marginBottom: 16,
-            fontSize: 10,
-            fontWeight: 700,
-            fontFamily: FONT.body,
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-            background: 'rgba(196,119,59,0.12)',
-            color: C.caramel,
-            padding: '6px 12px',
-            borderRadius: 999,
-            border: '1px solid rgba(196,119,59,0.2)',
-          }}
+      {showHeader && (
+        <motion.div
+          style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 48 }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: [0.23, 1, 0.32, 1] }}
         >
-          <Sparkles size={10} />
-          {t('subs.recBadge')}
-        </span>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 16,
+              fontSize: 10,
+              fontWeight: 700,
+              fontFamily: FONT.body,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              background: 'rgba(196,119,59,0.12)',
+              color: C.caramel,
+              padding: '6px 12px',
+              borderRadius: 999,
+              border: '1px solid rgba(196,119,59,0.2)',
+            }}
+          >
+            <Sparkles size={10} />
+            {t('subs.recBadge')}
+          </span>
 
-        <h2
-          style={{
-            fontFamily: FONT.display,
-            fontSize: 'clamp(2rem, 5vw, 2.75rem)',
-            fontWeight: 700,
-            color: C.espresso,
-            lineHeight: 1.05,
-            marginBottom: 12,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {t('subs.recHeading')}
-        </h2>
+          <h2
+            style={{
+              fontFamily: FONT.display,
+              fontSize: 'clamp(2rem, 5vw, 2.75rem)',
+              fontWeight: 700,
+              color: C.espresso,
+              lineHeight: 1.05,
+              marginBottom: 12,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {t('subs.recHeading')}
+          </h2>
 
-        <p
-          style={{
-            fontSize: 14,
-            color: C.stone,
-            maxWidth: 360,
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}
-        >
-          {t('subs.recSubheading')}
-        </p>
-      </motion.div>
+          <p
+            style={{
+              fontSize: 14,
+              color: C.stone,
+              maxWidth: 360,
+              margin: '0 auto',
+              lineHeight: 1.6,
+            }}
+          >
+            {t('subs.recSubheading')}
+          </p>
+        </motion.div>
+      )}
 
       {/* Plan grid / carousel */}
       <div
@@ -913,6 +969,7 @@ export const UsersPlanSuscription: React.FC = () => {
               index={i}
               isSelected={selectedPlan === plan.id}
               onSelect={() => setSelectedPlan(plan.id)}
+              onSubscribe={() => handleSubscribe(plan)}
               isMobile={isMobile}
               reduceMotion={Boolean(reduceMotion)}
             />

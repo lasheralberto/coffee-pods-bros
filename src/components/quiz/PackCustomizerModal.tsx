@@ -31,6 +31,15 @@ interface PackCustomizerModalProps {
   maxProducts?: number;
   /** Fixed plan price — when set, displayed instead of the computed product total */
   planPrice?: number;
+  planId?: string | null;
+  initialItems?: PackItem[];
+  preferInitialItems?: boolean;
+  suggestedProductIds?: string[];
+  title?: string;
+  subtitle?: string;
+  embedded?: boolean;
+  hideCloseButton?: boolean;
+  onSaved?: () => void;
 }
 
 function catalogToLocal(doc: ProductCatalogFirestore): LocalProfile {
@@ -45,43 +54,90 @@ function catalogToLocal(doc: ProductCatalogFirestore): LocalProfile {
   };
 }
 
-export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, onClose, uid, maxProducts, planPrice }) => {
+function packItemsToMap(items: PackItem[] | undefined): Record<string, number> {
+  if (!items?.length) return {};
+
+  return items.reduce<Record<string, number>>((acc, item) => {
+    acc[item.productId] = item.quantity;
+    return acc;
+  }, {});
+}
+
+export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
+  open,
+  onClose,
+  uid,
+  maxProducts,
+  planPrice,
+  planId,
+  initialItems,
+  preferInitialItems = false,
+  suggestedProductIds,
+  title,
+  subtitle,
+  embedded = false,
+  hideCloseButton = false,
+  onSaved,
+}) => {
   const [profiles, setProfiles] = useState<LocalProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [pack, setPack] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [numberOfProducts, setNumberOfProducts] = useState<number>(0);
+  const [resolvedPlanPrice, setResolvedPlanPrice] = useState<number | null>(planPrice ?? null);
+  const [resolvedPlanId, setResolvedPlanId] = useState<string | null>(planId ?? null);
 
   /* Fetch all products + existing pack + plan limit on open */
   useEffect(() => {
-    if (!open) return;
+    if (!embedded && !open) return;
     let cancelled = false;
     setLoadingProfiles(true);
     setSaved(false);
     Promise.all([getProductsCatalog(), getUserPack(uid), getSubscriptionPlans()])
       .then(([docs, existingPack, plans]) => {
         if (cancelled) return;
-        setProfiles(docs.map(catalogToLocal));
-        if (existingPack && existingPack.items.length > 0) {
-          const initial: Record<string, number> = {};
-          existingPack.items.forEach((item) => { initial[item.productId] = item.quantity; });
-          setPack(initial);
-        } else {
-          setPack({});
-        }
+        const suggestedIds = new Set(suggestedProductIds ?? []);
+        const nextProfiles = docs
+          .map(catalogToLocal)
+          .sort((left, right) => {
+            const leftSuggested = suggestedIds.has(left.id) ? 1 : 0;
+            const rightSuggested = suggestedIds.has(right.id) ? 1 : 0;
+            if (leftSuggested !== rightSuggested) return rightSuggested - leftSuggested;
+            return left.name.localeCompare(right.name, getLocale(), { sensitivity: 'base' });
+          });
+
+        setProfiles(nextProfiles);
+
+        const nextPack = preferInitialItems && initialItems?.length > 0
+          ? packItemsToMap(initialItems)
+          : existingPack && existingPack.items.length > 0
+            ? packItemsToMap(existingPack.items)
+            : packItemsToMap(initialItems);
+
+        setPack(nextPack);
+
+        const effectivePlanId = planId ?? existingPack?.planId ?? null;
+        const effectivePlanPrice = planPrice ?? existingPack?.planPrice ?? null;
+
+        setResolvedPlanId(effectivePlanId);
+        setResolvedPlanPrice(effectivePlanPrice);
+
         /* Resolve numberOfProducts: prop > highlighted plan > first plan */
         if (maxProducts && maxProducts > 0) {
           setNumberOfProducts(maxProducts);
         } else {
+          const selectedPlan = effectivePlanId
+            ? plans.find((p) => p.id === effectivePlanId)
+            : plans.find((p) => p.highlighted);
           const highlighted = plans.find((p) => p.highlighted);
-          const planLimit = highlighted?.numberOfProducts ?? plans[0]?.numberOfProducts ?? 0;
+          const planLimit = selectedPlan?.numberOfProducts ?? highlighted?.numberOfProducts ?? plans[0]?.numberOfProducts ?? 0;
           setNumberOfProducts(planLimit);
         }
       })
       .finally(() => { if (!cancelled) setLoadingProfiles(false); });
     return () => { cancelled = true; };
-  }, [open, uid, maxProducts]);
+  }, [embedded, initialItems, maxProducts, open, planId, planPrice, preferInitialItems, suggestedProductIds, uid]);
 
   const addItem = useCallback((id: string) => {
     setPack((prev) => {
@@ -121,15 +177,159 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
         price:     p.price,
         quantity:  pack[p.id],
       }));
-    const priceToSave = planPrice ?? totalPrice;
-    await saveUserPack(uid, items, priceToSave);
+    const effectivePlanPrice = resolvedPlanPrice ?? planPrice ?? null;
+    const priceToSave = effectivePlanPrice ?? totalPrice;
+    await saveUserPack(uid, items, priceToSave, null, resolvedPlanId ?? undefined, effectivePlanPrice ?? undefined);
     setSaving(false);
-    onClose();
+    setSaved(true);
+    onSaved?.();
+    if (!embedded) {
+      onClose();
+    }
   };
 
-  const displayPrice = planPrice != null
-    ? planPrice.toFixed(2).replace('.', ',') + '€'
+  const effectivePlanPrice = resolvedPlanPrice ?? planPrice;
+  const displayPrice = effectivePlanPrice != null
+    ? effectivePlanPrice.toFixed(2).replace('.', ',') + '€'
     : totalPrice.toFixed(2) + '€';
+
+  const headerTitle = title ?? t('pack.title');
+  const headerSubtitle = subtitle ?? t('pack.subtitle');
+
+  const content = (
+    <>
+      <div className="pack-modal__header">
+        <div>
+          <h2 className="pack-modal__title">{headerTitle}</h2>
+          <p className="pack-modal__subtitle">{headerSubtitle}</p>
+          {numberOfProducts > 0 && (
+            <div className={`pack-modal__counter ${isPackComplete ? 'pack-modal__counter--complete' : ''}`}>
+              <span className="pack-modal__counter-text">
+                {itemCount} / {numberOfProducts} {t('pack.itemCounter')}
+              </span>
+              {isPackComplete && (
+                <span className="pack-modal__counter-check">✓</span>
+              )}
+            </div>
+          )}
+        </div>
+        {!hideCloseButton && (embedded ? (
+          <button className="pack-modal__close-btn" aria-label="Close" onClick={onClose}>
+            <X size={20} className="text-muted" />
+          </button>
+        ) : (
+          <Dialog.Close asChild>
+            <button className="pack-modal__close-btn" aria-label="Close">
+              <X size={20} className="text-muted" />
+            </button>
+          </Dialog.Close>
+        ))}
+      </div>
+
+      <div className="pack-modal__list">
+        {loadingProfiles && (
+          <p className="pack-modal__loading">{t('pack.loadingProfiles')}</p>
+        )}
+
+        {!loadingProfiles && profiles.map((p) => {
+          const qty = pack[p.id] ?? 0;
+          const isSuggested = (suggestedProductIds ?? []).includes(p.id);
+
+          return (
+            <motion.div
+              key={p.id}
+              className={`pack-item ${qty > 0 ? 'pack-item--active' : ''} ${isSuggested ? 'pack-item--suggested' : ''}`}
+              layout
+            >
+              <img
+                src={p.image}
+                alt={p.name}
+                className="pack-item__img"
+              />
+              <div className="pack-item__info">
+                {isSuggested && (
+                  <span className="pack-item__badge">
+                    {t('quiz.suggestedCoffee')}
+                  </span>
+                )}
+                <span className="pack-item__name">{p.name}</span>
+                <span className="pack-item__origin">{p.brand}</span>
+                <span className="pack-item__price">
+                  {p.price.toFixed(2)}€ {t('pack.perUnit')}
+                </span>
+              </div>
+              <div className="pack-item__controls">
+                {qty > 0 && (
+                  <button
+                    className="pack-item__btn pack-item__btn--minus"
+                    onClick={() => removeItem(p.id)}
+                    aria-label={t('pack.remove')}
+                  >
+                    <Minus size={14} />
+                  </button>
+                )}
+                {qty > 0 && (
+                  <span className="pack-item__qty">{qty}</span>
+                )}
+                <button
+                  className="pack-item__btn pack-item__btn--plus"
+                  onClick={() => addItem(p.id)}
+                  aria-label={t('pack.add')}
+                  disabled={isPackFull && qty === 0}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <div className="pack-modal__footer">
+        <div className="pack-modal__total">
+          <span className="pack-modal__total-label">
+            {effectivePlanPrice != null ? t('personalPack.planPrice') : t('pack.total')}
+          </span>
+          <span className="pack-modal__total-value">{displayPrice}</span>
+        </div>
+
+        {saved && (
+          <p className="pack-modal__saved">{t('pack.saved')}</p>
+        )}
+
+        {numberOfProducts > 0 && !isPackComplete && (
+          <p className="pack-modal__hint">
+            {t('pack.packIncomplete').replace('{n}', String(numberOfProducts))}
+          </p>
+        )}
+
+        {isPackFull && (
+          <p className="pack-modal__hint pack-modal__hint--success">
+            {t('pack.packComplete')}
+          </p>
+        )}
+
+        <Button
+          variant="primary"
+          size="md"
+          fullWidth
+          loading={saving}
+          disabled={saving || !isPackComplete}
+          onClick={handleSave}
+        >
+          {saving ? t('pack.saving') : t('pack.savePack')}
+        </Button>
+      </div>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="pack-modal pack-modal--embedded flex h-full min-h-0 flex-col">
+        {content}
+      </div>
+    );
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
@@ -155,122 +355,10 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({ open, 
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 >
                   <VisuallyHidden.Root>
-                    <Dialog.Title>{t('pack.title')}</Dialog.Title>
-                    <Dialog.Description>{t('pack.subtitle')}</Dialog.Description>
+                    <Dialog.Title>{headerTitle}</Dialog.Title>
+                    <Dialog.Description>{headerSubtitle}</Dialog.Description>
                   </VisuallyHidden.Root>
-
-                  {/* Header */}
-                  <div className="pack-modal__header">
-                    <div>
-                      <h2 className="pack-modal__title">{t('pack.title')}</h2>
-                      <p className="pack-modal__subtitle">{t('pack.subtitle')}</p>
-                      {numberOfProducts > 0 && (
-                        <div className={`pack-modal__counter ${isPackComplete ? 'pack-modal__counter--complete' : ''}`}>
-                          <span className="pack-modal__counter-text">
-                            {itemCount} / {numberOfProducts} {t('pack.itemCounter')}
-                          </span>
-                          {isPackComplete && (
-                            <span className="pack-modal__counter-check">✓</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <Dialog.Close asChild>
-                      <button className="pack-modal__close-btn" aria-label="Close">
-                        <X size={20} className="text-muted" />
-                      </button>
-                    </Dialog.Close>
-                  </div>
-
-                  {/* Profile cards */}
-                  <div className="pack-modal__list">
-                    {loadingProfiles && (
-                      <p className="pack-modal__loading">{t('pack.loadingProfiles')}</p>
-                    )}
-
-                    {!loadingProfiles && profiles.map((p) => {
-                      const qty = pack[p.id] ?? 0;
-                      return (
-                        <motion.div
-                          key={p.id}
-                          className={`pack-item ${qty > 0 ? 'pack-item--active' : ''}`}
-                          layout
-                        >
-                          <img
-                            src={p.image}
-                            alt={p.name}
-                            className="pack-item__img"
-                          />
-                          <div className="pack-item__info">
-                            <span className="pack-item__name">{p.name}</span>
-                            <span className="pack-item__origin">{p.brand}</span>
-                            <span className="pack-item__price">
-                              {p.price.toFixed(2)}€ {t('pack.perUnit')}
-                            </span>
-                          </div>
-                          <div className="pack-item__controls">
-                            {qty > 0 && (
-                              <button
-                                className="pack-item__btn pack-item__btn--minus"
-                                onClick={() => removeItem(p.id)}
-                                aria-label={t('pack.remove')}
-                              >
-                                <Minus size={14} />
-                              </button>
-                            )}
-                            {qty > 0 && (
-                              <span className="pack-item__qty">{qty}</span>
-                            )}
-                            <button
-                              className="pack-item__btn pack-item__btn--plus"
-                              onClick={() => addItem(p.id)}
-                              aria-label={t('pack.add')}
-                              disabled={isPackFull && qty === 0}
-                            >
-                              <Plus size={14} />
-                            </button>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Footer: total + save */}
-                  <div className="pack-modal__footer">
-                    <div className="pack-modal__total">
-                      <span className="pack-modal__total-label">
-                        {planPrice != null ? t('personalPack.planPrice') : t('pack.total')}
-                      </span>
-                      <span className="pack-modal__total-value">{displayPrice}</span>
-                    </div>
-
-                    {saved && (
-                      <p className="pack-modal__saved">{t('pack.saved')}</p>
-                    )}
-
-                    {numberOfProducts > 0 && !isPackComplete && (
-                      <p className="pack-modal__hint">
-                        {t('pack.packIncomplete').replace('{n}', String(numberOfProducts))}
-                      </p>
-                    )}
-
-                    {isPackFull && (
-                      <p className="pack-modal__hint pack-modal__hint--success">
-                        {t('pack.packComplete')}
-                      </p>
-                    )}
-
-                    <Button
-                      variant="primary"
-                      size="md"
-                      fullWidth
-                      loading={saving}
-                      disabled={saving || !isPackComplete}
-                      onClick={handleSave}
-                    >
-                      {saving ? t('pack.saving') : t('pack.savePack')}
-                    </Button>
-                  </div>
+                  {content}
                 </motion.div>
               </div>
             </Dialog.Content>

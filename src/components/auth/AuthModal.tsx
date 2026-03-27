@@ -31,10 +31,10 @@ type SignupData = z.infer<typeof signupSchema>;
 /* ── Login Form ──────────────────────────────────────────── */
 
 type LoginFormProps = {
-  onLoginSuccess: () => void;
+  onAuthSuccess: () => void;
 };
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onAuthSuccess }) => {
   const { isLoading, error, actions } = useAuthStore();
   const {
     register,
@@ -45,7 +45,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   const onSubmit = async (data: LoginData) => {
     const user = await actions.loginWithEmail(data.email, data.password);
     if (user) {
-      onLoginSuccess();
+      onAuthSuccess();
     }
   };
 
@@ -83,7 +83,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
 
 /* ── Signup Form ─────────────────────────────────────────── */
 
-const SignupForm: React.FC = () => {
+type SignupFormProps = {
+  onAuthSuccess: () => void;
+};
+
+const SignupForm: React.FC<SignupFormProps> = ({ onAuthSuccess }) => {
   const { isLoading, error, actions } = useAuthStore();
   const {
     register,
@@ -91,8 +95,11 @@ const SignupForm: React.FC = () => {
     formState: { errors },
   } = useForm<SignupData>();
 
-  const onSubmit = (data: SignupData) => {
-    actions.signupWithEmail(data.email, data.password, data.name);
+  const onSubmit = async (data: SignupData) => {
+    const user = await actions.signupWithEmail(data.email, data.password, data.name);
+    if (user) {
+      onAuthSuccess();
+    }
   };
 
   return (
@@ -139,21 +146,37 @@ const SignupForm: React.FC = () => {
 export const AuthModal: React.FC = () => {
   const { isOpen, view, actions } = useAuthStore();
   const quizActions = useQuizStore((s) => s.actions);
+  const resumeAfterAuth = useQuizStore((s) => s.resumeAfterAuth);
   const navigate = useNavigate();
 
   const prefersReduced = typeof window !== 'undefined'
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
 
+  const handleClose = () => {
+    quizActions.clearResumeAfterAuth();
+    actions.closeAuth();
+  };
+
+  const handleAuthSuccess = () => {
+    if (resumeAfterAuth) {
+      quizActions.clearResumeAfterAuth();
+      quizActions.openQuiz({ reset: false });
+      return;
+    }
+
+    navigate('/profile');
+  };
+
   const handleGoogleLogin = async () => {
     const user = await actions.loginWithGoogle();
     if (user) {
-      navigate('/profile');
+      handleAuthSuccess();
     }
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && actions.closeAuth()}>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <AnimatePresence>
         {isOpen && (
           <Dialog.Portal forceMount>
@@ -193,7 +216,7 @@ export const AuthModal: React.FC = () => {
                       {view === 'login' ? t('auth.loginSubtitle') : t('auth.signupSubtitle')}
                     </p>
                     <Dialog.Close asChild>
-                      <button className="auth-close-btn" aria-label="Close">
+                      <button className="auth-close-btn" aria-label="Close" onClick={handleClose}>
                         <X size={20} />
                       </button>
                     </Dialog.Close>
@@ -223,7 +246,9 @@ export const AuthModal: React.FC = () => {
                         exit={{ opacity: 0, x: view === 'login' ? 20 : -20 }}
                         transition={{ duration: 0.2 }}
                       >
-                        {view === 'login' ? <LoginForm onLoginSuccess={() => navigate('/profile')} /> : <SignupForm />}
+                        {view === 'login'
+                          ? <LoginForm onAuthSuccess={handleAuthSuccess} />
+                          : <SignupForm onAuthSuccess={handleAuthSuccess} />}
                       </motion.div>
                     </AnimatePresence>
 
@@ -233,14 +258,7 @@ export const AuthModal: React.FC = () => {
                       <button
                         type="button"
                         className="auth-switch-link"
-                        onClick={() => {
-                          if (view === 'login') {
-                            actions.closeAuth();
-                            quizActions.openQuiz();
-                            return;
-                          }
-                          actions.switchView('login');
-                        }}
+                        onClick={() => actions.switchView(view === 'login' ? 'signup' : 'login')}
                       >
                         {view === 'login' ? t('auth.goToSignup') : t('auth.goToLogin')}
                       </button>

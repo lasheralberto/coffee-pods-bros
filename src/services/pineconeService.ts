@@ -26,6 +26,7 @@ const EMBEDDING_MODEL  = 'llama-text-embed-v2';
 const NAMESPACE        = 'coffee-products';
 const MIN_SCORE        = 0.3;
 const QUIZ_TEXT_ANSWER_KEY = 1;
+const QUIZ_PLAN_ANSWER_KEY = 100;
 
 /* ── Helpers ─────────────────────────────────────────────── */
 
@@ -47,7 +48,9 @@ export function buildQueryText(answers: Record<number, string | string[]>): stri
     return highlights.join('. ');
   }
 
-  const fallbackParts = Object.values(answers)
+  const fallbackParts = Object.entries(answers)
+    .filter(([key]) => Number(key) !== QUIZ_PLAN_ANSWER_KEY)
+    .map(([, value]) => value)
     .flatMap((value) => (Array.isArray(value) ? value : [value]))
     .map((value) => (typeof value === 'string' ? value.trim() : ''))
     .filter((value) => value.length > 0);

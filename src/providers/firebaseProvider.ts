@@ -1264,6 +1264,8 @@ export interface UserSubscriptionDoc {
   mode: 'subscription' | 'oneTime';
   items: PackItem[];
   totalPrice: number;
+  planId?: string | null;
+  planPrice?: number | null;
   genaiDescription?: string | null;
   subscribedAt: unknown;
   updatedAt: unknown;
@@ -1371,6 +1373,8 @@ export async function saveUserSubscription(
     mode,
     items: pack.items,
     totalPrice: pack.planPrice ?? pack.totalPrice,
+    planId: pack.planId ?? null,
+    planPrice: pack.planPrice ?? pack.totalPrice,
     genaiDescription: pack.genaiDescription ?? null,
     subscribedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

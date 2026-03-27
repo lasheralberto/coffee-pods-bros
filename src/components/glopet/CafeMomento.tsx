@@ -8,6 +8,7 @@ import { onProductsCatalog } from '../../providers/firebaseProvider';
 import { useAuthStore } from '../../stores/authStore';
 import { useQuizStore } from '../../stores/quizStore';
 import { Button } from '../ui/Button';
+import { PackCustomizerModal } from '../quiz/PackCustomizerModal';
 import { QuizAuthGate } from '../quiz/QuizAuthGate';
 
 const EASE_DEFAULT = [0.2, 0.65, 0.2, 1] as const;
@@ -20,7 +21,7 @@ export const CafeMomento: React.FC<CafeMomentoProps> = ({ surface = 'inline' }) 
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { currentStep, answers, result, packSaving, actions } = useQuizStore();
-  const { setAnswer, nextStep, prevStep, calculateResult, resetQuiz } = actions;
+  const { setAnswer, nextStep, prevStep, calculateResult, resetQuiz, closeQuiz } = actions;
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [isDesktopInline, setIsDesktopInline] = useState(() => (
     typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : false
@@ -59,12 +60,40 @@ export const CafeMomento: React.FC<CafeMomentoProps> = ({ surface = 'inline' }) 
     return formatter.format(new Date());
   }, []);
 
+  const suggestedProductIds = useMemo(() => {
+    if (!result) return [];
+
+    return [result.recommendedProduct.productId, ...result.alternatives.map((alternative) => alternative.productId)];
+  }, [result]);
+
+  const suggestedPackItems = useMemo(() => {
+    if (!result) return [];
+
+    const products = [result.recommendedProduct, ...result.alternatives];
+    const uniqueProducts = products.filter((product, index, allProducts) => (
+      allProducts.findIndex((candidate) => candidate.productId === product.productId) === index
+    ));
+
+    return uniqueProducts.map((product) => ({
+      productId: product.productId,
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      quantity: 1,
+    }));
+  }, [result]);
+
   const activeQuestion = QUIZ_QUESTIONS[currentStep] ?? null;
   const hasResult = !!result;
   const shouldExpandInline = !isModal && isDesktopInline && (currentStep > 0 || loading || hasStoredAnswers(answers) || hasResult);
 
   const handleRestart = () => {
     resetQuiz();
+  };
+
+  const handlePackSaved = () => {
+    closeQuiz();
+    navigate('/profile');
   };
 
   const handleSelect = async (questionId: number, optionId: string) => {
@@ -113,75 +142,23 @@ export const CafeMomento: React.FC<CafeMomentoProps> = ({ surface = 'inline' }) 
         </Button>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <div className="rounded-[28px] bg-[linear-gradient(150deg,rgba(250,246,239,0.95),rgba(244,236,223,0.84))] p-5 border border-[rgba(26,58,92,0.12)]">
-          <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)] mb-2">{result.timeContext}</p>
-          <h3 className="text-[1.55rem] sm:text-[1.9rem] leading-[1.08] font-semibold text-[var(--color-espresso)] mb-3">{result.headline}</h3>
-          <p className="text-[0.98rem] leading-relaxed text-[var(--text-secondary)] mb-5">{result.rationale}</p>
-
-          <div className="grid gap-4 md:grid-cols-[124px_minmax(0,1fr)] items-start">
-            <img
-              src={result.recommendedProduct.image}
-              alt={result.recommendedProduct.name}
-              className="h-40 w-full md:w-[124px] rounded-[24px] object-cover shadow-[0_16px_36px_rgba(28,20,16,0.14)]"
-            />
-            <div>
-              <p className="label-caps mb-1">{result.recommendedProduct.brand}</p>
-              <h4 className="text-[1.2rem] font-semibold text-primary mb-2">{result.recommendedProduct.name}</h4>
-              <p className="text-sm leading-relaxed text-muted mb-3">{result.recommendedProduct.description}</p>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-lg font-semibold text-primary">{result.recommendedProduct.price.toFixed(2)}€</span>
-                <span className="rounded-full bg-[rgba(196,118,58,0.1)] px-3 py-1 text-xs font-medium text-[var(--color-caramel)]">
-                  {result.recommendedProduct.roast}
-                </span>
-              </div>
-            </div>
-          </div>
+      {user?.uid ? (
+        <div className="rounded-[30px] border border-[rgba(28,20,16,0.08)] bg-[rgba(255,255,255,0.78)] p-5 sm:p-6 shadow-[0_18px_40px_rgba(28,20,16,0.08)]">
+          <PackCustomizerModal
+            open={isModal}
+            onClose={() => undefined}
+            uid={user.uid}
+            embedded
+            hideCloseButton
+            title={t('quiz.customizePackTitle')}
+            subtitle={t('quiz.customizePackSubtitle')}
+            initialItems={suggestedPackItems}
+            preferInitialItems
+            suggestedProductIds={suggestedProductIds}
+            onSaved={handlePackSaved}
+          />
         </div>
-
-        <div className="rounded-[28px] bg-[rgba(26,58,92,0.06)] p-5">
-          <p className="label-caps mb-2">{t(isModal ? 'quiz.ritual' : 'cafeMomento.ritual')}</p>
-          <p className="text-base font-semibold text-primary mb-3">{result.ritualTitle}</p>
-          <ol className="space-y-3 text-sm leading-relaxed text-muted">
-            {result.ritualSteps.map((step, index) => (
-              <li key={`${step}-${index}`} className="flex gap-3">
-                <span className="text-[var(--color-caramel)] font-semibold">0{index + 1}</span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
-
-          <div className="mt-5">
-            <Button variant="primary" onClick={() => navigate('/shop')} rightIcon={<ArrowRight size={16} />}>
-              {t('cafeMomento.cta')}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-5">
-        <p className="label-caps mb-3">{t(isModal ? 'quiz.alternatives' : 'cafeMomento.alternatives')}</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {result.alternatives.map((alternative, index) => (
-            <motion.div
-              key={alternative.productId}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: index * 0.05 }}
-              className="rounded-[24px] border border-[rgba(28,20,16,0.08)] bg-white/80 p-3"
-            >
-              <img
-                src={alternative.image}
-                alt={alternative.name}
-                className="h-36 w-full rounded-[20px] object-cover mb-3"
-              />
-              <p className="text-xs uppercase tracking-[0.16em] text-muted mb-1">{alternative.brand}</p>
-              <p className="text-sm font-semibold text-primary leading-snug mb-1">{alternative.name}</p>
-              <p className="text-xs text-muted">{alternative.price.toFixed(2)}€</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      ) : null}
 
       {isModal && !user && (
         <div className="mt-5 rounded-[24px] border border-[rgba(196,118,58,0.18)] bg-[rgba(255,255,255,0.72)] p-5">
