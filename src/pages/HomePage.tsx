@@ -1,48 +1,32 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Hero } from '../components/glopet/Hero';
-import { CafeMomento } from '../components/glopet/CafeMomento';
 import { Manifesto } from '../components/glopet/Manifesto';
 import { Product } from '../components/glopet/Product';
 import { Ritual } from '../components/glopet/Ritual';
 import { CallToAction } from '../components/glopet/CallToAction';
 import CoffeeLandingProducts from '../components/glopet/CoffeeLandingProducts';
 import { ChatFloatingContactUs } from '../components/glopet/ChatFloatingContactUs';
-import { WhyGlopet } from '../components/glopet/WhyGlopet';
-import { Testimonials } from '../components/glopet/Testimonials';
 
 interface HomePageProps {
   focusSectionId?: string;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
-  useEffect(() => {
-    if (!focusSectionId) {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-      return;
-    }
-
-    const frameId = window.requestAnimationFrame(() => {
-      const section = document.getElementById(focusSectionId);
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  React.useEffect(() => {
+    if (focusSectionId) {
+      const element = document.getElementById(focusSectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
       }
-    });
-
-    return () => window.cancelAnimationFrame(frameId);
+    }
   }, [focusSectionId]);
 
   return (
     <div className="glopet-page min-h-screen pb-6">
       <Hero />
-      <div className="hidden md:block">
-        <CafeMomento />
-      </div>
       <Manifesto />
       <CoffeeLandingProducts />
-      <WhyGlopet />
       <Product />
-      <Ritual />
-      <Testimonials />
       <CallToAction />
       <ChatFloatingContactUs />
     </div>
