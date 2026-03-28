@@ -20,6 +20,7 @@ import {
 import { UserSubscription } from '../components/shop/UserSubscription';
 import { ProfileChat } from '../components/profile/ProfileChat';
 import { AdminDashboard } from '../components/profile/AdminDashboard';
+import { PricingDemo } from '../components/ui/PricingDemo';
 import { t } from '../data/texts';
 
 const UserPurchasingHistory = React.lazy(async () => {
@@ -36,7 +37,7 @@ export const ProfilePage: React.FC = () => {
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
   const [quizData, setQuizData] = useState<QuizDoc | null>(null);
   const [purchases, setPurchases] = useState<PurchaseDoc[]>([]);
-  const [newPackOpen, setNewPackOpen] = useState(false);
+  const [subscriptionPlansOpen, setSubscriptionPlansOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -221,7 +222,7 @@ export const ProfilePage: React.FC = () => {
                       size="sm"
                       onClick={() => {
                         if (hasQuiz) {
-                          setNewPackOpen(true);
+                          setSubscriptionPlansOpen(true);
                           return;
                         }
                         quizActions.openQuiz();
@@ -239,43 +240,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1 }}
-                className="profile-overview-grid"
-              >
-                <article className="profile-overview-card">
-                  <div className="profile-overview-card__icon" aria-hidden="true">
-                    <ShoppingBag size={16} />
-                  </div>
-                  <p className="profile-overview-card__label">{t('purchase.historyHeading')}</p>
-                  <p className="profile-overview-card__value">{totalOrders}</p>
-                  <p className="profile-overview-card__meta">
-                    {totalItemsPurchased} {t('purchase.items')}
-                  </p>
-                </article>
-
-                <article className="profile-overview-card">
-                  <div className="profile-overview-card__icon" aria-hidden="true">
-                    <Package size={16} />
-                  </div>
-                  <p className="profile-overview-card__label">{t('profile.quizHeading')}</p>
-                  <p className="profile-overview-card__value">
-                    {hasQuiz ? t('profile.quizCompleted') : t('profile.quizNotCompleted')}
-                  </p>
-                  <p className="profile-overview-card__meta">{hasQuiz ? t('profile.refreshRecommendation') : t('profile.takeQuiz')}</p>
-                </article>
-
-                <article className="profile-overview-card">
-                  <div className="profile-overview-card__icon" aria-hidden="true">
-                    <CalendarClock size={16} />
-                  </div>
-                  <p className="profile-overview-card__label">{t('profile.memberSince')}</p>
-                  <p className="profile-overview-card__value">{memberSince || '-'}</p>
-                  <p className="profile-overview-card__meta">{membershipDays ? `${membershipDays} dias` : displayEmail}</p>
-                </article>
-              </motion.div>
+          
 
               {isAdmin ? (
                 <AdminDashboard uid={authUser!.uid} chatOpen={chatOpen} onChatOpenChange={setChatOpen} />
@@ -286,15 +251,21 @@ export const ProfilePage: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: 0.16 }}
                   >
-                    <UserSubscription uid={authUser!.uid} quizData={quizData} onNewPack={() => setNewPackOpen(true)} />
+                    <UserSubscription uid={authUser!.uid} quizData={quizData} onNewPack={() => setSubscriptionPlansOpen(true)} />
                   </motion.div>
 
                   <QuizUserCard
                     quizData={quizData}
                     onTakeQuiz={quizActions.openQuiz}
                     uid={authUser!.uid}
-                    open={newPackOpen}
-                    onClose={() => setNewPackOpen(false)}
+                    open={false}
+                    onClose={() => undefined}
+                  />
+
+                  <PricingDemo
+                    mode="modal"
+                    open={subscriptionPlansOpen}
+                    onClose={() => setSubscriptionPlansOpen(false)}
                   />
 
                   <motion.div

@@ -242,9 +242,7 @@ export const UserPurchasingHistory: React.FC<UserPurchasingHistoryProps> = ({ pu
   return (
     <section className="purchase-history">
       <div className="purchase-history__header">
-        <div className="purchase-history__header-icon" aria-hidden="true">
-          <Receipt size={16} />
-        </div>
+      
         <div className="purchase-history__header-meta">
           <h3 className="purchase-history__title">{t('purchase.historyHeading')}</h3>
           <p className="purchase-history__subtitle">

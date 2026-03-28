@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
-import { UsersPlanSuscription } from '../components/shop/UsersPlanSuscription';
+import { PricingDemo } from '../components/ui/PricingDemo';
 import { t } from '../data/texts';
 
 export const SubscriptionsPage: React.FC = () => {
@@ -16,7 +16,7 @@ export const SubscriptionsPage: React.FC = () => {
             {t('subscriptions.intro')}
           </motion.p>
           <motion.div variants={childVariants}>
-            <UsersPlanSuscription forceShowPlans showHeader={false} />
+            <PricingDemo />
           </motion.div>
         </Container>
       </Section>

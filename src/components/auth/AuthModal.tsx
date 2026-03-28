@@ -144,7 +144,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onAuthSuccess }) => {
 /* ── AuthModal ───────────────────────────────────────────── */
 
 export const AuthModal: React.FC = () => {
-  const { isOpen, view, actions } = useAuthStore();
+  const { isOpen, view, actions, suppressSuccessRedirect } = useAuthStore();
   const quizActions = useQuizStore((s) => s.actions);
   const resumeAfterAuth = useQuizStore((s) => s.resumeAfterAuth);
   const navigate = useNavigate();
@@ -162,6 +162,11 @@ export const AuthModal: React.FC = () => {
     if (resumeAfterAuth) {
       quizActions.clearResumeAfterAuth();
       quizActions.openQuiz({ reset: false });
+      return;
+    }
+
+    if (suppressSuccessRedirect) {
+      actions.setSuppressSuccessRedirect(false);
       return;
     }
 

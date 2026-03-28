@@ -19,6 +19,7 @@ interface AuthStore {
   error:      string | null;
   isOpen:     boolean;
   view:       AuthView;
+  suppressSuccessRedirect: boolean;
 
   /* Actions */
   actions: {
@@ -30,6 +31,7 @@ interface AuthStore {
     loginWithGoogle:() => Promise<AuthUser | null>;
     logout:         () => Promise<void>;
     clearError:     () => void;
+    setSuppressSuccessRedirect: (suppress: boolean) => void;
   };
 }
 
@@ -41,6 +43,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   error:     null,
   isOpen:    false,
   view:      'login',
+  suppressSuccessRedirect: false,
 
   actions: {
     openAuth: (view = 'login') => set({ isOpen: true, view, error: null }),
@@ -89,6 +92,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     },
 
     clearError: () => set({ error: null }),
+    setSuppressSuccessRedirect: (suppress) => set({ suppressSuccessRedirect: suppress }),
   },
 }));
 
