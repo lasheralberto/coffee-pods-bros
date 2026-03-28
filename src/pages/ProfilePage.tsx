@@ -1,6 +1,8 @@
 import React, { Suspense, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { CalendarClock, LogOut, MessageSquare, Package, ShoppingBag, Sparkles } from 'lucide-react';
+import * as Dialog from '@radix-ui/react-dialog';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CalendarClock, LogOut, MessageSquare, Package, ShoppingBag, Sparkles, X } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
@@ -39,6 +41,7 @@ export const ProfilePage: React.FC = () => {
   const [purchases, setPurchases] = useState<PurchaseDoc[]>([]);
   const [subscriptionPlansOpen, setSubscriptionPlansOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [purchaseHistoryOpen, setPurchaseHistoryOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -217,6 +220,13 @@ export const ProfilePage: React.FC = () => {
                   )}
 
                   {!isAdmin && (
+                    <Button variant="secondary" size="sm" onClick={() => setPurchaseHistoryOpen(true)}>
+                      <ShoppingBag size={16} />
+                      {t('purchase.historyHeading')}
+                    </Button>
+                  )}
+
+                  {!isAdmin && (
                     <Button
                       variant="secondary"
                       size="sm"
@@ -268,15 +278,56 @@ export const ProfilePage: React.FC = () => {
                     onClose={() => setSubscriptionPlansOpen(false)}
                   />
 
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: 0.2 }}
-                  >
-                    <Suspense fallback={<div className="purchase-history__lazy-loader" aria-label={t('profile.loading')} />}>
-                      <UserPurchasingHistory purchases={purchases} />
-                    </Suspense>
-                  </motion.div>
+                  <Dialog.Root open={purchaseHistoryOpen} onOpenChange={setPurchaseHistoryOpen}>
+                    <AnimatePresence>
+                      {purchaseHistoryOpen && (
+                        <Dialog.Portal forceMount>
+                          <Dialog.Overlay asChild>
+                            <motion.div
+                              className="overlay backdrop-blur-sm"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            />
+                          </Dialog.Overlay>
+
+                          <Dialog.Content asChild>
+                            <div className="fixed inset-0 flex items-end sm:items-center justify-center z-modal pointer-events-none">
+                              <motion.div
+                                className="modal-panel purchase-history-modal pointer-events-auto flex flex-col"
+                                initial={{ y: isDesktop ? 24 : '100%', opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: isDesktop ? 24 : '100%', opacity: 0 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                              >
+                                <VisuallyHidden.Root>
+                                  <Dialog.Title>{t('purchase.historyHeading')}</Dialog.Title>
+                                  <Dialog.Description>{displayName}</Dialog.Description>
+                                </VisuallyHidden.Root>
+
+                                <div className="purchase-history-modal__header">
+                                  <h2 className="purchase-history-modal__title">{t('purchase.historyHeading')}</h2>
+                                  <Dialog.Close asChild>
+                                    <button className="purchase-history-modal__close" aria-label={t('purchase.close')}>
+                                      <X size={18} />
+                                    </button>
+                                  </Dialog.Close>
+                                </div>
+
+                                <div className="purchase-history-modal__body">
+                                  <Suspense
+                                    fallback={<div className="purchase-history__lazy-loader" aria-label={t('profile.loading')} />}
+                                  >
+                                    <UserPurchasingHistory purchases={purchases} />
+                                  </Suspense>
+                                </div>
+                              </motion.div>
+                            </div>
+                          </Dialog.Content>
+                        </Dialog.Portal>
+                      )}
+                    </AnimatePresence>
+                  </Dialog.Root>
 
                   <ProfileChat uid={authUser!.uid} open={chatOpen} onOpenChange={setChatOpen} />
                 </>
