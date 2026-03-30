@@ -49,13 +49,17 @@ export const Product: React.FC = () => {
             maskSize: 'cover',
           }}
         >
-          <img
-            src="/images/hero2.png"
-            alt="Mesa mediterranea con cafe y ceramica"
+          <video
             className="h-full w-full object-cover"
-            loading="eager"
-            decoding="async"
-          />
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            aria-label="Mesa mediterranea con cafe y ceramica"
+          >
+            <source src="/videos/hero2.mp4" type="video/mp4" />
+          </video>
         </div>
 
         {/* Cards flotando sobre la imagen */}
