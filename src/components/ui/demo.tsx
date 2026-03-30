@@ -1,5 +1,5 @@
-import { Component } from '@/components/ui/luma-spin';
+import { Accordion05 } from '@/components/ui/accordion-05';
 
 export default function DemoOne() {
-  return <Component />;
+  return <Accordion05 />;
 }

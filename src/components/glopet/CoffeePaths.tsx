@@ -31,6 +31,7 @@ const PATHS = [
     border: 'rgba(104,124,94,0.2)',
     icon: Compass,
     ctaLabel: 'Hacer quiz',
+    to: undefined,
   },
 ] as const;
 
@@ -40,7 +41,7 @@ export const CoffeePaths: React.FC = () => {
   const { actions } = useQuizStore();
 
   return (
-    <section id="elige-tu-camino" className="px-4 md:px-10 lg:px-16 mt-24">
+    <section id="elige-tu-camino" className="mt-14 px-4 md:mt-24 md:px-10 lg:px-16">
       <div className="max-w-[1160px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -55,15 +56,15 @@ export const CoffeePaths: React.FC = () => {
           >
             Elige tu camino
           </p>
-          <h2 className="mt-4 glopet-title text-[2.2rem] sm:text-[2.8rem] lg:text-[3.2rem] leading-[1.05]" style={{ color: 'var(--color-espresso)' }}>
+          <h2 className="mt-3 glopet-title text-[1.85rem] leading-[1.02] sm:mt-4 sm:text-[2.8rem] lg:text-[3.2rem]" style={{ color: 'var(--color-espresso)' }}>
             Tres formas simples de entrar en Glopet.
           </h2>
-          <p className="mt-4 max-w-[44ch] text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <p className="mt-3 max-w-[44ch] text-sm leading-relaxed sm:mt-4 sm:text-base" style={{ color: 'var(--text-secondary)' }}>
             Compra puntual, suscripcion flexible o recomendacion guiada. La home ahora explica con claridad por donde empezar.
           </p>
         </motion.div>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mt-10 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible lg:pb-0 lg:pr-0">
           {PATHS.map(({ title, text, accent, border, icon: Icon, ctaLabel, to }, index) => (
             <motion.div
               key={title}
@@ -71,7 +72,7 @@ export const CoffeePaths: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, ease: EASE, delay: index * 0.1 }}
-              className="flex h-full flex-col rounded-[2rem] border p-7 md:p-8"
+              className="flex min-h-[232px] w-[82vw] max-w-[320px] shrink-0 snap-start flex-col rounded-[1.4rem] border p-4 sm:min-h-[260px] sm:w-auto sm:max-w-none sm:rounded-[2rem] sm:p-7 md:p-8 lg:h-full"
               style={{
                 background: 'var(--bg-surface)',
                 borderColor: border,
@@ -79,35 +80,35 @@ export const CoffeePaths: React.FC = () => {
               }}
             >
               <div
-                className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                className="flex h-10 w-10 items-center justify-center rounded-xl sm:h-12 sm:w-12 sm:rounded-2xl"
                 style={{ background: accent, color: 'var(--color-espresso)' }}
               >
-                <Icon size={22} strokeWidth={1.8} />
+                <Icon size={20} strokeWidth={1.8} />
               </div>
-              <h3 className="mt-6 text-[1.45rem] leading-tight" style={{ color: 'var(--color-espresso)', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+              <h3 className="mt-4 text-[1.18rem] leading-[1.02] sm:mt-6 sm:text-[1.45rem]" style={{ color: 'var(--color-espresso)', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
                 {title}
               </h3>
-              <p className="mt-3 flex-1 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              <p className="mt-2.5 flex-1 text-[0.88rem] leading-relaxed sm:mt-3 sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {text}
               </p>
               {to ? (
                 <Button
                   as={RouterLink}
                   to={to}
-                  size="lg"
+                  size="sm"
                   radius="full"
-                  className="mt-7 w-fit bg-[#1a3a5c] px-6 text-[#faf6ef]"
-                  endContent={<ArrowRight size={16} />}
+                  className="mt-4 h-10 w-full bg-[#1a3a5c] px-4 text-[#faf6ef] sm:mt-7 sm:h-auto sm:w-fit sm:px-6"
+                  endContent={<ArrowRight size={15} />}
                 >
                   {ctaLabel}
                 </Button>
               ) : (
                 <Button
-                  size="lg"
+                  size="sm"
                   radius="full"
-                  className="mt-7 w-fit bg-[#c4763a] px-6 text-[#faf6ef]"
-                  endContent={<ArrowRight size={16} />}
-                  onPress={actions.openQuiz}
+                  className="mt-4 h-10 w-full bg-[#c4763a] px-4 text-[#faf6ef] sm:mt-7 sm:h-auto sm:w-fit sm:px-6"
+                  endContent={<ArrowRight size={15} />}
+                  onPress={() => actions.openQuiz()}
                 >
                   {ctaLabel}
                 </Button>
