@@ -1,6 +1,7 @@
 ﻿import { useRef, useState, useEffect, useMemo } from 'react';
 import { onProductsCatalog, type ProductCatalogFirestore } from '../../providers/firebaseProvider';
 import { getLocale } from '../../data/texts';
+import { useGlobalLoadingSync } from '../../hooks/useGlobalLoadingSync';
 import { ProductCard } from '../shop/ProductCard';
 import type { ShopProduct } from '../../data/shopProducts';
 import { useNavigate } from 'react-router-dom';
@@ -52,6 +53,8 @@ export default function CoffeeLandingProducts() {
   const [products, setProducts] = useState<ProductCatalogFirestore[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
+
+  useGlobalLoadingSync(loading);
 
   const cardW = CARD_W;
   const cardH = CARD_H;

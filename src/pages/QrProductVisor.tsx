@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useGlobalLoadingSync } from '../hooks/useGlobalLoadingSync';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Container } from '../components/ui/Container';
@@ -59,6 +60,8 @@ export const QrProductVisor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [selectedFormat, setSelectedFormat] = useState('');
+
+  useGlobalLoadingSync(loading);
 
   useEffect(() => {
     let alive = true;

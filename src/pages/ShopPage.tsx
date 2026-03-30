@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDownUp, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
+import { useGlobalLoadingSync } from '../hooks/useGlobalLoadingSync';
 import { Section } from '../components/ui/Section';
-import { Container } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
 import { FilterGroup } from '../components/shop/FilterGroup';
 import { ProductCard } from '../components/shop/ProductCard';
@@ -119,6 +119,8 @@ export const ShopPage: React.FC = () => {
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useGlobalLoadingSync(loading);
+
   /* Close sort dropdown on outside click */
   useEffect(() => {
     if (!sortOpen) return;
@@ -182,20 +184,37 @@ export const ShopPage: React.FC = () => {
   return (
     <PageTransition>
       <Section size="lg">
-        <Container size="xl">
-          <motion.h1 variants={childVariants} className="heading-display text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4">
-            {t('shop.heading')}
-          </motion.h1>
-          
-          <motion.p variants={childVariants} className="body-lg max-w-3xl mb-10 md:mb-12 lg:mb-14">
-            {t('shop.description')}
-          </motion.p>
-      <div className="h-[var(--space-6)]" />
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14">
+          <div className="mb-10 border-b border-border-color/70 pb-8 md:mb-12 lg:mb-14 lg:pb-10">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between xl:gap-10">
+              <div className="max-w-3xl">
+                <motion.h1 variants={childVariants} className="heading-display text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4">
+                  {t('shop.heading')}
+                </motion.h1>
+
+                <motion.p variants={childVariants} className="body-lg text-balance">
+                  {t('shop.description')}
+                </motion.p>
+              </div>
+
+              <motion.div variants={childVariants} className="flex shrink-0 items-center xl:justify-end">
+                <Button
+                  variant={activeCount > 0 ? 'accent' : 'secondary'}
+                  size="md"
+                  onClick={clearFilters}
+                  disabled={activeCount === 0}
+                  className="!min-w-[180px]"
+                >
+                  {t('shop.clearAllFilters')}
+                </Button>
+              </motion.div>
+            </div>
+          </div>
 
           {/* <UsersPlanSuscription /> */}
 
-          <div className="flex flex-col lg:flex-row gap-9 lg:gap-14">
-            <aside className="hidden lg:block w-[232px] shrink-0">
+          <div className="flex flex-col gap-9 lg:flex-row lg:gap-12 xl:gap-16">
+            <aside className="hidden w-[232px] shrink-0 lg:block xl:w-[248px]">
               <FilterPanel {...panelProps} />
             </aside>
 
@@ -260,7 +279,7 @@ export const ShopPage: React.FC = () => {
                 <AnimatePresence mode="popLayout">
                   <motion.div
                     key={JSON.stringify(filters)}
-                    className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6 lg:gap-7"
+                    className="grid grid-cols-2 gap-5 md:grid-cols-3 md:gap-6 xl:grid-cols-4 2xl:grid-cols-5 lg:gap-7"
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
@@ -295,7 +314,7 @@ export const ShopPage: React.FC = () => {
               </aside>
             </div>
           )}
-        </Container>
+        </div>
       </Section>
     </PageTransition>
   );

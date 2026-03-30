@@ -7,6 +7,7 @@ import {
 } from '../providers/firebaseProvider';
 import { generateContextualCoffeeRecommendation } from '../services/genaiService';
 import type { ContextualCoffeeRecommendationSnapshot } from '../types/contextualCoffee';
+import type { SubscriptionPeriod } from '../lib/subscription';
 
 export const QUIZ_TEXT_ANSWER_KEY = 1;
 export const QUIZ_PLAN_ANSWER_KEY = 100;
@@ -15,6 +16,8 @@ interface PendingSubscriptionSelection {
   id: string;
   name: string;
   totalPrice: number;
+  basePrice?: number;
+  subscriptionPeriod?: SubscriptionPeriod;
   numberOfProducts?: number;
 }
 
@@ -70,11 +73,13 @@ function buildRecommendationAnswers(answers: Record<number, string | string[]>):
 
 async function persistSubscriptionSelection(uid: string, selection: PendingSubscriptionSelection): Promise<void> {
   const numberOfProducts = selection.numberOfProducts ?? 6;
+  const basePrice = selection.basePrice ?? selection.totalPrice;
+  const subscriptionPeriod = selection.subscriptionPeriod;
 
   try {
-    await selectPlanAndRegeneratePack(uid, selection.id, selection.totalPrice, numberOfProducts);
+    await selectPlanAndRegeneratePack(uid, selection.id, basePrice, numberOfProducts, subscriptionPeriod, selection.totalPrice);
   } catch {
-    await saveUserPack(uid, [], selection.totalPrice, null, selection.id, selection.totalPrice);
+    await saveUserPack(uid, [], selection.totalPrice, null, selection.id, basePrice, subscriptionPeriod);
   }
 }
 

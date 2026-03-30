@@ -7,10 +7,17 @@ import { PackCustomizerModal } from '../quiz/PackCustomizerModal'
 import { useAuthStore } from '../../stores/authStore'
 import { useQuizStore } from '../../stores/quizStore'
 import { Button } from './Button'
-import { getLocale } from '../../data/texts'
+import { getLocale, t } from '../../data/texts'
 import { onSubscriptionPlans, type SubscriptionPlanFirestore } from '../../providers/firebaseProvider'
 import { PricingContainer } from './PricingContainer'
 import type { PricingPlan } from './PricingContainer'
+import {
+  getAnnualEquivalentMonthlyPrice,
+  getSubscriptionCharge,
+  roundCurrency,
+  type SubscriptionPeriod,
+} from '../../lib/subscription'
+import { fmtPrice } from '../../data/shopProducts'
 
 const FALLBACK_PLANS: PricingPlan[] = [
   {
@@ -226,6 +233,7 @@ export function PricingDemo({ mode = 'inline', open = false, onClose }: PricingD
   const intlLocale = locale === 'es' ? 'es-ES' : 'en-US'
   const [plans, setPlans] = useState<PricingPlan[]>(FALLBACK_PLANS)
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null)
+  const [selectedPeriod, setSelectedPeriod] = useState<SubscriptionPeriod>('monthly')
   const [isChoiceModalOpen, setIsChoiceModalOpen] = useState(false)
   const [isPackCustomizerOpen, setIsPackCustomizerOpen] = useState(false)
   const [pendingAuthAction, setPendingAuthAction] = useState<SubscriptionFlowAction | null>(null)
@@ -254,10 +262,21 @@ export function PricingDemo({ mode = 'inline', open = false, onClose }: PricingD
     return FALLBACK_PLANS
   }, [plans])
 
+  const displayedPlans = useMemo(() => localizedFallback.map((plan) => ({
+    ...plan,
+    monthlyPrice: getSubscriptionCharge(plan.monthlyPrice, selectedPeriod),
+    priceBadgeNote: selectedPeriod === 'annual'
+      ? `${locale === 'es' ? 'Ahorra' : 'Save'} ${fmtPrice(roundCurrency(plan.monthlyPrice - getAnnualEquivalentMonthlyPrice(plan.monthlyPrice)))}/${locale === 'es' ? 'pack' : 'pack'}`
+      : undefined,
+    billingLabel: selectedPeriod === 'annual'
+      ? (locale === 'es' ? 'anual' : 'annual')
+      : plan.billingLabel,
+  })), [locale, localizedFallback, selectedPeriod])
+
   const handlePlanAction = useCallback((plan: PricingPlan) => {
-    setSelectedPlan(plan)
+    setSelectedPlan(localizedFallback.find((entry) => entry.id === plan.id) ?? plan)
     setIsChoiceModalOpen(true)
-  }, [])
+  }, [localizedFallback])
 
   const handleChooseFlow = useCallback((action: SubscriptionFlowAction) => {
     if (!selectedPlan) return
@@ -283,7 +302,9 @@ export function PricingDemo({ mode = 'inline', open = false, onClose }: PricingD
     quizActions.setSubscriptionSelection({
       id: selectedPlan.id,
       name: selectedPlan.name,
-      totalPrice: selectedPlan.monthlyPrice,
+      totalPrice: getSubscriptionCharge(selectedPlan.monthlyPrice, selectedPeriod),
+      basePrice: selectedPlan.monthlyPrice,
+      subscriptionPeriod: selectedPeriod,
       numberOfProducts: selectedPlan.numberOfProducts ?? 6,
     })
 
@@ -294,7 +315,7 @@ export function PricingDemo({ mode = 'inline', open = false, onClose }: PricingD
     }
 
     quizActions.openQuiz()
-  }, [authActions, authUser?.uid, mode, onClose, quizActions, selectedPlan])
+  }, [authActions, authUser?.uid, mode, onClose, quizActions, selectedPeriod, selectedPlan])
 
   useEffect(() => {
     if (pendingAuthAction !== 'products') return
@@ -318,15 +339,45 @@ export function PricingDemo({ mode = 'inline', open = false, onClose }: PricingD
   }, [])
 
   const pricingContent = (
-    <PricingContainer
-      title={locale === 'es' ? 'Elige tu plan ideal' : 'Choose your ideal plan'}
-      plans={localizedFallback}
-      showBillingToggle={false}
-      locale={intlLocale}
-      onPlanAction={handlePlanAction}
-      fullHeight={mode === 'inline'}
-      className={mode === 'modal' ? 'min-h-0' : ''}
-    />
+    <div className="relative">
+      <div className="sticky top-0 z-20 border-b border-[rgba(28,20,16,0.08)] bg-[rgba(255,248,239,0.94)] px-4 py-3 backdrop-blur-sm sm:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="label-caps">{t('userSubscription.duration')}</p>
+
+          <div className="grid gap-2 sm:min-w-[320px] sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setSelectedPeriod('monthly')}
+              className={`rounded-[16px] border px-3 py-2.5 text-center transition-all ${selectedPeriod === 'monthly'
+                ? 'border-[var(--color-espresso)] bg-[rgba(250,246,239,0.96)] shadow-[0_6px_14px_rgba(28,20,16,0.08)]'
+                : 'border-[rgba(28,20,16,0.08)] bg-white hover:border-[rgba(26,58,92,0.18)] hover:bg-[rgba(250,246,239,0.7)]'}`}
+            >
+              <p className="text-sm font-semibold text-primary">{t('userSubscription.periodMonthly')}</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedPeriod('annual')}
+              className={`rounded-[16px] border px-3 py-2.5 text-center transition-all ${selectedPeriod === 'annual'
+                ? 'border-[var(--color-roast)] bg-[rgba(123,45,0,0.05)] shadow-[0_6px_14px_rgba(28,20,16,0.08)]'
+                : 'border-[rgba(28,20,16,0.08)] bg-white hover:border-[rgba(123,45,0,0.18)] hover:bg-[rgba(250,246,239,0.7)]'}`}
+            >
+              <p className="text-sm font-semibold text-primary">{t('userSubscription.periodAnnual')}</p>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <PricingContainer
+        title={locale === 'es' ? 'Elige tu plan ideal' : 'Choose your ideal plan'}
+        plans={displayedPlans}
+        showBillingToggle={false}
+        locale={intlLocale}
+        onPlanAction={handlePlanAction}
+        fullHeight={mode === 'inline'}
+        className={mode === 'modal' ? 'min-h-0' : ''}
+      />
+    </div>
   )
 
   return (
@@ -400,6 +451,7 @@ export function PricingDemo({ mode = 'inline', open = false, onClose }: PricingD
           maxProducts={selectedPlan.numberOfProducts}
           planPrice={selectedPlan.monthlyPrice}
           planId={selectedPlan.id}
+          initialSubscriptionPeriod={selectedPeriod}
           title={locale === 'es' ? `Configura tu pack ${selectedPlan.name}` : `Build your ${selectedPlan.name} pack`}
           subtitle={locale === 'es' ? 'Añade productos de la tienda a tu suscripción.' : 'Add products from the shop to your subscription.'}
           onSaved={handlePackCustomizerClose}

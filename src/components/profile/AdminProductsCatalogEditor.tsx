@@ -5,6 +5,7 @@ import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown, Download, ExternalLink, Package, Plus, RefreshCw, X } from 'lucide-react';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
+import { useGlobalLoadingSync } from '../../hooks/useGlobalLoadingSync';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -78,6 +79,16 @@ export const AdminProductsCatalogEditor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const formatMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextFile = event.target.files?.[0] ?? null;
+    setImageFile(nextFile);
+    if (nextFile) {
+      setRemoveImage(false);
+    }
+  };
+
+  useGlobalLoadingSync(Boolean(loading || saving || deletingId || addingQrId || reindexing));
 
   useEffect(() => {
     const unsub = onProductsCatalog((items) => {
@@ -703,7 +714,10 @@ export const AdminProductsCatalogEditor: React.FC = () => {
                           className="input-base"
                           type="file"
                           accept="image/*"
-                          onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                          onClick={(e) => {
+                            e.currentTarget.value = '';
+                          }}
+                          onChange={handleImageChange}
                         />
                         {editingProductId && (
                           <label className="admin-catalog-sheet__checkbox-row">

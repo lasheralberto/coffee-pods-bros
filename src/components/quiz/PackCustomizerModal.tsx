@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { t, getLocale } from '../../data/texts';
+import { fmtPrice } from '../../data/shopProducts';
 import {
   getProductsCatalog,
   getUserPack,
@@ -14,6 +15,10 @@ import {
   type PackItem,
   type SubscriptionPlanFirestore,
 } from '../../providers/firebaseProvider';
+import {
+  getSubscriptionCharge,
+  type SubscriptionPeriod,
+} from '../../lib/subscription';
 
 interface LocalProfile {
   id: string;
@@ -41,6 +46,7 @@ interface PackCustomizerModalProps {
   embedded?: boolean;
   hideCloseButton?: boolean;
   showPlanSelection?: boolean;
+  initialSubscriptionPeriod?: SubscriptionPeriod | null;
   onSaved?: () => void;
 }
 
@@ -105,6 +111,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
   embedded = false,
   hideCloseButton = false,
   showPlanSelection = false,
+  initialSubscriptionPeriod = null,
   onSaved,
 }) => {
   const [profiles, setProfiles] = useState<LocalProfile[]>([]);
@@ -116,6 +123,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
   const [numberOfProducts, setNumberOfProducts] = useState<number>(0);
   const [resolvedPlanPrice, setResolvedPlanPrice] = useState<number | null>(planPrice ?? null);
   const [resolvedPlanId, setResolvedPlanId] = useState<string | null>(planId ?? null);
+  const [selectedPeriod, setSelectedPeriod] = useState<SubscriptionPeriod | null>(initialSubscriptionPeriod);
 
   /* Fetch all products + existing pack + plan limit on open */
   useEffect(() => {
@@ -149,6 +157,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
 
         const persistedPlanId = showPlanSelection ? null : existingPack?.planId ?? null;
         const persistedPlanPrice = showPlanSelection ? null : existingPack?.planPrice ?? null;
+        const persistedPeriod = showPlanSelection ? null : existingPack?.subscriptionPeriod ?? null;
         const effectivePlanId = planId ?? persistedPlanId;
         const selectedPlan = effectivePlanId
           ? plans.find((plan) => plan.id === effectivePlanId) ?? null
@@ -157,6 +166,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
 
         setResolvedPlanId(effectivePlanId);
         setResolvedPlanPrice(effectivePlanPrice);
+        setSelectedPeriod(initialSubscriptionPeriod ?? (persistedPeriod === 'annual' ? 'annual' : persistedPeriod === 'monthly' ? 'monthly' : null));
 
         /* Resolve numberOfProducts: prop > highlighted plan > first plan */
         if (maxProducts && maxProducts > 0) {
@@ -170,7 +180,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
       })
       .finally(() => { if (!cancelled) setLoadingProfiles(false); });
     return () => { cancelled = true; };
-  }, [embedded, initialItems, maxProducts, open, planId, planPrice, preferInitialItems, showPlanSelection, suggestedProductIds, uid]);
+  }, [embedded, initialItems, initialSubscriptionPeriod, maxProducts, open, planId, planPrice, preferInitialItems, showPlanSelection, suggestedProductIds, uid]);
 
   const handleSelectPlan = useCallback((plan: SubscriptionPlanFirestore) => {
     setResolvedPlanId(plan.id);
@@ -206,6 +216,12 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
   const hasSelectedPlan = !!resolvedPlanId;
   const isPackComplete = numberOfProducts > 0 ? itemCount === numberOfProducts : itemCount > 0;
   const isPackFull = numberOfProducts > 0 && itemCount >= numberOfProducts;
+  const effectiveBasePlanPrice = resolvedPlanPrice ?? planPrice ?? null;
+  const effectiveSubscriptionPeriod = selectedPeriod ?? undefined;
+  const effectivePlanCharge = effectiveBasePlanPrice != null
+    && selectedPeriod
+    ? getSubscriptionCharge(effectiveBasePlanPrice, selectedPeriod)
+    : null;
 
   const handleSave = async () => {
     setSaving(true);
@@ -218,9 +234,16 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
         price:     p.price,
         quantity:  pack[p.id],
       }));
-    const effectivePlanPrice = resolvedPlanPrice ?? planPrice ?? null;
-    const priceToSave = effectivePlanPrice ?? totalPrice;
-    await saveUserPack(uid, items, priceToSave, null, resolvedPlanId ?? undefined, effectivePlanPrice ?? undefined);
+    const priceToSave = effectivePlanCharge ?? effectiveBasePlanPrice ?? totalPrice;
+    await saveUserPack(
+      uid,
+      items,
+      priceToSave,
+      null,
+      resolvedPlanId ?? undefined,
+      effectiveBasePlanPrice ?? undefined,
+      effectiveSubscriptionPeriod,
+    );
     setSaving(false);
     setSaved(true);
     onSaved?.();
@@ -229,9 +252,8 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
     }
   };
 
-  const effectivePlanPrice = resolvedPlanPrice ?? planPrice;
-  const displayPrice = effectivePlanPrice != null
-    ? effectivePlanPrice.toFixed(2).replace('.', ',') + '€'
+  const displayPrice = (effectivePlanCharge ?? effectiveBasePlanPrice) != null
+    ? fmtPrice((effectivePlanCharge ?? effectiveBasePlanPrice) ?? 0)
     : totalPrice.toFixed(2) + '€';
 
   const headerTitle = title ?? t('pack.title');
@@ -369,7 +391,7 @@ export const PackCustomizerModal: React.FC<PackCustomizerModalProps> = ({
       <div className="pack-modal__footer">
         <div className="pack-modal__total">
           <span className="pack-modal__total-label">
-            {effectivePlanPrice != null ? t('personalPack.planPrice') : t('pack.total')}
+            {(effectivePlanCharge ?? effectiveBasePlanPrice) != null ? t('personalPack.planPrice') : t('pack.total')}
           </span>
           <span className="pack-modal__total-value">{displayPrice}</span>
         </div>

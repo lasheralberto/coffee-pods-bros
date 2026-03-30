@@ -13,6 +13,7 @@ export interface PricingPlan {
   name: string
   monthlyPrice: number
   yearlyPrice?: number
+  priceBadgeNote?: string
   features: string[]
   isPopular?: boolean
   accent: string
@@ -172,6 +173,7 @@ const PricingCard = ({
   const billingLabel = plan.billingLabel ?? (useBillingToggle ? (isYearly ? 'yr' : 'mo') : 'plan')
   const ctaLabel = plan.ctaLabel ?? 'GET STARTED →'
   const badgeLabel = plan.badgeLabel ?? (plan.isPopular ? 'POPULAR' : '')
+  const hasPriceBadgeNote = Boolean(plan.priceBadgeNote)
 
   return (
     <motion.div
@@ -205,9 +207,9 @@ const PricingCard = ({
       {/* Price Badge */}
       <motion.div
         className={cn(
-          `absolute -top-4 -right-4 w-16 h-16 
-                    rounded-full flex items-center justify-center border-2 border-[var(--color-espresso)]
+          `absolute -top-4 -right-4 flex min-h-[64px] min-w-[64px] items-center justify-center border-2 border-[var(--color-espresso)]
                     shadow-[3px_3px_0px_0px_rgba(28,20,16,0.9)]`
+          , hasPriceBadgeNote ? 'rounded-[22px] px-3 py-2' : 'w-16 h-16 rounded-full'
           , plan.accent)}
         style={accentStyle}
         animate={{
@@ -227,6 +229,11 @@ const PricingCard = ({
             <Counter from={previousPrice} to={currentPrice} locale={locale} precision={2} />
           </div>
           <div className="text-[10px] font-bold">/{billingLabel}</div>
+          {plan.priceBadgeNote ? (
+            <div className="mt-1 text-[9px] font-black uppercase leading-tight text-[rgba(255,255,255,0.92)]">
+              {plan.priceBadgeNote}
+            </div>
+          ) : null}
         </div>
       </motion.div>
 

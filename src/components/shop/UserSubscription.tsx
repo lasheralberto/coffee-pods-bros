@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { RefreshCw, ShoppingCart, Eye, FileText, Trash2 } from 'lucide-react';
+import { useGlobalLoadingSync } from '../../hooks/useGlobalLoadingSync';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -21,6 +22,7 @@ import {
 import { fmtPrice } from '../../data/shopProducts';
 import type { ShopProduct } from '../../data/shopProducts';
 import { t, getLocale } from '../../data/texts';
+import { getSubscriptionCharge } from '../../lib/subscription';
 import { ProductDetail } from './ProductDetail';
 import { formatRichText } from '../ui/TypewriterText';
 import { TypewriterText } from '../ui/TypewriterText';
@@ -148,24 +150,42 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
     && !!completedAtDate
     && Date.now() - completedAtDate.getTime() <= PACK_GENERATION_GRACE_MS;
   const isLoadingSubscriptionSection = loading || packLoading || waitingForFreshPack;
+  useGlobalLoadingSync(isLoadingSubscriptionSection || isDeletingDraft || isEndingSubscription);
   const draftPlanPrice = parsePositivePrice(draftPack?.planPrice);
   const draftTotalPrice = parsePositivePrice(draftPack?.totalPrice);
-  const resolvedDraftPrice = draftPack
+  const draftSubscriptionPeriod = draftPack?.subscriptionPeriod === 'annual' ? 'annual' : 'monthly';
+  const resolvedDraftBasePrice = draftPack
     ? (draftPlanPrice > 0
       ? draftPlanPrice
       : (draftTotalPrice > 0
         ? draftTotalPrice
         : (draftPack.planId ? planPriceById[draftPack.planId] : undefined) ?? 0))
     : 0;
+  const resolvedDraftChargePrice = draftPack
+    ? (draftTotalPrice > 0
+      ? draftTotalPrice
+      : (resolvedDraftBasePrice > 0
+        ? getSubscriptionCharge(resolvedDraftBasePrice, draftSubscriptionPeriod)
+        : 0))
+    : 0;
   const hasSelectedDraftPlan = !!draftPack?.planId;
-  const hasValidDraftPlanPrice = resolvedDraftPrice > 0;
+  const hasValidDraftPlanPrice = resolvedDraftBasePrice > 0 && resolvedDraftChargePrice > 0;
 
   const handleSubscribeDraftPack = useCallback(() => {
     if (!draftPack || draftPack.items.length === 0) return;
     if (!hasValidDraftPlanPrice) return;
 
     const doSubscribe = () => {
-      addBundle(draftPack.items, resolvedDraftPrice, 'subscription', uid, draftPack.planId, draftPack.planId);
+      addBundle(
+        draftPack.items,
+        resolvedDraftChargePrice,
+        'subscription',
+        uid,
+        draftPack.planId,
+        draftPack.planId,
+        draftSubscriptionPeriod,
+        resolvedDraftBasePrice,
+      );
     };
 
     if (sub) {
@@ -175,7 +195,7 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
     }
 
     doSubscribe();
-  }, [addBundle, draftPack, hasValidDraftPlanPrice, resolvedDraftPrice, sub, uid]);
+  }, [addBundle, draftPack, draftSubscriptionPeriod, hasValidDraftPlanPrice, resolvedDraftBasePrice, resolvedDraftChargePrice, sub, uid]);
 
   const closeChangeConfirm = useCallback(() => {
     setShowChangeConfirm(false);
@@ -247,10 +267,15 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
             {hasDraftPack && (
               <div className="mt-4 space-y-3">
                 {hasSelectedDraftPlan && hasValidDraftPlanPrice && (
-                  <div className="user-subscription__total justify-start">
-                    <span className="text-sm text-muted">{t('userSubscription.total')}</span>
-                    <span className="text-lg font-bold text-primary">{fmtPrice(resolvedDraftPrice)}</span>
-                  </div>
+                  <>
+                    <div className="user-subscription__total justify-start">
+                      <span className="text-sm text-muted">{t('userSubscription.total')}</span>
+                      <span className="text-lg font-bold text-primary">{fmtPrice(resolvedDraftChargePrice)}</span>
+                    </div>
+                    <span className="rounded-full bg-[rgba(240,232,216,0.85)] px-3 py-1 text-xs font-medium text-primary w-fit">
+                      {draftSubscriptionPeriod === 'annual' ? t('userSubscription.durationAnnual') : t('userSubscription.durationMonthly')}
+                    </span>
+                  </>
                 )}
                 <Button
                   variant="primary"
@@ -362,10 +387,15 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
                       <div className="user-subscription__footer user-subscription__footer--draft">
                         <div className="flex flex-col items-start gap-2">
                           {hasSelectedDraftPlan && hasValidDraftPlanPrice && (
-                            <div className="user-subscription__total justify-start">
-                              <span className="text-sm text-muted">{t('userSubscription.total')}</span>
-                              <span className="text-lg font-bold text-primary">{fmtPrice(resolvedDraftPrice)}</span>
-                            </div>
+                            <>
+                              <div className="user-subscription__total justify-start">
+                                <span className="text-sm text-muted">{t('userSubscription.total')}</span>
+                                <span className="text-lg font-bold text-primary">{fmtPrice(resolvedDraftChargePrice)}</span>
+                              </div>
+                              <span className="rounded-full bg-[rgba(240,232,216,0.85)] px-3 py-1 text-xs font-medium text-primary w-fit">
+                                {draftSubscriptionPeriod === 'annual' ? t('userSubscription.durationAnnual') : t('userSubscription.durationMonthly')}
+                              </span>
+                            </>
                           )}
                         </div>
                         <div className="user-subscription__draft-actions">
@@ -447,6 +477,13 @@ export const UserSubscription: React.FC<UserSubscriptionProps> = ({ uid, quizDat
                   <div className="user-subscription__meta">
                     <span className="text-xs text-muted">
                       {t('userSubscription.subscribedAt')} {formatDate(sub.subscribedAt)}
+                    </span>
+                    <span className="text-xs text-muted">
+                      {t('userSubscription.duration')} {' '}
+                      {sub.suscriptionPeriod === 'annual' ? t('userSubscription.durationAnnual') : t('userSubscription.durationMonthly')}
+                    </span>
+                    <span className="text-xs text-muted">
+                      {t('userSubscription.endsOn')} {formatDate(sub.suscriptionEndsOn)}
                     </span>
                   </div>
                   <div className="flex flex-col items-end gap-2">

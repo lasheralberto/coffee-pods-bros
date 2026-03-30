@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CalendarClock, LogOut, MessageSquare, Package, ShoppingBag, Sparkles, X } from 'lucide-react';
+import { useGlobalLoadingSync } from '../hooks/useGlobalLoadingSync';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
 import { Button } from '../components/ui/Button';
@@ -46,6 +47,8 @@ export const ProfilePage: React.FC = () => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useGlobalLoadingSync(loading);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -333,7 +336,7 @@ export const ProfilePage: React.FC = () => {
                 </>
               )}
 
-              <p className="profile-footer-note">{t('chat.title')}</p>
+ 
             </div>
           )}
         </Container>

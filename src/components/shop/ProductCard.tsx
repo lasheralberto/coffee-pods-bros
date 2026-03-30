@@ -39,6 +39,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { actions } = useCartStore();
   const [detailOpen, setDetailOpen] = useState(false);
+  const hasImage = product.image.trim().length > 0;
 
   const openDetail = useCallback(() => setDetailOpen(true), []);
   const closeDetail = useCallback(() => setDetailOpen(false), []);
@@ -107,14 +108,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </Popover.Root>
         )}
         <div className="shop-product-card__image-wrap">
-          <img
-            src={product.image}
-            alt={product.name}
-            width={700}
-            height={875}
-            loading="lazy"
-            className="shop-product-card__image"
-          />
+          {hasImage ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              width={700}
+              height={875}
+              loading="lazy"
+              className="shop-product-card__image"
+            />
+          ) : null}
         </div>
       </div>
 

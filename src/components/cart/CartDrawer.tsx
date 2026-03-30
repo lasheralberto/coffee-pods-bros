@@ -75,6 +75,8 @@ export const CartDrawer: React.FC = () => {
         bundle?.bundleId,
         bundle?.suscriptionName,
         bundle?.suscriptionId,
+        bundle?.suscriptionPeriod,
+        bundle?.basePrice,
       );
 
       setCheckoutState('success');

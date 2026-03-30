@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Form, Input, Textarea, Button } from '@heroui/react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { useGlobalLoadingSync } from '../hooks/useGlobalLoadingSync';
 import { Section } from '../components/ui/Section';
 import { Container } from '../components/ui/Container';
 import { PageTransition, childVariants } from '../components/layout/PageTransition';
@@ -21,6 +22,8 @@ export const ContactPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
+  useGlobalLoadingSync(submitting);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

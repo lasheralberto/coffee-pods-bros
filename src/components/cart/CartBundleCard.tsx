@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Package, Trash2, RefreshCw, ShoppingCart } from 'lucide-react';
 import { useCartStore, type CartBundle } from '../../stores/cartStore';
 import { t } from '../../data/texts';
+import { fmtPrice } from '../../data/shopProducts';
+import { getSubscriptionSavings } from '../../lib/subscription';
 
 interface CartBundleCardProps {
   bundle: CartBundle;
@@ -13,6 +15,9 @@ const prefersReduced =
 
 export const CartBundleCard: React.FC<CartBundleCardProps> = ({ bundle }) => {
   const { actions } = useCartStore();
+  const annualSavings = bundle.mode === 'subscription' && bundle.suscriptionPeriod === 'annual' && bundle.basePrice
+    ? getSubscriptionSavings(bundle.basePrice, 'annual')
+    : 0;
 
   return (
     <motion.div
@@ -53,6 +58,19 @@ export const CartBundleCard: React.FC<CartBundleCardProps> = ({ bundle }) => {
         <span>{t('cart.bundleLabel')}</span>
       </div>
 
+      {bundle.mode === 'subscription' && bundle.suscriptionPeriod && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[rgba(240,232,216,0.85)] px-3 py-1 text-xs font-medium text-primary">
+            {bundle.suscriptionPeriod === 'annual' ? t('userSubscription.durationAnnual') : t('userSubscription.durationMonthly')}
+          </span>
+          {bundle.suscriptionPeriod === 'annual' && annualSavings > 0 && (
+            <span className="rounded-full bg-[rgba(123,45,0,0.12)] px-3 py-1 text-xs font-semibold text-[var(--color-roast)]">
+              {t('cart.annualSavings', { amount: fmtPrice(annualSavings) })}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Items inside bundle */}
       <div className="cart-bundle__items">
         {bundle.items.map((item) => (
@@ -86,7 +104,7 @@ export const CartBundleCard: React.FC<CartBundleCardProps> = ({ bundle }) => {
       {/* Bundle total */}
       <div className="cart-bundle__total">
         <span>{t('cart.bundleTotal')}</span>
-        <span className="cart-bundle__total-price">{bundle.totalPrice.toFixed(2)}€</span>
+        <span className="cart-bundle__total-price">{fmtPrice(bundle.totalPrice)}</span>
       </div>
     </motion.div>
   );

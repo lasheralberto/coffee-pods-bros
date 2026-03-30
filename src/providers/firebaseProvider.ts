@@ -32,6 +32,7 @@ import {
 import { ref, getDownloadURL, uploadBytes, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '../config/firebase';
 import type { ContextualCoffeeRecommendationSnapshot } from '../types/contextualCoffee';
+import { calculateSubscriptionEndDate, type SubscriptionPeriod } from '../lib/subscription';
 
 /* ── Types ───────────────────────────────────────────────── */
 
@@ -440,6 +441,8 @@ export interface UserPack {
   planId?: string | null;
   /** Fixed plan price (e.g. "19,90") derived from plan.price + plan.priceCents */
   planPrice?: number | null;
+  /** Selected billing term for the draft pack */
+  subscriptionPeriod?: SubscriptionPeriod | null;
   /** Pack lifecycle status: 'draft' until confirmed, 'complete' after checkout */
   status: 'draft' | 'complete';
   createdAt: unknown;
@@ -456,13 +459,13 @@ export async function saveUserPack(
   genaiDescription?: string | null,
   planId?: string | null,
   planPrice?: number | null,
+  subscriptionPeriod?: SubscriptionPeriod | null,
 ): Promise<void> {
   const packRef = doc(db, 'userPacks', uid);
-  const resolvedTotalPrice = planPrice != null ? planPrice : totalPrice;
   const data: Record<string, unknown> = {
     uid,
     items,
-    totalPrice: resolvedTotalPrice,
+    totalPrice,
     status: 'draft',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -475,6 +478,9 @@ export async function saveUserPack(
   }
   if (planPrice !== undefined) {
     data.planPrice = planPrice;
+  }
+  if (subscriptionPeriod !== undefined) {
+    data.subscriptionPeriod = subscriptionPeriod;
   }
   await setDoc(packRef, data, { merge: true });
 
@@ -517,6 +523,8 @@ export async function selectPlanAndRegeneratePack(
   planId: string,
   planPrice: number,
   numberOfProducts: number,
+  subscriptionPeriod?: SubscriptionPeriod,
+  totalPriceOverride?: number,
 ): Promise<void> {
   // 1. Get quiz answers
   const quizData = await getUserQuizData(uid);
@@ -541,9 +549,10 @@ export async function selectPlanAndRegeneratePack(
   await setDoc(packRef, {
     uid,
     items: packItems,
-    totalPrice: planPrice,
+    totalPrice: totalPriceOverride ?? planPrice,
     planId,
     planPrice,
+    subscriptionPeriod: subscriptionPeriod ?? null,
     genaiDescription: genaiDescription ?? null,
     status: 'draft',
     updatedAt: serverTimestamp(),
@@ -657,6 +666,31 @@ const isStoragePath = (value: string): boolean => {
   return !value.startsWith('http://') && !value.startsWith('https://');
 };
 
+const resolveProductCatalogStoragePath = (imageValue: string, imageStoragePath?: string | null): string | null => {
+  if (imageStoragePath?.trim()) {
+    return imageStoragePath.trim();
+  }
+
+  if (isStoragePath(imageValue)) {
+    return imageValue;
+  }
+
+  if (!imageValue.startsWith('http')) {
+    return null;
+  }
+
+  try {
+    const url = new URL(imageValue);
+    const encodedPath = url.pathname.split('/o/')[1];
+    if (!encodedPath) {
+      return null;
+    }
+    return decodeURIComponent(encodedPath);
+  } catch {
+    return null;
+  }
+};
+
 function normalizeCoffeeOriginCoordinates(value: unknown): ProductCatalogFirestore['coffeeOriginCoordinates'] {
   if (value instanceof GeoPoint) {
     return {
@@ -692,7 +726,7 @@ function normalizeCoffeeOriginCoordinates(value: unknown): ProductCatalogFiresto
 
 function normalizeProductCatalogDoc(id: string, data: ProductCatalogFirestoreRaw, resolvedImage: string): ProductCatalogFirestore {
   const rawImage = typeof data.image === 'string' ? data.image : '';
-  const fallbackStoragePath = isStoragePath(rawImage) ? rawImage : null;
+  const fallbackStoragePath = resolveProductCatalogStoragePath(rawImage, data.imageStoragePath);
   const qrId = typeof data.qrId === 'string' && data.qrId.trim().length > 0
     ? normalizeProductNameToQrRoute(data.qrId)
     : '';
@@ -766,8 +800,7 @@ function validateAdminProductPayload(payload: AdminProductCatalogPayload): void 
 
 function buildCatalogImageStoragePath(productId: string, fileName: string): string {
   const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_').toLowerCase();
-  const timestamp = Date.now();
-  return `${PRODUCT_CATALOG_STORAGE_PREFIX}/${productId}/${timestamp}_${sanitizedName}`;
+  return `${PRODUCT_CATALOG_STORAGE_PREFIX}/${productId}/${sanitizedName}`;
 }
 
 export function normalizeProductNameToQrRoute(name: string): string {
@@ -818,7 +851,8 @@ export async function getProductsCatalog(): Promise<ProductCatalogFirestore[]> {
   const products = await Promise.all(
     snap.docs.map(async (d) => {
       const data = d.data() as ProductCatalogFirestoreRaw;
-      const resolvedImage = await resolveStorageUrl(data.image ?? '');
+      const imageSource = data.imageStoragePath ?? data.image ?? '';
+      const resolvedImage = await resolveStorageUrl(imageSource);
       return normalizeProductCatalogDoc(d.id, data, resolvedImage ?? '');
     }),
   );
@@ -837,7 +871,8 @@ export async function getProductCatalogProductById(productId: string): Promise<P
   }
 
   const data = snap.data() as ProductCatalogFirestoreRaw;
-  const resolvedImage = await resolveStorageUrl(data.image ?? '');
+  const imageSource = data.imageStoragePath ?? data.image ?? '';
+  const resolvedImage = await resolveStorageUrl(imageSource);
   return normalizeProductCatalogDoc(snap.id, data, resolvedImage ?? '');
 }
 
@@ -1087,7 +1122,7 @@ export async function updateProductCatalogProduct(
     : normalizeProductNameToQrRoute(fallbackName);
   const qrId = normalizedCurrentQrId || normalizeProductNameToQrRoute(productId) || 'qr';
   const currentImageRaw = typeof currentData.image === 'string' ? currentData.image : '';
-  const currentStoragePath = currentData.imageStoragePath ?? (isStoragePath(currentImageRaw) ? currentImageRaw : null);
+  const currentStoragePath = resolveProductCatalogStoragePath(currentImageRaw, currentData.imageStoragePath);
 
   let nextImage = currentImageRaw;
   let nextStoragePath: string | null = currentStoragePath;
@@ -1158,7 +1193,7 @@ export async function deleteProductCatalogProduct(productId: string): Promise<vo
     : normalizeProductNameToQrRoute(fallbackName);
   const qrId = normalizedCurrentQrId || null;
   const imageRaw = typeof data.image === 'string' ? data.image : '';
-  const storagePath = data.imageStoragePath ?? (isStoragePath(imageRaw) ? imageRaw : null);
+  const storagePath = resolveProductCatalogStoragePath(imageRaw, data.imageStoragePath);
   if (storagePath) {
     await deleteObject(ref(storage, storagePath));
   }
@@ -1193,6 +1228,8 @@ export interface PurchaseDoc {
   bundleId?: string;
   suscriptionName?: string;
   suscriptionId?: string;
+  suscriptionPeriod?: SubscriptionPeriod | null;
+  suscriptionBasePrice?: number | null;
   totalPrice: number;
   status: 'completed' | 'pending' | 'cancelled';
   createdAt: unknown;
@@ -1212,6 +1249,8 @@ export async function savePurchase(
   bundleId?: string,
   suscriptionName?: string,
   suscriptionId?: string,
+  suscriptionPeriod?: SubscriptionPeriod,
+  suscriptionBasePrice?: number,
 ): Promise<string> {
   const colRef = collection(db, 'userPurchasesPacks');
   const docRef = await addDoc(colRef, {
@@ -1223,17 +1262,17 @@ export async function savePurchase(
     bundleId: bundleId ?? null,
     suscriptionName: suscriptionName ?? null,
     suscriptionId: suscriptionId ?? null,
+    suscriptionPeriod: suscriptionPeriod ?? null,
+    suscriptionBasePrice: suscriptionBasePrice ?? null,
     totalPrice,
     status: 'completed',
     createdAt: serverTimestamp(),
   });
 
-  // If this purchase includes a bundle with a bundleId (uid),
-  // save subscription, mark pack as complete, then delete from userPacks.
-  if (bundleId) {
-    await saveUserSubscription(uid, bundleId, bundleMode ?? 'oneTime');
+  // If this purchase includes a subscription bundle, save subscription data.
+  if (bundleId && bundleMode === 'subscription') {
+    await saveUserSubscription(uid, bundleId, bundleMode, bundleTotal ?? totalPrice, suscriptionPeriod ?? 'monthly');
     await confirmAndDeleteUserPack(bundleId);
-    // Update user doc subscription status so real-time listener fires
     const userRef = doc(db, 'users', uid);
     await updateDoc(userRef, { subscriptionStatus: 'active' });
   }
@@ -1266,6 +1305,8 @@ export interface UserSubscriptionDoc {
   totalPrice: number;
   planId?: string | null;
   planPrice?: number | null;
+  suscriptionPeriod?: SubscriptionPeriod | null;
+  suscriptionEndsOn?: unknown;
   genaiDescription?: string | null;
   subscribedAt: unknown;
   updatedAt: unknown;
@@ -1361,22 +1402,29 @@ export async function saveUserSubscription(
   uid: string,
   bundleId: string,
   mode: 'subscription' | 'oneTime',
+  totalPrice: number,
+  suscriptionPeriod: SubscriptionPeriod,
 ): Promise<void> {
   const packSnap = await getDoc(doc(db, 'userPacks', bundleId));
   if (!packSnap.exists()) return;
 
   const pack = packSnap.data() as UserPack;
   const subRef = doc(db, 'usersToSuscription', uid);
+  const subscribedAt = new Date();
+  const suscriptionEndsOn = calculateSubscriptionEndDate(subscribedAt, suscriptionPeriod);
+
   await setDoc(subRef, {
     uid,
     bundleId,
     mode,
     items: pack.items,
-    totalPrice: pack.planPrice ?? pack.totalPrice,
+    totalPrice,
     planId: pack.planId ?? null,
     planPrice: pack.planPrice ?? pack.totalPrice,
+    suscriptionPeriod,
+    suscriptionEndsOn,
     genaiDescription: pack.genaiDescription ?? null,
-    subscribedAt: serverTimestamp(),
+    subscribedAt,
     updatedAt: serverTimestamp(),
   });
 }
@@ -1387,6 +1435,9 @@ export async function saveUserSubscription(
 export async function deleteUserSubscription(uid: string): Promise<void> {
   const subRef = doc(db, 'usersToSuscription', uid);
   await deleteDoc(subRef);
+
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, { subscriptionStatus: 'none' });
 }
 
 /**
@@ -1487,7 +1538,8 @@ export function onProductsCatalog(
     const products = await Promise.all(
       snap.docs.map(async (d) => {
         const data = d.data() as ProductCatalogFirestoreRaw;
-        const resolvedImage = await resolveStorageUrl(data.image ?? '');
+        const imageSource = data.imageStoragePath ?? data.image ?? '';
+        const resolvedImage = await resolveStorageUrl(imageSource);
         return normalizeProductCatalogDoc(d.id, data, resolvedImage ?? '');
       }),
     );

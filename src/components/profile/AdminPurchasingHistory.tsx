@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Package, ShoppingBag, UserRound } from 'lucide-react';
+import { useGlobalLoadingSync } from '../../hooks/useGlobalLoadingSync';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
@@ -54,6 +55,8 @@ export const AdminPurchasingHistory: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useGlobalLoadingSync(loading || loadingMore);
 
   const loadInitialOrders = async () => {
     setLoading(true);

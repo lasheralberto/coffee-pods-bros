@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ShopProduct } from '../data/shopProducts';
 import type { PackItem } from '../providers/firebaseProvider';
+import type { SubscriptionPeriod } from '../lib/subscription';
 
 /* ── Tipos ── */
 
@@ -22,6 +23,8 @@ export interface CartBundle {
   bundleId?: string;
   suscriptionName?: string;
   suscriptionId?: string;
+  suscriptionPeriod?: SubscriptionPeriod;
+  basePrice?: number;
 }
 
 interface CartStore {
@@ -36,7 +39,7 @@ interface CartStore {
     openCart: () => void;
     closeCart: () => void;
     toggleCart: () => void;
-    addBundle: (items: PackItem[], totalPrice: number, mode: BundleMode, bundleId?: string, suscriptionName?: string, suscriptionId?: string) => void;
+    addBundle: (items: PackItem[], totalPrice: number, mode: BundleMode, bundleId?: string, suscriptionName?: string, suscriptionId?: string, suscriptionPeriod?: SubscriptionPeriod, basePrice?: number) => void;
     removeBundle: () => void;
   };
 }
@@ -114,10 +117,10 @@ export const useCartStore = create<CartStore>()(
         closeCart: () => set({ isOpen: false }),
         toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 
-        addBundle: (items, totalPrice, mode, bundleId, suscriptionName, suscriptionId) =>
+        addBundle: (items, totalPrice, mode, bundleId, suscriptionName, suscriptionId, suscriptionPeriod, basePrice) =>
           set({
             items: [],
-            bundle: { items, totalPrice, mode, bundleId, suscriptionName, suscriptionId },
+            bundle: { items, totalPrice, mode, bundleId, suscriptionName, suscriptionId, suscriptionPeriod, basePrice },
             isOpen: true,
           }),
 

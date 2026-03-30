@@ -19,6 +19,13 @@ import { TypewriterText } from '../ui/TypewriterText';
 import { ExpandableText } from '../ui/ExpandableText';
 import { SubscriptionChangeConfirmModal } from '../shop/SubscriptionChangeConfirmModal';
 import type { ShopProduct } from '../../data/shopProducts';
+import {
+  SUBSCRIPTION_ANNUAL_DISCOUNT_RATE,
+  getAnnualEquivalentMonthlyPrice,
+  getSubscriptionCharge,
+  getSubscriptionSavings,
+  type SubscriptionPeriod,
+} from '../../lib/subscription';
 
 interface QuizUserCardProps {
   quizData: QuizDoc | null;
@@ -52,6 +59,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const [existingSub, setExistingSub] = useState<UserSubscriptionDoc | null>(null);
   const [showChangeConfirm, setShowChangeConfirm] = useState(false);
   const [pendingSubscribe, setPendingSubscribe] = useState<(() => void) | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<SubscriptionPeriod>('monthly');
 
   const locale = getLocale();
 
@@ -205,6 +213,10 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
   const hasPlan = !!selectedPlan;
   const hasProducts = !!pack && pack.items.length > 0;
   const planPrice = selectedPlan ? getPlanPrice(selectedPlan) : 0;
+  const selectedPlanCharge = selectedPlan ? getSubscriptionCharge(planPrice, selectedPeriod) : 0;
+  const annualSavings = selectedPlan ? getSubscriptionSavings(planPrice, 'annual') : 0;
+  const annualEquivalentMonthlyPrice = selectedPlan ? getAnnualEquivalentMonthlyPrice(planPrice) : 0;
+  const annualDiscountPercent = Math.round(SUBSCRIPTION_ANNUAL_DISCOUNT_RATE * 100);
   const planNumberOfProducts = selectedPlan?.numberOfProducts ?? 0;
   const completedAt = quizData?.completedAt;
   const completedAtDate = completedAt && typeof completedAt === 'object' && 'toDate' in (completedAt as object)
@@ -216,6 +228,32 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
     && !existingSub
     && !!completedAtDate
     && Date.now() - completedAtDate.getTime() <= PACK_GENERATION_GRACE_MS;
+
+  const handleSubscribe = useCallback(() => {
+    if (!pack || !selectedPlan) return;
+
+    const doSubscribe = () => {
+      useCartStore.getState().actions.addBundle(
+        pack.items,
+        selectedPlanCharge,
+        'subscription',
+        uid,
+        selectedPlan.id,
+        selectedPlan.id,
+        selectedPeriod,
+        planPrice,
+      );
+      onClose();
+    };
+
+    if (existingSub) {
+      setPendingSubscribe(() => doSubscribe);
+      setShowChangeConfirm(true);
+      return;
+    }
+
+    doSubscribe();
+  }, [existingSub, onClose, pack, planPrice, selectedPeriod, selectedPlan, selectedPlanCharge, uid]);
 
   if (quizData.recommendation) {
     const recommendation = quizData.recommendation;
@@ -582,18 +620,7 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => {
-                      const doSubscribe = () => {
-                        useCartStore.getState().actions.addBundle(pack!.items, planPrice, 'subscription', uid, selectedPlan?.id, selectedPlan?.id);
-                        onClose();
-                      };
-                      if (existingSub) {
-                        setPendingSubscribe(() => doSubscribe);
-                        setShowChangeConfirm(true);
-                      } else {
-                        doSubscribe();
-                      }
-                    }}
+                    onClick={handleSubscribe}
                   >
                     <RefreshCw size={14} />
                     {t('personalPack.subscribeBtn')}
@@ -602,6 +629,69 @@ export const QuizUserCard: React.FC<QuizUserCardProps> = ({ quizData, onTakeQuiz
                 <Button variant="accent" size="sm" onClick={() => setPackModalOpen(true)}>
                   {hasProducts ? t('profile.customizePack') : t('personalPack.selectProducts')}
                 </Button>
+              </div>
+            </div>
+
+            <div className="sticky top-0 z-10 mb-4 rounded-[20px] border border-[rgba(28,20,16,0.08)] bg-[rgba(255,255,255,0.92)] p-3 shadow-[0_8px_18px_rgba(28,20,16,0.06)] backdrop-blur-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="label-caps mb-1">{t('userSubscription.duration')}</p>
+                  <p className="text-xs text-muted">{t('userSubscription.periodAnnualDiscount').replace('{percent}', String(annualDiscountPercent))}</p>
+                </div>
+
+                <div className="grid gap-2 sm:min-w-[340px] sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setSelectedPeriod('monthly')}
+                className={`rounded-[16px] border px-3 py-2.5 text-left transition-all ${selectedPeriod === 'monthly'
+                  ? 'border-[var(--color-espresso)] bg-[rgba(250,246,239,0.96)] shadow-[0_6px_14px_rgba(28,20,16,0.08)]'
+                  : 'border-[rgba(28,20,16,0.08)] bg-white hover:border-[rgba(26,58,92,0.18)] hover:bg-[rgba(250,246,239,0.7)]'}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-primary">{t('userSubscription.periodMonthly')}</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted">{t('userSubscription.periodMonthlyHint')}</p>
+                  </div>
+                  <span className="rounded-full bg-[rgba(240,232,216,0.85)] px-3 py-1 text-xs font-medium text-primary">
+                    {fmtPrice(getSubscriptionCharge(planPrice, 'monthly'))}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPeriod('annual')}
+                className={`rounded-[16px] border px-3 py-2.5 text-left transition-all ${selectedPeriod === 'annual'
+                  ? 'border-[var(--color-roast)] bg-[rgba(123,45,0,0.05)] shadow-[0_6px_14px_rgba(28,20,16,0.08)]'
+                  : 'border-[rgba(28,20,16,0.08)] bg-white hover:border-[rgba(123,45,0,0.18)] hover:bg-[rgba(250,246,239,0.7)]'}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-primary">{t('userSubscription.periodAnnual')}</p>
+                      <span className="rounded-full bg-[rgba(123,45,0,0.12)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-roast)]">
+                        {t('userSubscription.periodAnnualDiscount').replace('{percent}', String(annualDiscountPercent))}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                      {t('userSubscription.periodAnnualEquivalent').replace('{price}', fmtPrice(annualEquivalentMonthlyPrice))}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[rgba(123,45,0,0.08)] px-3 py-1 text-xs font-semibold text-[var(--color-roast)]">
+                    {fmtPrice(getSubscriptionCharge(planPrice, 'annual'))}
+                  </span>
+                </div>
+              </button>
+            </div>
+            </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[rgba(28,20,16,0.08)] pt-3">
+                <span className="text-xs text-muted">
+                  {selectedPeriod === 'annual'
+                    ? t('userSubscription.periodAnnualSavings').replace('{amount}', fmtPrice(annualSavings))
+                    : t('userSubscription.periodMonthlySummary').replace('{price}', fmtPrice(getSubscriptionCharge(planPrice, 'monthly')))}
+                </span>
+                <span className="text-sm font-semibold text-primary">{t('userSubscription.periodSelectionSummary')}: {fmtPrice(selectedPlanCharge)}</span>
               </div>
             </div>
 

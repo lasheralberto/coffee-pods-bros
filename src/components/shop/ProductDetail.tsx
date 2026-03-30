@@ -66,6 +66,7 @@ interface ProductDetailProps {
 export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose, onAddToCart }) => {
   const { actions } = useCartStore();
   const [selectedFormat, setSelectedFormat] = useState('');
+  const hasImage = product?.image?.trim().length > 0;
 
   useEffect(() => {
     if (!product) {
@@ -132,13 +133,15 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose, 
           >
             {/* Image column */}
             <div className="w-[45%] shrink-0 bg-surface p-6">
-              <img
-                src={product.image}
-                alt={product.name}
-                width={700}
-                height={875}
-                className="w-full h-full object-cover rounded-2xl"
-              />
+              {hasImage ? (
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  width={700}
+                  height={875}
+                  className="w-full h-full object-cover rounded-2xl"
+                />
+              ) : null}
             </div>
 
             {/* Content column */}
@@ -268,7 +271,10 @@ const ProductDetailContent: React.FC<ContentProps> = ({
   onFormatChange,
   onClose,
   onAdd,
-}) => (
+}) => {
+  const hasImage = product.image.trim().length > 0;
+
+  return (
   <>
     {/* Drag handle */}
     <div className="sticky top-0 z-10 flex justify-center pt-3 pb-2 bg-page rounded-t-3xl">
@@ -290,13 +296,15 @@ const ProductDetailContent: React.FC<ContentProps> = ({
     {/* Image */}
     <div className="px-5 mb-5">
       <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-surface">
-        <img
-          src={product.image}
-          alt={product.name}
-          width={700}
-          height={875}
-          className="w-full h-full object-cover"
-        />
+        {hasImage ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            width={700}
+            height={875}
+            className="w-full h-full object-cover"
+          />
+        ) : null}
       </div>
     </div>
 
@@ -388,4 +396,5 @@ const ProductDetailContent: React.FC<ContentProps> = ({
       </Button>
     </div>
   </>
-);
+  );
+};

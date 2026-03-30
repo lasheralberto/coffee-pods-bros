@@ -4,6 +4,7 @@ import { ArrowRight, RotateCcw, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QUIZ_QUESTIONS } from '../../data/quizQuestions';
 import { t } from '../../data/texts';
+import { useGlobalLoadingSync } from '../../hooks/useGlobalLoadingSync';
 import { onProductsCatalog } from '../../providers/firebaseProvider';
 import { useAuthStore } from '../../stores/authStore';
 import { QUIZ_PLAN_ANSWER_KEY, useQuizStore } from '../../stores/quizStore';
@@ -29,6 +30,8 @@ export const CafeMomento: React.FC<CafeMomentoProps> = ({ surface = 'inline' }) 
 
   const isModal = surface === 'modal';
   const loading = catalogLoading || packSaving;
+
+  useGlobalLoadingSync(loading);
 
   useEffect(() => {
     const unsub = onProductsCatalog((docs) => {
