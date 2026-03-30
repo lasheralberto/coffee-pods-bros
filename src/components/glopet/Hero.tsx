@@ -4,7 +4,7 @@ import { Button, Link } from '@heroui/react';
 import { Plus, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Link as RouterLink } from 'react-router-dom';
-import hero3Webm from '../../../assets/videos/hero3-webm.webm';
+import hero3Webm from '../../../assets/videos/hero3-webm.mp4';
 
 type HeroInfoSection = {
   id: string;
