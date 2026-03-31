@@ -5,6 +5,7 @@ import { useGlobalLoadingSync } from '../../hooks/useGlobalLoadingSync';
 import { ProductCard } from '../shop/ProductCard';
 import type { ShopProduct } from '../../data/shopProducts';
 import { useNavigate } from 'react-router-dom';
+import { ensureGsapPlugins, gsap, ScrollTrigger, useGSAP } from '../../lib/gsap';
 
 /* ── Constants ─────────────────────────────────────────── */
 
@@ -80,6 +81,10 @@ export default function CoffeeLandingProducts() {
   );
 
   const trackRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const introRef = useRef<HTMLParagraphElement>(null);
+
+  ensureGsapPlugins();
 
   const s = useRef({
     x: 0,
@@ -318,6 +323,100 @@ export default function CoffeeLandingProducts() {
     }
   };
 
+  useGSAP(
+    () => {
+      if (loading) {
+        return;
+      }
+
+      const mm = gsap.matchMedia();
+
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set('[data-landing-intro], [data-landing-shell], [data-landing-product-card], [data-landing-dots]', {
+          clearProps: 'all',
+          autoAlpha: 1,
+        });
+      });
+
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo(
+          '[data-landing-intro]',
+          { autoAlpha: 0, y: 22, letterSpacing: '0.28em' },
+          {
+            autoAlpha: 1,
+            y: 0,
+            letterSpacing: '0.22em',
+            duration: 0.9,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: introRef.current,
+              start: 'top 86%',
+              once: true,
+            },
+          },
+        );
+
+        gsap.fromTo(
+          '[data-landing-shell]',
+          { autoAlpha: 0, y: 38, scale: 0.985 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            duration: 1,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: '[data-landing-shell]',
+              start: 'top 82%',
+              once: true,
+            },
+          },
+        );
+
+        ScrollTrigger.batch('[data-landing-product-card]', {
+          start: 'top 88%',
+          once: true,
+          interval: 0.08,
+          batchMax: 6,
+          onEnter: (elements) => {
+            gsap.fromTo(
+              elements,
+              { autoAlpha: 0, y: 28, scale: 0.96 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.72,
+                stagger: 0.06,
+                ease: 'power3.out',
+                clearProps: 'transform',
+              },
+            );
+          },
+        });
+
+        gsap.fromTo(
+          '[data-landing-dots]',
+          { autoAlpha: 0, y: 16 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.6,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: '[data-landing-shell]',
+              start: 'top 78%',
+              once: true,
+            },
+          },
+        );
+      });
+
+      return () => mm.revert();
+    },
+    { dependencies: [loading, products.length], scope: sectionRef },
+  );
+
   if (loading) {
     return (
       <section className="py-16 overflow-hidden">
@@ -341,15 +440,17 @@ export default function CoffeeLandingProducts() {
   }
 
   return (
-    <section className="py-16 overflow-hidden select-none" style={{ background: 'var(--bg-page)' }}>
+    <section ref={sectionRef} className="py-16 overflow-hidden select-none" style={{ background: 'var(--bg-page)' }}>
       <p
+        ref={introRef}
+        data-landing-intro
         className="text-center tracking-[0.22em] uppercase text-xs font-light mb-10"
         style={{ fontFamily: 'var(--font-body)', color: 'var(--color-stone)' }}
       >
         Nuestra selección
       </p>
 
-      <div className="relative w-full overflow-hidden">
+      <div data-landing-shell className="relative w-full overflow-hidden">
         <div
           className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
           style={{ background: 'linear-gradient(to right, var(--bg-page), transparent)' }}
@@ -367,7 +468,7 @@ export default function CoffeeLandingProducts() {
           onClickCapture={onTrackClickCapture}
         >
           {allCards.map((product, i) => (
-            <div key={`${product.id}-${i}`} className="flex-none" style={{ width: cardW }}>
+            <div key={`${product.id}-${i}`} data-landing-product-card className="flex-none" style={{ width: cardW }}>
               <ProductCard
                 product={product}
                 onAddToCart={() => navigate('/shop')}
@@ -379,7 +480,7 @@ export default function CoffeeLandingProducts() {
         </div>
       </div>
 
-      <div className="flex justify-center gap-1.5 mt-6">
+      <div data-landing-dots className="flex justify-center gap-1.5 mt-6">
         {products.map((_, i) => (
           <button
             key={i}

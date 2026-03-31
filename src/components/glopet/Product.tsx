@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Card, CardBody } from '@heroui/react';
+import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
 
 const highlights = [
   {
@@ -32,11 +32,102 @@ const maskImage = [
 ].join(', ');
 
 export const Product: React.FC = () => {
+  const sectionRef = React.useRef<HTMLElement | null>(null);
+  const mediaRef = React.useRef<HTMLDivElement | null>(null);
+
+  ensureGsapPlugins();
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add(
+        {
+          isDesktop: '(min-width: 1024px)',
+          reduceMotion: '(prefers-reduced-motion: reduce)',
+        },
+        (context) => {
+          const { isDesktop, reduceMotion } = context.conditions;
+
+          if (reduceMotion) {
+            gsap.set('[data-product-media], [data-product-card]', { clearProps: 'all', autoAlpha: 1 });
+            return;
+          }
+
+          gsap.fromTo(
+            '[data-product-media]',
+            { autoAlpha: 0, scale: 0.97, y: 36 },
+            {
+              autoAlpha: 1,
+              scale: 1,
+              y: 0,
+              duration: 1.05,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: mediaRef.current,
+                start: 'top 82%',
+                once: true,
+              },
+            },
+          );
+
+          gsap.fromTo(
+            '[data-product-card]',
+            { autoAlpha: 0, y: 34, rotate: (index) => (index % 2 === 0 ? -4 : 4), scale: 0.94 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              rotate: 0,
+              scale: 1,
+              duration: 0.85,
+              stagger: 0.13,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: mediaRef.current,
+                start: 'top 76%',
+                once: true,
+              },
+            },
+          );
+
+          gsap.to('[data-product-media]', {
+            yPercent: isDesktop ? 10 : 5,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 1.1,
+            },
+          });
+
+          gsap.utils.toArray<HTMLElement>('[data-product-card]').forEach((card, index) => {
+            gsap.to(card, {
+              yPercent: index % 2 === 0 ? -10 : -5,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: sectionRef.current,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: 1.2 + index * 0.2,
+              },
+            });
+          });
+        },
+      );
+
+      return () => mm.revert();
+    },
+    { scope: sectionRef },
+  );
+
   return (
-    <section id="cafe" className="mt-20">
+    <section ref={sectionRef} id="cafe" className="mt-20">
       <div className="relative mx-4 md:mx-10 lg:mx-16">
         {/* Imagen con bordes difuminados */}
         <div
+          ref={mediaRef}
+          data-product-media
           className="w-full h-[340px] sm:h-[420px] lg:h-[500px] overflow-hidden"
           style={{
             maskImage,
@@ -64,15 +155,11 @@ export const Product: React.FC = () => {
 
         {/* Cards flotando sobre la imagen */}
         {highlights.map((item) => (
-          <motion.div
+          <div
             key={item.title}
+            data-product-card
             className="absolute"
             style={{ ...item.position, rotate: item.rotate }}
-            initial={{ opacity: 0, y: 18, scale: 0.9 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.75, ease: [0.2, 0.65, 0.2, 1], delay: item.delay }}
-            whileHover={{ scale: 1.04, rotate: '0deg', transition: { duration: 0.2 } }}
           >
             <Card
               className="border border-[#d8c7a5] bg-[#faf6ef]/88 backdrop-blur-md shadow-xl w-[155px] sm:w-[190px]"
@@ -83,7 +170,7 @@ export const Product: React.FC = () => {
                 <p className="mt-2 text-base glopet-title text-[#1c1410] leading-snug">{item.value}</p>
               </CardBody>
             </Card>
-          </motion.div>
+          </div>
         ))}
       </div>
     </section>

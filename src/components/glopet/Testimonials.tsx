@@ -1,7 +1,7 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { t } from '../../data/texts';
+import { ensureGsapPlugins, gsap, ScrollTrigger, useGSAP } from '../../lib/gsap';
 
 const REVIEWS = [
   { quoteKey: 'review1Quote', nameKey: 'review1Name', roleKey: 'review1Role', delay: 0 },
@@ -18,19 +18,75 @@ const Stars: React.FC = () => (
 );
 
 export const Testimonials: React.FC = () => {
+  const sectionRef = React.useRef<HTMLElement | null>(null);
+  const introRef = React.useRef<HTMLDivElement | null>(null);
+
+  ensureGsapPlugins();
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set('[data-testimonial-intro] > *, [data-testimonial-card]', { clearProps: 'all', autoAlpha: 1 });
+      });
+
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo(
+          '[data-testimonial-intro] > *',
+          { autoAlpha: 0, y: 20 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.85,
+            stagger: 0.12,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: introRef.current,
+              start: 'top 84%',
+              once: true,
+            },
+          },
+        );
+
+        ScrollTrigger.batch('[data-testimonial-card]', {
+          start: 'top 84%',
+          once: true,
+          onEnter: (elements) => {
+            gsap.fromTo(
+              elements,
+              { autoAlpha: 0, y: 34, scale: 0.96 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.82,
+                stagger: 0.12,
+                ease: 'power3.out',
+                clearProps: 'transform',
+              },
+            );
+          },
+        });
+      });
+
+      return () => mm.revert();
+    },
+    { scope: sectionRef },
+  );
+
   return (
     <section
+      ref={sectionRef}
       id="testimonios"
       className="mt-20 px-4 md:px-10 lg:px-16 py-20"
       style={{ background: 'var(--bg-page)' }}
     >
       <div className="max-w-[1160px] mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: [0.2, 0.65, 0.2, 1] }}
+        <div
+          ref={introRef}
+          data-testimonial-intro
           className="text-center mb-14"
         >
           <p
@@ -45,17 +101,14 @@ export const Testimonials: React.FC = () => {
           >
             {t('testimonials.heading')}
           </h2>
-        </motion.div>
+        </div>
 
         {/* Reviews grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-          {REVIEWS.map(({ quoteKey, nameKey, roleKey, delay }) => (
-            <motion.div
+          {REVIEWS.map(({ quoteKey, nameKey, roleKey }) => (
+            <div
               key={quoteKey}
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, ease: [0.2, 0.65, 0.2, 1], delay }}
+              data-testimonial-card
               className="relative flex flex-col rounded-[1.75rem] p-7 border"
               style={{
                 background: 'var(--bg-surface)',
@@ -112,7 +165,7 @@ export const Testimonials: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

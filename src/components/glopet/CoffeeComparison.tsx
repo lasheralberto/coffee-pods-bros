@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
+import React from 'react';
 import { Check, Minus } from 'lucide-react';
+import { ensureGsapPlugins, gsap, ScrollTrigger, useGSAP } from '../../lib/gsap';
 
 type ComparisonRow = {
   label: string;
@@ -26,53 +26,20 @@ const ROWS: readonly ComparisonRow[] = [
   },
 ] as const;
 
-const EASE = [0.2, 0.65, 0.2, 1] as const;
-
 const ComparisonCard: React.FC<ComparisonRow & { index: number }> = ({
   label,
   generic,
   glopet,
   index,
 }) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start 0.92', 'start 0.48'],
-  });
-
-  const opacity = useSpring(useTransform(scrollYProgress, [0, 1], [0.22, 1]), {
-    stiffness: 180,
-    damping: 24,
-    mass: 0.5,
-  });
-  const y = useSpring(useTransform(scrollYProgress, [0, 1], [72 + index * 10, 0]), {
-    stiffness: 150,
-    damping: 22,
-    mass: 0.55,
-  });
-  const scale = useSpring(useTransform(scrollYProgress, [0, 1], [0.92, 1]), {
-    stiffness: 180,
-    damping: 24,
-    mass: 0.55,
-  });
-  const rotateX = useSpring(useTransform(scrollYProgress, [0, 1], [10, 0]), {
-    stiffness: 170,
-    damping: 22,
-    mass: 0.45,
-  });
-  const innerParallax = useSpring(useTransform(scrollYProgress, [0, 1], [24, -10]), {
-    stiffness: 130,
-    damping: 20,
-    mass: 0.45,
-  });
-
   return (
-    <motion.div
-      ref={ref}
-      style={{ opacity, y, scale, rotateX, transformPerspective: 1200 }}
+    <div
+      data-comparison-card
+      data-comparison-index={index}
       className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/6 backdrop-blur-sm will-change-transform"
+      style={{ transformPerspective: '1200px' }}
     >
-      <motion.div style={{ y: innerParallax }} className="will-change-transform">
+      <div data-comparison-card-inner className="will-change-transform">
         <div className="border-b border-white/10 px-4 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#e8d5b0] sm:px-5">
           {label}
         </div>
@@ -96,20 +63,109 @@ const ComparisonCard: React.FC<ComparisonRow & { index: number }> = ({
             </div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
 export const CoffeeComparison: React.FC = () => {
+  const sectionRef = React.useRef<HTMLElement | null>(null);
+  const introRef = React.useRef<HTMLDivElement | null>(null);
+
+  ensureGsapPlugins();
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set('[data-comparison-intro] > *, [data-comparison-card], [data-comparison-card-inner]', {
+          clearProps: 'all',
+          autoAlpha: 1,
+        });
+      });
+
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo(
+          '[data-comparison-intro] > *',
+          { autoAlpha: 0, y: 24 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.9,
+            stagger: 0.12,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: introRef.current,
+              start: 'top 82%',
+              once: true,
+            },
+          },
+        );
+
+        ScrollTrigger.batch('[data-comparison-card]', {
+          start: 'top 86%',
+          once: true,
+          onEnter: (elements) => {
+            gsap.fromTo(
+              elements,
+              {
+                autoAlpha: 0,
+                y: (index) => 68 + index * 10,
+                scale: 0.94,
+                rotateX: 12,
+                filter: 'blur(8px)',
+              },
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                rotateX: 0,
+                filter: 'blur(0px)',
+                duration: 0.95,
+                stagger: 0.12,
+                ease: 'power3.out',
+                clearProps: 'transform,filter',
+              },
+            );
+          },
+        });
+
+        gsap.utils.toArray<HTMLElement>('[data-comparison-card]').forEach((card, index) => {
+          const inner = card.querySelector<HTMLElement>('[data-comparison-card-inner]');
+
+          if (!inner) {
+            return;
+          }
+
+          gsap.fromTo(
+            inner,
+            { y: 22 + index * 3 },
+            {
+              y: -10,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: card,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: 1,
+              },
+            },
+          );
+        });
+      });
+
+      return () => mm.revert();
+    },
+    { scope: sectionRef },
+  );
+
   return (
-    <section id="comparativa" className="mt-14 px-4 md:mt-24 md:px-10 lg:px-16">
+    <section ref={sectionRef} id="comparativa" className="mt-14 px-4 md:mt-24 md:px-10 lg:px-16">
       <div className="mx-auto max-w-[1160px] rounded-[1.8rem] border px-5 py-6 md:rounded-[2.4rem] md:px-10 md:py-10" style={{ background: '#1a3a5c', borderColor: 'rgba(232,213,176,0.28)' }}>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: EASE }}
+        <div
+          ref={introRef}
+          data-comparison-intro
           className="max-w-[36rem]"
         >
           <p className="text-xs uppercase tracking-[0.24em] text-[#e8d5b0]">Por que cambiar</p>
@@ -119,7 +175,7 @@ export const CoffeeComparison: React.FC = () => {
           <p className="mt-3 max-w-[34rem] text-sm leading-relaxed text-[#e4d8c8] sm:text-base">
             Si buscas mejor sabor, mas criterio al elegir y una compra que se adapte a ti, aqui esta la diferencia.
           </p>
-        </motion.div>
+        </div>
 
         <div className="mt-6 grid gap-3 [perspective:1200px] md:mt-8 md:gap-4">
           {ROWS.map(({ label, generic, glopet }, index) => (

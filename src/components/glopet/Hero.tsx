@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@heroui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { GlopetFAQSection } from './GlopetFAQSection.tsx';
 import hero3Webm from '../../../assets/videos/hero3-webm.mp4';
+import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
 
 const HERO_VERTICAL_MASK_MOBILE =
   'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 1.5%, rgba(0,0,0,0.18) 3.5%, rgba(0,0,0,0.34) 6.5%, rgba(0,0,0,0.56) 10%, rgba(0,0,0,0.78) 14%, rgba(0,0,0,0.92) 18%, black 22%, black 97.5%, rgba(0,0,0,0.94) 99%, transparent 100%)';
@@ -13,8 +13,15 @@ const HERO_VERTICAL_MASK_DESKTOP =
 
 export const Hero: React.FC = () => {
   const [mobileHeroHeight, setMobileHeroHeight] = useState<number | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
   const heroContainerRef = useRef<HTMLDivElement | null>(null);
+  const mediaRef = useRef<HTMLDivElement | null>(null);
+  const copyRef = useRef<HTMLDivElement | null>(null);
+  const faqPanelRef = useRef<HTMLDivElement | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
   const isMobileViewport = mobileHeroHeight !== null;
+
+  ensureGsapPlugins();
 
   useEffect(() => {
     const updateMobileHeroHeight = () => {
@@ -51,8 +58,88 @@ export const Hero: React.FC = () => {
     };
   }, []);
 
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add(
+        {
+          isDesktop: '(min-width: 1024px)',
+          reduceMotion: '(prefers-reduced-motion: reduce)',
+        },
+        (context) => {
+          const { isDesktop, reduceMotion } = context.conditions;
+          const copyItems = copyRef.current ? Array.from(copyRef.current.children) : [];
+          const actionItems = actionsRef.current ? Array.from(actionsRef.current.children) : [];
+
+          if (reduceMotion) {
+            gsap.set([mediaRef.current, faqPanelRef.current, ...copyItems, ...actionItems], {
+              clearProps: 'all',
+              autoAlpha: 1,
+            });
+            return;
+          }
+
+          const intro = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+          intro
+            .fromTo(
+              mediaRef.current,
+              { autoAlpha: 0, scale: isDesktop ? 1.08 : 1.04, yPercent: -2 },
+              { autoAlpha: 1, scale: 1, yPercent: 0, duration: 1.35 },
+            )
+            .fromTo(
+              copyItems,
+              { autoAlpha: 0, y: 36 },
+              { autoAlpha: 1, y: 0, duration: 0.92, stagger: 0.12 },
+              0.2,
+            )
+            .fromTo(
+              actionItems,
+              { autoAlpha: 0, y: 28 },
+              { autoAlpha: 1, y: 0, duration: 0.78, stagger: 0.1 },
+              0.42,
+            )
+            .fromTo(
+              faqPanelRef.current,
+              { autoAlpha: 0, x: 40, rotate: 1.5 },
+              { autoAlpha: 1, x: 0, rotate: 0, duration: 1 },
+              0.28,
+            );
+
+          gsap.to(mediaRef.current, {
+            yPercent: isDesktop ? 10 : 6,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: rootRef.current,
+              start: 'top top',
+              end: 'bottom top',
+              scrub: 1.1,
+            },
+          });
+
+          if (faqPanelRef.current && isDesktop) {
+            gsap.to(faqPanelRef.current, {
+              yPercent: -8,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: rootRef.current,
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 1.4,
+              },
+            });
+          }
+        },
+      );
+
+      return () => mm.revert();
+    },
+    { scope: rootRef },
+  );
+
   return (
-    <header className="relative overflow-hidden px-4 pt-0 md:px-10 lg:px-16 -mt-6 md:-mt-8">
+    <header ref={rootRef} className="relative overflow-hidden px-4 pt-0 md:px-10 lg:px-16 -mt-6 md:-mt-8">
      
       {/* Hero stack: imagen de fondo + texto encima */}
       <div
@@ -62,10 +149,8 @@ export const Hero: React.FC = () => {
       >
 
         {/* Video de fondo con difuminado vertical */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.2, ease: [0.2, 0.65, 0.2, 1] }}
+        <div
+          ref={mediaRef}
           className="absolute inset-0 overflow-hidden"
           style={{
             maskImage: isMobileViewport
@@ -100,16 +185,14 @@ export const Hero: React.FC = () => {
           <div className="absolute inset-0 bg-[#07111a]/18 sm:bg-transparent" />
           {/* Difuminado inferior para suavizar el corte con el fondo de la página */}
           <div className="absolute inset-x-0 bottom-0 h-24 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/42 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
-        </motion.div>
+        </div>
 
         {/* Contenido sobre la imagen */}
         <div className="absolute inset-0 z-20 flex flex-col px-4 md:px-10 lg:px-16 py-8">
 
           {/* Texto — entra desde arriba, queda centrado verticalmente */}
-          <motion.div
-            initial={{ opacity: 0, y: -48 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.2, 0.65, 0.2, 1] }}
+          <div
+            ref={copyRef}
             className="flex-1 flex flex-col justify-center max-w-[1280px] mx-auto w-full"
           >
             <p className="uppercase tracking-[0.24em] text-xs text-white/90 mb-6">
@@ -127,12 +210,10 @@ export const Hero: React.FC = () => {
             >
               Glopet nace en tardes salinas y sobremesas que se alargan. Es un café para detenerse: lento, cálido y honesto, que invita a respirar sin prisa.
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 28 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.2, 0.65, 0.2, 1] }}
+          <div
+            ref={faqPanelRef}
             className="absolute bottom-4 z-30 hidden sm:block sm:left-6 sm:right-6 sm:bottom-6 lg:left-auto lg:right-4 xl:right-8 lg:top-8 lg:bottom-auto lg:w-[min(42vw,540px)]"
           >
             <div className="rounded-[28px] overflow-hidden border border-[#aec1d3] bg-gradient-to-br from-[#f8efe1]/94 via-[#f4f0ea]/92 to-[#dbe8f0]/88 backdrop-blur-[6px] shadow-[0_18px_55px_rgba(26,58,92,0.22)] ring-1 ring-white/45">
@@ -148,13 +229,11 @@ export const Hero: React.FC = () => {
                 />
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Botones — entran desde abajo, quedan en el fondo */}
-          <motion.div
-            initial={{ opacity: 0, y: 48 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.25, ease: [0.2, 0.65, 0.2, 1] }}
+          <div
+            ref={actionsRef}
             className="hidden max-w-[1280px] flex-wrap gap-3 absolute left-4 right-4 bottom-4 z-30 sm:flex sm:static sm:mx-auto sm:w-full sm:left-auto sm:right-auto sm:bottom-auto"
           >
             <Button
@@ -177,7 +256,7 @@ export const Hero: React.FC = () => {
             >
               Personaliza tu pack
             </Button>
-          </motion.div>
+          </div>
 
         </div>
       </div>
