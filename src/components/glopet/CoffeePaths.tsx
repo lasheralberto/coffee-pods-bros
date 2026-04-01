@@ -41,7 +41,32 @@ export const CoffeePaths: React.FC = () => {
   const sectionRef = React.useRef<HTMLElement | null>(null);
   const introRef = React.useRef<HTMLDivElement | null>(null);
   const desktopDeckRef = React.useRef<HTMLDivElement | null>(null);
+  const mobileDeckRef = React.useRef<HTMLDivElement | null>(null);
   const activePath = PATHS[activeIndex];
+
+  const renderIntro = React.useCallback(
+    (className: string, isDesktop = false) => (
+      <div
+        ref={isDesktop ? introRef : undefined}
+        data-path-intro
+        className={className}
+      >
+        <p
+          className="uppercase tracking-[0.24em] text-xs"
+          style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}
+        >
+          Elige tu camino
+        </p>
+        <h2 className="mt-2 glopet-title text-[1.85rem] leading-[1.02] sm:mt-3 sm:text-[2.55rem] lg:text-[2.9rem]" style={{ color: 'var(--color-espresso)' }}>
+          Tres formas simples de entrar en Glopet.
+        </h2>
+        <p className="mx-auto mt-3 max-w-[40ch] text-sm leading-relaxed sm:mt-3 sm:text-[0.98rem]" style={{ color: 'var(--text-secondary)' }}>
+          Compra puntual, suscripcion flexible o recomendacion guiada. La home ahora explica con claridad por donde empezar.
+        </p>
+      </div>
+    ),
+    [],
+  );
 
   const renderCard = React.useCallback(
     (
@@ -263,9 +288,10 @@ export const CoffeePaths: React.FC = () => {
 
             ScrollTrigger.create({
               trigger: desktopDeckRef.current,
-              start: 'top top+=96',
+              start: 'center center',
               end: () => `+=${cards.length * 260}`,
               pin: true,
+              anticipatePin: 1,
               scrub: false,
               snap: {
                 snapTo: cards.length > 1 ? 1 / (cards.length - 1) : 1,
@@ -283,82 +309,98 @@ export const CoffeePaths: React.FC = () => {
 
           if (mobile) {
             const mobileCards = gsap.utils.toArray<HTMLElement>('[data-path-mobile-card]');
-            const mobileSteps = gsap.utils.toArray<HTMLElement>('[data-path-mobile-step]');
 
-            const syncMobileActiveIndex = () => {
-              const viewportAnchor = window.innerHeight * 0.42;
-              let closestIndex = 0;
-              let closestDistance = Number.POSITIVE_INFINITY;
-
-              mobileSteps.forEach((step, index) => {
-                const bounds = step.getBoundingClientRect();
-                const center = bounds.top + bounds.height / 2;
-                const distance = Math.abs(center - viewportAnchor);
-
-                if (distance < closestDistance) {
-                  closestDistance = distance;
-                  closestIndex = index;
-                }
-              });
-
-              setActiveIndex((current) => (current === closestIndex ? current : closestIndex));
-            };
-
+            gsap.set('[data-path-mobile-deck-shell]', { autoAlpha: 1 });
             gsap.set(mobileCards, {
-              y: 24,
-              autoAlpha: 0.72,
-              scale: 0.97,
+              autoAlpha: 0,
+              yPercent: 26,
+              scale: 0.9,
+              rotate: (index) => (index % 2 === 0 ? -8 : 8),
+              zIndex: (index) => index + 1,
+              transformOrigin: '50% 100%',
+              pointerEvents: 'none',
             });
 
             gsap.set(mobileCards[0], {
-              y: 0,
               autoAlpha: 1,
+              yPercent: 0,
               scale: 1,
+              rotate: -2,
+              pointerEvents: 'auto',
             });
 
-            ScrollTrigger.create({
-              trigger: sectionRef.current,
-              start: 'top bottom',
-              end: 'bottom top',
-              onUpdate: syncMobileActiveIndex,
-              onRefresh: syncMobileActiveIndex,
-            });
+            let currentMobileIndex = 0;
 
-            mobileSteps.forEach((step, index) => {
-              const card = mobileCards[index];
-
-              if (!card) {
+            const showMobileCard = (nextIndex: number) => {
+              if (nextIndex === currentMobileIndex) {
                 return;
               }
 
-              ScrollTrigger.create({
-                trigger: step,
-                start: 'top center',
-                end: 'bottom center',
-                onToggle: (self) => {
-                  if (self.isActive) {
-                    setActiveIndex(index);
-                  }
-                },
-                onRefresh: syncMobileActiveIndex,
+              const previous = mobileCards[currentMobileIndex];
+              const next = mobileCards[nextIndex];
+
+              mobileCards.forEach((card, index) => {
+                card.style.pointerEvents = index === nextIndex ? 'auto' : 'none';
               });
 
-              gsap.fromTo(
-                card,
-                { y: 28, autoAlpha: 0.7, scale: 0.965 },
-                {
-                  y: 0,
-                  autoAlpha: 1,
-                  scale: 1,
-                  ease: 'power3.out',
-                  scrollTrigger: {
-                    trigger: step,
-                    start: 'top 76%',
-                    end: 'top 40%',
-                    scrub: 0.6,
+              const transition = gsap.timeline({ defaults: { duration: 0.42, ease: 'power2.out' } });
+
+              if (previous) {
+                transition.to(
+                  previous,
+                  {
+                    autoAlpha: 0,
+                    yPercent: -8,
+                    scale: 0.96,
+                    rotate: nextIndex > currentMobileIndex ? -3 : 3,
+                    overwrite: true,
                   },
-                },
-              );
+                  0,
+                );
+              }
+
+              if (next) {
+                transition.fromTo(
+                  next,
+                  {
+                    autoAlpha: 0,
+                    yPercent: nextIndex > currentMobileIndex ? 10 : -10,
+                    scale: 0.985,
+                    rotate: nextIndex % 2 === 0 ? -2 : 2,
+                  },
+                  {
+                    autoAlpha: 1,
+                    yPercent: 0,
+                    scale: 1,
+                    rotate: nextIndex % 2 === 0 ? -1 : 1,
+                    overwrite: true,
+                  },
+                  0.04,
+                );
+              }
+
+              currentMobileIndex = nextIndex;
+              setActiveIndex(nextIndex);
+            };
+
+            ScrollTrigger.create({
+              trigger: mobileDeckRef.current,
+              start: 'center center',
+              end: () => `+=${mobileCards.length * 260}`,
+              pin: true,
+              anticipatePin: 1,
+              scrub: false,
+              snap: {
+                snapTo: mobileCards.length > 1 ? 1 / (mobileCards.length - 1) : 1,
+                duration: { min: 0.12, max: 0.2 },
+                delay: 0,
+                ease: 'power1.out',
+              },
+              invalidateOnRefresh: true,
+              onUpdate: (self) => {
+                const nextIndex = Math.round(self.progress * (mobileCards.length - 1));
+                showMobileCard(nextIndex);
+              },
             });
           }
         },
@@ -372,50 +414,34 @@ export const CoffeePaths: React.FC = () => {
   return (
     <section ref={sectionRef} id="elige-tu-camino" className="mt-12 px-4 md:mt-18 md:px-10 lg:px-16">
       <div className="max-w-[1160px] mx-auto">
-        <div
-          ref={introRef}
-          data-path-intro
-          className="max-w-[38rem]"
-        >
-          <p
-            className="uppercase tracking-[0.24em] text-xs"
-            style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}
-          >
-            Elige tu camino
-          </p>
-          <h2 className="mt-2 glopet-title text-[1.85rem] leading-[1.02] sm:mt-3 sm:text-[2.55rem] lg:text-[2.9rem]" style={{ color: 'var(--color-espresso)' }}>
-            Tres formas simples de entrar en Glopet.
-          </h2>
-          <p className="mt-3 max-w-[40ch] text-sm leading-relaxed sm:mt-3 sm:text-[0.98rem]" style={{ color: 'var(--text-secondary)' }}>
-            Compra puntual, suscripcion flexible o recomendacion guiada. La home ahora explica con claridad por donde empezar.
-          </p>
-        </div>
-
-        <div className="mt-5 lg:hidden">
-          <div className="mt-3">
-            {PATHS.map((path, index) => (
-              <div key={path.title} data-path-mobile-step className="relative min-h-[44svh] py-1.5 first:pt-0 last:min-h-[48svh]">
-                <div className="sticky top-[88px]">
+        <div ref={mobileDeckRef} className="mt-4 lg:hidden">
+          <div className="mx-auto flex max-w-[760px] flex-col items-center gap-4 text-center">
+            {renderIntro('mx-auto max-w-[760px] text-center')}
+            <div data-path-mobile-deck-shell className="relative min-h-[250px] w-full">
+              {PATHS.map((path, index) => (
+                <div key={path.title} className="absolute inset-x-0 top-0 flex justify-center">
                   {renderCard(
                     path,
                     index,
-                    'flex min-h-[250px] flex-col rounded-[1.3rem] border p-4',
+                    'flex max-w-[760px] flex-col rounded-[1.3rem] border p-4',
                     'mt-4 h-10 w-full bg-[#1a3a5c] px-4.5 text-[#faf6ef]',
                     'data-path-mobile-card',
                   )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
         <div
           ref={desktopDeckRef}
-          className="relative mt-8 hidden lg:block"
+          className="relative mt-5 hidden lg:block"
         >
-          <div data-path-deck-shell className="relative min-h-[220px] xl:min-h-[240px]">
+          <div className="mx-auto flex max-w-[760px] flex-col items-center gap-4 text-center">
+            {renderIntro('mx-auto max-w-[760px] text-center', true)}
+            <div data-path-deck-shell className="relative min-h-[220px] w-full xl:min-h-[240px]">
             {PATHS.map((path, index) => (
-              <div key={path.title} className="absolute inset-x-0 top-0">
+              <div key={path.title} className="absolute inset-x-0 top-0 flex justify-center">
                 {renderCard(
                   path,
                   index,
@@ -425,6 +451,7 @@ export const CoffeePaths: React.FC = () => {
                 )}
               </div>
             ))}
+            </div>
           </div>
         </div>
 

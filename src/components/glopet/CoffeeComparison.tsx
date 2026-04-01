@@ -1,72 +1,85 @@
 import React from 'react';
-import { Check, Minus } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { ensureGsapPlugins, gsap, ScrollTrigger, useGSAP } from '../../lib/gsap';
 
 type ComparisonRow = {
-  label: string;
-  generic: string;
-  glopet: string;
+  painLabel: string;
+  genericStat: string;
+  genericDesc: string;
+  glopetStat: string;
+  glopetDesc: string;
 };
 
 const ROWS: readonly ComparisonRow[] = [
   {
-    label: 'Sabor plano',
-    generic: 'Cafe viejo o de rotacion larga que pierde aroma y expresion.',
-    glopet: 'Tueste reciente y una taza con mas definicion desde la molienda.',
+    painLabel: 'Frescura',
+    genericStat: '+60 días',
+    genericDesc: 'En el lineal meses antes de llegar a ti.',
+    glopetStat: '≤7 días',
+    glopetDesc: 'Tostado esta semana. En tu puerta.',
   },
   {
-    label: 'Poca claridad',
-    generic: 'No sabes bien que compras ni por que sabe como sabe.',
-    glopet: 'Origen, perfil y proceso explicados para elegir con criterio.',
+    painLabel: 'Origen',
+    genericStat: '¿?',
+    genericDesc: 'Blend anónimo, sin datos de procedencia.',
+    glopetStat: 'Trazado',
+    glopetDesc: 'Finca, varietal y proceso en cada bolsa.',
   },
   {
-    label: 'Rigidez',
-    generic: 'Opciones cerradas y compras que no se adaptan a tu ritmo real.',
-    glopet: 'Compra puntual o suscripcion flexible para ajustar cuando quieras.',
+    painLabel: 'Flexibilidad',
+    genericStat: 'Fijo',
+    genericDesc: 'Formatos rígidos que no se adaptan a ti.',
+    glopetStat: 'Sin ataduras',
+    glopetDesc: 'Pausa o cancela cuando quieras.',
   },
 ] as const;
 
 const ComparisonCard: React.FC<ComparisonRow & { index: number }> = ({
-  label,
-  generic,
-  glopet,
+  painLabel,
+  genericStat,
+  genericDesc,
+  glopetStat,
+  glopetDesc,
   index,
-}) => {
-  return (
-    <div
-      data-comparison-card
-      data-comparison-index={index}
-      className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/6 backdrop-blur-sm will-change-transform"
-      style={{ transformPerspective: '1200px' }}
-    >
-      <div data-comparison-card-inner className="will-change-transform">
-        <div className="border-b border-white/10 px-4 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#e8d5b0] sm:px-5">
-          {label}
+}) => (
+  <div
+    data-comparison-card
+    data-comparison-index={index}
+    className="overflow-hidden rounded-[1.2rem] border border-white/10 bg-white/5 backdrop-blur-sm will-change-transform"
+    style={{ perspective: '1200px' }}
+  >
+    <div className="border-b border-white/10 px-4 py-2.5 sm:px-5">
+      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-[#e8d5b0]">
+        {painLabel}
+      </p>
+    </div>
+    <div data-comparison-inner className="grid grid-cols-[1fr_1px_1fr] will-change-transform">
+      <div className="flex flex-col gap-1 px-4 py-4 sm:px-5">
+        <div className="mb-1 flex items-center gap-1.5">
+          <X size={12} className="shrink-0 text-[#c9a97a]/60" />
+          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[#c9a97a]/70">
+            Lo habitual
+          </p>
         </div>
-        <div className="grid gap-0 md:grid-cols-2">
-          <div className="flex gap-3 px-4 py-4 text-sm leading-relaxed text-[#e4d8c8] sm:px-5">
-            <Minus size={17} className="mt-0.5 shrink-0 text-[#d8c7a5]" />
-            <div>
-              <p className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#d8c7a5]">
-                Cafe convencional
-              </p>
-              <span>{generic}</span>
-            </div>
-          </div>
-          <div className="flex gap-3 border-t border-white/10 px-4 py-4 text-sm leading-relaxed text-[#faf6ef] md:border-l md:border-t-0 sm:px-5">
-            <Check size={17} className="mt-0.5 shrink-0 text-[#e8d5b0]" />
-            <div>
-              <p className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#e8d5b0]">
-                Glopet
-              </p>
-              <span>{glopet}</span>
-            </div>
-          </div>
+        <p className="text-xl font-bold leading-none text-[#d8c7a5]/55 sm:text-2xl">
+          {genericStat}
+        </p>
+        <p className="mt-1 text-xs leading-snug text-[#e4d8c8]/60">{genericDesc}</p>
+      </div>
+      <div className="bg-white/10" />
+      <div className="flex flex-col gap-1 px-4 py-4 sm:px-5">
+        <div className="mb-1 flex items-center gap-1.5">
+          <Check size={12} className="shrink-0 text-[#e8d5b0]" />
+          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[#e8d5b0]">
+            Glopet
+          </p>
         </div>
+        <p className="text-xl font-bold leading-none text-[#faf6ef] sm:text-2xl">{glopetStat}</p>
+        <p className="mt-1 text-xs leading-snug text-[#faf6ef]/80">{glopetDesc}</p>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export const CoffeeComparison: React.FC = () => {
   const sectionRef = React.useRef<HTMLElement | null>(null);
@@ -79,7 +92,7 @@ export const CoffeeComparison: React.FC = () => {
       const mm = gsap.matchMedia();
 
       mm.add('(prefers-reduced-motion: reduce)', () => {
-        gsap.set('[data-comparison-intro] > *, [data-comparison-card], [data-comparison-card-inner]', {
+        gsap.set('[data-cc-line], [data-comparison-card], [data-comparison-inner]', {
           clearProps: 'all',
           autoAlpha: 1,
         });
@@ -87,13 +100,13 @@ export const CoffeeComparison: React.FC = () => {
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.fromTo(
-          '[data-comparison-intro] > *',
-          { autoAlpha: 0, y: 24 },
+          '[data-cc-line]',
+          { autoAlpha: 0, y: 28 },
           {
             autoAlpha: 1,
             y: 0,
-            duration: 0.9,
-            stagger: 0.12,
+            duration: 0.85,
+            stagger: 0.1,
             ease: 'power3.out',
             scrollTrigger: {
               trigger: introRef.current,
@@ -104,17 +117,17 @@ export const CoffeeComparison: React.FC = () => {
         );
 
         ScrollTrigger.batch('[data-comparison-card]', {
-          start: 'top 86%',
+          start: 'top 88%',
           once: true,
           onEnter: (elements) => {
             gsap.fromTo(
               elements,
               {
                 autoAlpha: 0,
-                y: (index) => 68 + index * 10,
-                scale: 0.94,
-                rotateX: 12,
-                filter: 'blur(8px)',
+                y: (i) => 48 + i * 8,
+                scale: 0.9,
+                rotateX: 10,
+                filter: 'blur(6px)',
               },
               {
                 autoAlpha: 1,
@@ -122,33 +135,29 @@ export const CoffeeComparison: React.FC = () => {
                 scale: 1,
                 rotateX: 0,
                 filter: 'blur(0px)',
-                duration: 0.95,
-                stagger: 0.12,
-                ease: 'power3.out',
+                duration: 0.85,
+                stagger: 0.1,
+                ease: 'back.out(1.6)',
                 clearProps: 'transform,filter',
               },
             );
           },
         });
 
-        gsap.utils.toArray<HTMLElement>('[data-comparison-card]').forEach((card, index) => {
-          const inner = card.querySelector<HTMLElement>('[data-comparison-card-inner]');
-
-          if (!inner) {
-            return;
-          }
-
+        gsap.utils.toArray<HTMLElement>('[data-comparison-card]').forEach((card, i) => {
+          const inner = card.querySelector<HTMLElement>('[data-comparison-inner]');
+          if (!inner) return;
           gsap.fromTo(
             inner,
-            { y: 22 + index * 3 },
+            { y: 18 + i * 3 },
             {
-              y: -10,
+              y: -8,
               ease: 'none',
               scrollTrigger: {
                 trigger: card,
                 start: 'top bottom',
                 end: 'bottom top',
-                scrub: 1,
+                scrub: 1.2,
               },
             },
           );
@@ -161,29 +170,37 @@ export const CoffeeComparison: React.FC = () => {
   );
 
   return (
-    <section ref={sectionRef} id="comparativa" className="mt-14 px-4 md:mt-24 md:px-10 lg:px-16">
-      <div className="mx-auto max-w-[1160px] rounded-[1.8rem] border px-5 py-6 md:rounded-[2.4rem] md:px-10 md:py-10" style={{ background: '#1a3a5c', borderColor: 'rgba(232,213,176,0.28)' }}>
-        <div
-          ref={introRef}
-          data-comparison-intro
-          className="max-w-[36rem]"
-        >
-          <p className="text-xs uppercase tracking-[0.24em] text-[#e8d5b0]">Por que cambiar</p>
-          <h2 className="mt-3 glopet-title text-[1.9rem] leading-[1.02] text-[#faf6ef] sm:mt-4 sm:text-[2.9rem] lg:text-[3.2rem]">
-            El problema no es tomar cafe. Es conformarte.
+    <section ref={sectionRef} id="comparativa" className="mt-14 px-4 md:mt-20 md:px-10 lg:px-16">
+      <div
+        className="mx-auto max-w-[1160px] rounded-[1.8rem] border px-5 py-7 md:rounded-[2.4rem] md:px-10 md:py-10"
+        style={{ background: '#1a3a5c', borderColor: 'rgba(232,213,176,0.28)' }}
+      >
+        <div ref={introRef} className="max-w-[36rem]">
+          <p data-cc-line className="text-xs uppercase tracking-[0.24em] text-[#e8d5b0]">
+            Por qué cambiar
+          </p>
+          <h2
+            data-cc-line
+            className="mt-3 glopet-title text-[1.9rem] leading-[1.02] text-[#faf6ef] sm:mt-4 sm:text-[2.9rem] lg:text-[3.2rem]"
+          >
+            Llevas años pagando café fresco.
+            <br />
+            Pero no lo era.
           </h2>
-          <p className="mt-3 max-w-[34rem] text-sm leading-relaxed text-[#e4d8c8] sm:text-base">
-            Si buscas mejor sabor, mas criterio al elegir y una compra que se adapte a ti, aqui esta la diferencia.
+          <p data-cc-line className="mt-3 max-w-[32rem] text-sm leading-relaxed text-[#e4d8c8] sm:text-base">
+            Lo que no te cuentan en el paquete, aquí sin filtros.
           </p>
         </div>
 
         <div className="mt-6 grid gap-3 [perspective:1200px] md:mt-8 md:gap-4">
-          {ROWS.map(({ label, generic, glopet }, index) => (
+          {ROWS.map(({ painLabel, genericStat, genericDesc, glopetStat, glopetDesc }, index) => (
             <ComparisonCard
-              key={label}
-              label={label}
-              generic={generic}
-              glopet={glopet}
+              key={painLabel}
+              painLabel={painLabel}
+              genericStat={genericStat}
+              genericDesc={genericDesc}
+              glopetStat={glopetStat}
+              glopetDesc={glopetDesc}
               index={index}
             />
           ))}
