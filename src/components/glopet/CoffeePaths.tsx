@@ -4,6 +4,7 @@ import { ArrowRight, Compass, Package, Repeat } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useQuizStore } from '../../stores/quizStore';
 import { ensureGsapPlugins, gsap, ScrollTrigger, useGSAP } from '../../lib/gsap';
+import { EtherealShadow } from '../ui/etheral-shadow';
 
 const PATHS = [
   {
@@ -412,8 +413,25 @@ export const CoffeePaths: React.FC = () => {
   );
 
   return (
-    <section ref={sectionRef} id="elige-tu-camino" className="mt-12 px-4 md:mt-18 md:px-10 lg:px-16">
-      <div className="max-w-[1160px] mx-auto">
+    <section ref={sectionRef} id="elige-tu-camino" className="relative mt-12">
+      {/* ── Fondo mediterráneo full-width ── */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        style={{
+          background:
+            'linear-gradient(155deg, #c8dff0 0%, #daedf7 18%, #edf6fb 38%, #f3ede0 62%, #ede3d0 82%, #e5d8c0 100%)',
+        }}
+      >
+        <EtherealShadow
+          color="rgba(26, 92, 155, 0.40)"
+          animation={{ scale: 55, speed: 35 }}
+          noise={{ opacity: 0.5, scale: 1.4 }}
+          sizing="fill"
+          style={{ width: '100%', height: '100%' }}
+        />
+      </div>
+      <div className="max-w-[1160px] mx-auto px-4 md:px-10 lg:px-16">
         <div ref={mobileDeckRef} className="mt-4 lg:hidden">
           <div className="mx-auto flex max-w-[760px] flex-col items-center gap-4 text-center">
             {renderIntro('mx-auto max-w-[760px] text-center')}

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@heroui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { GlopetFAQSection } from './GlopetFAQSection.tsx';
-import hero3Webm from '../../../assets/videos/hero3-webm.mp4';
+import hero2Webm from '../../../assets/videos/hero2.mp4';
 import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
 
 const HERO_VERTICAL_MASK_MOBILE =
@@ -168,7 +168,7 @@ export const Hero: React.FC = () => {
             playsInline
             className="h-full w-full object-cover object-[center_22%] sm:object-center"
           >
-            <source src={hero3Webm} type="video/webm" />
+            <source src={hero2Webm} type="video/webm" />
           </video>
           {/* Gradiente superior suavizado para legibilidad del texto (difuminado más amplio) */}
           <div
