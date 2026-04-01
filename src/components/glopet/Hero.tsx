@@ -170,6 +170,8 @@ export const Hero: React.FC = () => {
           >
             <source src={hero2Webm} type="video/webm" />
           </video>
+          {/* Velo dorado suave para difuminar ligeramente el video */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(232,192,122,0.52) 0%, rgba(250,246,239,0.58) 50%, rgba(202,127,70,0.38) 100%)' }} />
           {/* Gradiente superior suavizado para legibilidad del texto (difuminado más amplio) */}
           <div
             className="absolute inset-0"

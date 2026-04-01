@@ -1,21 +1,28 @@
 import React from 'react';
-import { Star } from 'lucide-react';
 import { t } from '../../data/texts';
-import { ensureGsapPlugins, gsap, ScrollTrigger, useGSAP } from '../../lib/gsap';
+import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
+import { CircularTestimonials } from '../ui/circular-testimonials';
 
-const REVIEWS = [
-  { quoteKey: 'review1Quote', nameKey: 'review1Name', roleKey: 'review1Role', delay: 0 },
-  { quoteKey: 'review2Quote', nameKey: 'review2Name', roleKey: 'review2Role', delay: 0.12 },
-  { quoteKey: 'review3Quote', nameKey: 'review3Name', roleKey: 'review3Role', delay: 0.24 },
+const TESTIMONIALS = [
+  {
+    quoteKey: 'review1Quote',
+    nameKey: 'review1Name',
+    roleKey: 'review1Role',
+    src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop&q=80',
+  },
+  {
+    quoteKey: 'review2Quote',
+    nameKey: 'review2Name',
+    roleKey: 'review2Role',
+    src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&q=80',
+  },
+  {
+    quoteKey: 'review3Quote',
+    nameKey: 'review3Name',
+    roleKey: 'review3Role',
+    src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=600&fit=crop&q=80',
+  },
 ] as const;
-
-const Stars: React.FC = () => (
-  <div className="flex gap-0.5">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <Star key={i} size={14} fill="currentColor" strokeWidth={0} style={{ color: 'var(--color-caramel)' }} />
-    ))}
-  </div>
-);
 
 export const Testimonials: React.FC = () => {
   const sectionRef = React.useRef<HTMLElement | null>(null);
@@ -28,7 +35,7 @@ export const Testimonials: React.FC = () => {
       const mm = gsap.matchMedia();
 
       mm.add('(prefers-reduced-motion: reduce)', () => {
-        gsap.set('[data-testimonial-intro] > *, [data-testimonial-card]', { clearProps: 'all', autoAlpha: 1 });
+        gsap.set('[data-testimonial-intro] > *', { clearProps: 'all', autoAlpha: 1 });
       });
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
@@ -48,32 +55,19 @@ export const Testimonials: React.FC = () => {
             },
           },
         );
-
-        ScrollTrigger.batch('[data-testimonial-card]', {
-          start: 'top 84%',
-          once: true,
-          onEnter: (elements) => {
-            gsap.fromTo(
-              elements,
-              { autoAlpha: 0, y: 34, scale: 0.96 },
-              {
-                autoAlpha: 1,
-                y: 0,
-                scale: 1,
-                duration: 0.82,
-                stagger: 0.12,
-                ease: 'power3.out',
-                clearProps: 'transform',
-              },
-            );
-          },
-        });
       });
 
       return () => mm.revert();
     },
     { scope: sectionRef },
   );
+
+  const testimonialData = TESTIMONIALS.map((item) => ({
+    quote: t(`testimonials.${item.quoteKey}`),
+    name: t(`testimonials.${item.nameKey}`),
+    designation: t(`testimonials.${item.roleKey}`),
+    src: item.src,
+  }));
 
   return (
     <section
@@ -103,72 +97,29 @@ export const Testimonials: React.FC = () => {
           </h2>
         </div>
 
-        {/* Reviews grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-          {REVIEWS.map(({ quoteKey, nameKey, roleKey }) => (
-            <div
-              key={quoteKey}
-              data-testimonial-card
-              className="relative flex flex-col rounded-[1.75rem] p-7 border"
-              style={{
-                background: 'var(--bg-surface)',
-                borderColor: 'var(--border-color)',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-            >
-              {/* Decorative quote mark */}
-              <span
-                aria-hidden="true"
-                className="glopet-title absolute top-5 right-6 select-none leading-none"
-                style={{
-                  fontSize: '5rem',
-                  color: 'rgba(196,118,58,0.12)',
-                  lineHeight: 1,
-                }}
-              >
-                &ldquo;
-              </span>
-
-              <Stars />
-
-              <p
-                className="mt-4 text-[0.95rem] leading-relaxed flex-1"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                &ldquo;{t(`testimonials.${quoteKey}`)}&rdquo;
-              </p>
-
-              <div className="mt-6 flex items-center gap-3">
-                {/* Avatar initials */}
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--color-caramel), var(--color-roast))',
-                    color: 'var(--color-cream)',
-                    fontFamily: 'var(--font-body)',
-                  }}
-                >
-                  {Array.from(t(`testimonials.${nameKey}`))[0] ?? ''}
-                </div>
-                <div>
-                  <p
-                    className="text-sm font-semibold leading-tight"
-                    style={{ color: 'var(--color-espresso)', fontFamily: 'var(--font-body)' }}
-                  >
-                    {t(`testimonials.${nameKey}`)}
-                  </p>
-                  <p
-                    className="text-xs leading-tight mt-0.5"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {t(`testimonials.${roleKey}`)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Circular testimonials carousel */}
+        <div className="flex justify-center">
+          <CircularTestimonials
+            testimonials={testimonialData}
+            autoplay={true}
+            colors={{
+              name: '#1c1410',
+              designation: '#7a6a5a',
+              testimony: '#3f342d',
+              arrowBackground: '#1c1410',
+              arrowForeground: '#faf6ef',
+              arrowHoverBackground: '#c4763a',
+            }}
+            fontSizes={{
+              name: '1.6rem',
+              designation: '0.9rem',
+              quote: '1.05rem',
+            }}
+          />
         </div>
       </div>
     </section>
   );
 };
+
+

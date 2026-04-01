@@ -187,15 +187,7 @@ export const ShopPage: React.FC = () => {
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-14">
           <div className="mb-10 border-b border-border-color/70 pb-8 md:mb-12 lg:mb-14 lg:pb-10">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between xl:gap-10">
-              <div className="max-w-3xl">
-                <motion.h1 variants={childVariants} className="heading-display text-4xl md:text-5xl lg:text-6xl mb-3 md:mb-4">
-                  {t('shop.heading')}
-                </motion.h1>
-
-                <motion.p variants={childVariants} className="body-lg text-balance">
-                  {t('shop.description')}
-                </motion.p>
-              </div>
+             
 
               <motion.div variants={childVariants} className="flex shrink-0 items-center xl:justify-end">
                 <Button

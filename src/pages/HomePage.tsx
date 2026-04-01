@@ -32,8 +32,8 @@ export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
     <div className="glopet-page min-h-screen pb-6">
       <Hero />
       {/* <TrustBar /> */}
-      <CoffeePaths />
       <CoffeeLandingProducts />
+      <CoffeePaths />
       <CoffeeComparison />
       <Product />
  
