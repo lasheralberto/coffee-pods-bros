@@ -1,145 +1,109 @@
-import React from 'react';
-import { Card, CardBody } from '@heroui/react';
-import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
+import React, { useRef, useState, useEffect } from 'react';
+import { gsap, useGSAP } from '../../lib/gsap';
+import hero2Image from '../../../assets/images/hero2.png';
 
 const highlights = [
   {
     stat: '48h',
-    title: 'Del tueste a tu puerta',
-    value: 'No semanas. Sin almacén.',
-    position: { bottom: '12%', left: '3%' },
-    rotate: '-2.5deg',
+    label: 'Del tueste a tu puerta',
+    desc: 'No semanas. Sin almacén.',
   },
   {
     stat: '0',
-    title: 'Intermediarios',
-    value: 'Finca → tostador → tú.',
-    position: { top: '38%', left: '35%' },
-    rotate: '2.5deg',
+    label: 'Intermediarios',
+    desc: 'Finca → tostador → tú.',
   },
   {
     stat: '100%',
-    title: 'Origen trazable',
-    value: 'Sabes quién lo cultivó.',
-    position: { top: '8%', right: '4%' },
-    rotate: '-1.5deg',
+    label: 'Trazable',
+    desc: 'Sabes quién lo cultivó.',
   },
 ];
 
-const maskImage = [
-  'linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 6%, rgba(0,0,0,0.45) 14%, rgba(0,0,0,0.96) 24%, rgba(0,0,0,0.96) 76%, rgba(0,0,0,0.45) 86%, rgba(0,0,0,0.12) 94%, rgba(0,0,0,0) 100%)',
-  'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 6%, rgba(0,0,0,0.45) 14%, rgba(0,0,0,0.96) 24%, rgba(0,0,0,0.96) 76%, rgba(0,0,0,0.45) 86%, rgba(0,0,0,0.12) 94%, rgba(0,0,0,0) 100%)',
-].join(', ');
+export const Product: React.FC = React.memo(() => {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const videoWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [videoVisible, setVideoVisible] = useState(false);
 
-export const Product: React.FC = () => {
-  const sectionRef = React.useRef<HTMLElement | null>(null);
-  const mediaRef = React.useRef<HTMLDivElement | null>(null);
-  const headlineRef = React.useRef<HTMLDivElement | null>(null);
-
-  ensureGsapPlugins();
+  useEffect(() => {
+    const el = videoWrapperRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVideoVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
 
-      mm.add(
-        {
-          isDesktop: '(min-width: 1024px)',
-          reduceMotion: '(prefers-reduced-motion: reduce)',
-        },
-        (context) => {
-          const { isDesktop, reduceMotion } = context.conditions;
+      mm.add('(prefers-reduced-motion: reduce)', () => {
+        gsap.set('[data-product-line], [data-product-media], [data-product-stat]', {
+          clearProps: 'all',
+          autoAlpha: 1,
+        });
+      });
 
-          if (reduceMotion) {
-            gsap.set('[data-product-media], [data-product-card], [data-product-line]', {
-              clearProps: 'all',
-              autoAlpha: 1,
-            });
-            return;
-          }
-
-          // Headline: líneas aparecen en stagger con reveal suave
-          gsap.fromTo(
-            '[data-product-line]',
-            { autoAlpha: 0, y: 22 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: 0.7,
-              stagger: 0.11,
-              ease: 'power3.out',
-              scrollTrigger: {
-                trigger: headlineRef.current,
-                start: 'top 88%',
-                once: true,
-              },
-            },
-          );
-
-          // Video reveal
-          gsap.fromTo(
-            '[data-product-media]',
-            { autoAlpha: 0, scale: 0.97, y: 32 },
-            {
-              autoAlpha: 1,
-              scale: 1,
-              y: 0,
-              duration: 1.0,
-              ease: 'power3.out',
-              scrollTrigger: {
-                trigger: mediaRef.current,
-                start: 'top 84%',
-                once: true,
-              },
-            },
-          );
-
-          // Cards: spring pop con back ease
-          gsap.fromTo(
-            '[data-product-card]',
-            { autoAlpha: 0, y: 28, scale: 0.86 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              scale: 1,
-              duration: 0.72,
-              stagger: 0.14,
-              ease: 'back.out(1.7)',
-              scrollTrigger: {
-                trigger: mediaRef.current,
-                start: 'top 78%',
-                once: true,
-              },
-            },
-          );
-
-          // Parallax video
-          gsap.to('[data-product-media]', {
-            yPercent: isDesktop ? 10 : 5,
-            ease: 'none',
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo(
+          '[data-product-line]',
+          { autoAlpha: 0, y: 28 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: 'power3.out',
             scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: 1.1,
+              trigger: '[data-product-line]',
+              start: 'top 85%',
+              once: true,
             },
-          });
+          },
+        );
 
-          // Parallax diferencial por card
-          gsap.utils.toArray<HTMLElement>('[data-product-card]').forEach((card, index) => {
-            gsap.to(card, {
-              yPercent: index % 2 === 0 ? -8 : -4,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: sectionRef.current,
-                start: 'top bottom',
-                end: 'bottom top',
-                scrub: 1.2 + index * 0.2,
-              },
-            });
-          });
-        },
-      );
+        gsap.fromTo(
+          '[data-product-media]',
+          { autoAlpha: 0, scale: 0.96, y: 40 },
+          {
+            autoAlpha: 1,
+            scale: 1,
+            y: 0,
+            duration: 1.1,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: '[data-product-media]',
+              start: 'top 82%',
+              once: true,
+            },
+          },
+        );
+
+        gsap.fromTo(
+          '[data-product-stat]',
+          { autoAlpha: 0, y: 24 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.7,
+            stagger: 0.12,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: '[data-product-stat]',
+              start: 'top 88%',
+              once: true,
+            },
+          },
+        );
+      });
 
       return () => mm.revert();
     },
@@ -147,76 +111,98 @@ export const Product: React.FC = () => {
   );
 
   return (
-    <section ref={sectionRef} id="cafe" className="mt-16 mb-4">
-      {/* Headline pain-point */}
-      <div ref={headlineRef} className="mb-5 px-6 text-center">
-        <p data-product-line className="text-[11px] uppercase tracking-[0.26em] text-[#1a7ab5] mb-2">
-          Café de verdad
-        </p>
-        <h2
-          data-product-line
-          className="glopet-title text-[1.75rem] sm:text-4xl text-[#1c1410] leading-tight max-w-lg mx-auto"
-        >
-          El café de supermercado tiene meses.{' '}
-          <span className="text-[#c4763a]">El nuestro, días.</span>
-        </h2>
-        <p data-product-line className="mt-2.5 text-sm text-[#4a3728]/68 max-w-xs mx-auto leading-relaxed">
-          Origen conocido. Lote pequeño. Sin escalas.
-        </p>
-      </div>
-
-      {/* Video con cards flotantes */}
-      <div className="relative mx-4 md:mx-10 lg:mx-16">
-        <div
-          ref={mediaRef}
-          data-product-media
-          className="w-full h-[300px] sm:h-[370px] lg:h-[430px] overflow-hidden"
-          style={{
-            maskImage,
-            maskComposite: 'intersect',
-            WebkitMaskImage: maskImage,
-            WebkitMaskComposite: 'source-in',
-            WebkitMaskRepeat: 'no-repeat',
-            maskRepeat: 'no-repeat',
-            WebkitMaskSize: 'cover',
-            maskSize: 'cover',
-          }}
-        >
-          <video
-            className="h-full w-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            aria-label="Mesa mediterránea con café y cerámica artesanal"
-          >
-            <source src="/videos/hero2.mp4" type="video/mp4" />
-          </video>
-        </div>
-
-        {highlights.map((item) => (
-          <div
-            key={item.title}
-            data-product-card
-            className="absolute"
-            style={{ ...item.position, rotate: item.rotate }}
-          >
-            <Card
-              className="border border-[#d8c7a5] bg-[#faf6ef]/90 backdrop-blur-md shadow-xl w-[140px] sm:w-[172px]"
-              radius="lg"
+    <section
+      ref={sectionRef}
+      id="cafe"
+      className="py-24 sm:py-32"
+      style={{
+        background: [
+          'radial-gradient(ellipse at 20% 80%, rgba(196,245,219,0.10) 0%, transparent 50%)',
+          'linear-gradient(150deg, var(--ds-primary) 0%, var(--ds-primary-container) 100%)',
+        ].join(', '),
+      }}
+    >
+      <div className="mx-auto max-w-[1280px] px-6 md:px-12 lg:px-20">
+        {/* Two-column editorial layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Left: Copy */}
+          <div>
+            <p
+              data-product-line
+              className="text-[0.68rem] uppercase tracking-[0.28em] font-medium mb-5"
+              style={{ color: '#e8c88a', fontFamily: 'var(--font-body)' }}
             >
-              <CardBody className="p-3 md:p-4">
-                <p className="text-2xl sm:text-3xl glopet-title text-[#c4763a] leading-none">{item.stat}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#1a3a5c] leading-tight">
-                  {item.title}
-                </p>
-                <p className="mt-1.5 text-[11px] sm:text-xs text-[#1c1410]/72 leading-snug">{item.value}</p>
-              </CardBody>
-            </Card>
+              Café de verdad
+            </p>
+            <h2
+              data-product-line
+              className="glopet-title text-[2.2rem] sm:text-[2.8rem] lg:text-[3.4rem] leading-[1.02] text-white"
+            >
+              El café del súper tiene meses.{' '}
+              <span style={{ color: '#e8c88a' }}>El nuestro, días.</span>
+            </h2>
+            <p
+              data-product-line
+              className="mt-6 text-[1rem] leading-relaxed max-w-[42ch]"
+              style={{ color: 'rgba(250,246,239,0.75)', fontFamily: 'var(--font-body)' }}
+            >
+              Lote pequeño, origen conocido, sin escalas. Lo que no te cuentan en el paquete, aquí sin filtros.
+            </p>
+
+            {/* Stats row */}
+            <div className="mt-10 grid grid-cols-3 gap-4">
+              {highlights.map(({ stat, label, desc }) => (
+                <div
+                  key={label}
+                  data-product-stat
+                  className="pt-5"
+                  style={{ paddingTop: '1.25rem' }}
+                >
+                  <p className="glopet-title text-[2rem] sm:text-[2.4rem] leading-none" style={{ color: '#e8c88a' }}>
+                    {stat}
+                  </p>
+                  <p
+                    className="mt-2 text-[0.68rem] uppercase tracking-[0.16em] font-semibold text-white/80"
+                    style={{ fontFamily: 'var(--font-label)' }}
+                  >
+                    {label}
+                  </p>
+                  <p className="mt-1 text-[0.78rem] leading-snug" style={{ color: 'rgba(250,246,239,0.55)' }}>
+                    {desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+
+          {/* Right: Image */}
+          <div
+            ref={videoWrapperRef}
+            data-product-media
+            className="relative rounded-[2rem] overflow-hidden aspect-[4/5] lg:aspect-[3/4]"
+            style={{
+              boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
+            }}
+          >
+            {videoVisible && (
+              <img
+                className="h-full w-full object-cover"
+                src={hero2Image}
+                alt="Café Glopet de especialidad"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+            {/* Subtle overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(to top, rgba(6,63,46,0.45) 0%, transparent 45%)',
+              }}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
-};
+});

@@ -1,34 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { t } from '../../data/texts';
-import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
-import { CircularTestimonials } from '../ui/circular-testimonials';
+import { gsap, useGSAP } from '../../lib/gsap';
+import { XCard, type XCardProps } from '../ui/x-gradient-card';
 
-const TESTIMONIALS = [
-  {
-    quoteKey: 'review1Quote',
-    nameKey: 'review1Name',
-    roleKey: 'review1Role',
-    src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop&q=80',
-  },
-  {
-    quoteKey: 'review2Quote',
-    nameKey: 'review2Name',
-    roleKey: 'review2Role',
-    src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop&q=80',
-  },
-  {
-    quoteKey: 'review3Quote',
-    nameKey: 'review3Name',
-    roleKey: 'review3Role',
-    src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=600&fit=crop&q=80',
-  },
-] as const;
+const AVATAR_STOCK = {
+  marta: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&q=75',
+  jordi: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&q=75',
+  ana: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop&q=75',
+} as const;
 
-export const Testimonials: React.FC = () => {
+export const Testimonials: React.FC = React.memo(() => {
   const sectionRef = React.useRef<HTMLElement | null>(null);
   const introRef = React.useRef<HTMLDivElement | null>(null);
-
-  ensureGsapPlugins();
+  const cardsRef = React.useRef<HTMLDivElement | null>(null);
 
   useGSAP(
     () => {
@@ -36,6 +20,7 @@ export const Testimonials: React.FC = () => {
 
       mm.add('(prefers-reduced-motion: reduce)', () => {
         gsap.set('[data-testimonial-intro] > *', { clearProps: 'all', autoAlpha: 1 });
+        gsap.set('[data-testimonial-card]', { clearProps: 'all', autoAlpha: 1 });
       });
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
@@ -55,6 +40,23 @@ export const Testimonials: React.FC = () => {
             },
           },
         );
+
+        gsap.fromTo(
+          '[data-testimonial-card]',
+          { autoAlpha: 0, y: 26 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.9,
+            stagger: 0.18,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: cardsRef.current,
+              start: 'top 84%',
+              once: true,
+            },
+          },
+        );
       });
 
       return () => mm.revert();
@@ -62,12 +64,42 @@ export const Testimonials: React.FC = () => {
     { scope: sectionRef },
   );
 
-  const testimonialData = TESTIMONIALS.map((item) => ({
-    quote: t(`testimonials.${item.quoteKey}`),
-    name: t(`testimonials.${item.nameKey}`),
-    designation: t(`testimonials.${item.roleKey}`),
-    src: item.src,
-  }));
+  const xCards = useMemo<XCardProps[]>(() => [
+    {
+      link: 'https://x.com/dorian_baffier/status/1880291036410572934',
+      authorName: t('testimonials.review1Name'),
+      authorHandle: 'marta_glopet',
+      authorImage: AVATAR_STOCK.marta,
+      content: [t('testimonials.review1Quote')],
+      isVerified: true,
+      timestamp: 'Jan 18, 2026',
+      reply: {
+        authorName: t('footer.brand'),
+        authorHandle: 'glopet',
+        authorImage: AVATAR_STOCK.jordi,
+        content: t('testimonials.review2Quote'),
+        isVerified: true,
+        timestamp: 'Jan 18',
+      },
+    },
+    {
+      link: 'https://x.com/serafimcloud/status/1880291036410572934',
+      authorName: t('testimonials.review3Name'),
+      authorHandle: 'ana_glopet',
+      authorImage: AVATAR_STOCK.ana,
+      content: [t('testimonials.review3Quote')],
+      isVerified: true,
+      timestamp: 'Apr 6, 2026',
+      reply: {
+        authorName: t('footer.brand'),
+        authorHandle: 'glopet',
+        authorImage: AVATAR_STOCK.marta,
+        content: t('testimonials.review1Quote'),
+        isVerified: true,
+        timestamp: 'Apr 7',
+      },
+    },
+  ], []);
 
   return (
     <section
@@ -97,29 +129,21 @@ export const Testimonials: React.FC = () => {
           </h2>
         </div>
 
-        {/* Circular testimonials carousel */}
-        <div className="flex justify-center">
-          <CircularTestimonials
-            testimonials={testimonialData}
-            autoplay={true}
-            colors={{
-              name: '#1c1410',
-              designation: '#7a6a5a',
-              testimony: '#3f342d',
-              arrowBackground: '#1c1410',
-              arrowForeground: '#faf6ef',
-              arrowHoverBackground: '#c4763a',
-            }}
-            fontSizes={{
-              name: '1.6rem',
-              designation: '0.9rem',
-              quote: '1.05rem',
-            }}
-          />
+        <div
+          ref={cardsRef}
+          className="flex gap-5 overflow-x-auto px-1 pb-4 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:grid lg:grid-cols-2 lg:gap-8 lg:overflow-visible lg:px-0 lg:pb-0 lg:snap-none"
+        >
+          {xCards.map((card) => (
+            <div
+              key={card.authorHandle}
+              data-testimonial-card
+              className="snap-start shrink-0 w-[90%] sm:w-[78%] md:w-[68%] lg:w-full lg:min-w-0"
+            >
+              <XCard {...card} />
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
-};
-
-
+});

@@ -161,4 +161,33 @@
   --z-modal:      400;
   --z-toast:      500;
   --z-cursor:     9999;
+
+  /* ── DESIGN SYSTEM — Sensory Sommelier (DESIGN.md) ────── */
+  /* Forest green primary — deep impact sections, CTAs */
+  --ds-primary:              #063f2e;
+  --ds-primary-container:    #245644;
+  --ds-on-primary:           #ffffff;
+
+  /* Amber secondary — buttons */
+  --ds-secondary:            #7b5800;
+  --ds-on-secondary:         #ffffff;
+  --ds-secondary-container:  #ffdea8;
+
+  /* Surface hierarchy — tonal layering (no borders) */
+  --ds-surface:                  #f4f9f6;
+  --ds-surface-container:        #e8f4ee;
+  --ds-surface-container-low:    #eff7f3;
+  --ds-surface-container-lowest: #ffffff;
+  --ds-surface-container-high:   #dceee6;
+
+  --ds-on-surface:           #002116;
+  --ds-outline-variant:      rgba(0, 33, 22, 0.12);
+  --ds-surface-variant:      rgba(196, 250, 225, 0.6);
+
+  /* Ambient shadow — blur 40px, 6% opacity, no pure black */
+  --ds-shadow-ambient:       0 10px 40px rgba(0, 33, 22, 0.06);
+  --ds-shadow-float:         0 24px 64px rgba(0, 33, 22, 0.10);
+
+  /* Typography */
+  --font-label:              "Space Grotesk", "Manrope", sans-serif;
 }

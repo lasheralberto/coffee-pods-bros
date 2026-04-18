@@ -1,89 +1,33 @@
 import React from 'react';
 import { Button } from '@heroui/react';
 import { Link as RouterLink } from 'react-router-dom';
-import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
+import { ArrowRight } from 'lucide-react';
+import { gsap, useGSAP } from '../../lib/gsap';
 
-export const CallToAction: React.FC = () => {
+export const CallToAction: React.FC = React.memo(() => {
   const sectionRef = React.useRef<HTMLElement | null>(null);
-  const panelRef = React.useRef<HTMLDivElement | null>(null);
-
-  ensureGsapPlugins();
 
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
 
       mm.add('(prefers-reduced-motion: reduce)', () => {
-        gsap.set('[data-cta-orb], [data-cta-copy] > *, [data-cta-actions] > *', {
-          clearProps: 'all',
-          autoAlpha: 1,
-        });
+        gsap.set('[data-cta-el]', { clearProps: 'all', autoAlpha: 1 });
       });
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.fromTo(
-          panelRef.current,
-          { autoAlpha: 0, y: 44, scale: 0.985 },
+          '[data-cta-el]',
+          { autoAlpha: 0, y: 36 },
           {
             autoAlpha: 1,
             y: 0,
-            scale: 1,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: panelRef.current,
-              start: 'top 84%',
-              once: true,
-            },
-          },
-        );
-
-        gsap.fromTo(
-          '[data-cta-orb]',
-          { autoAlpha: 0, scale: 0.72 },
-          {
-            autoAlpha: 0.92,
-            scale: 1,
-            duration: 1.2,
-            stagger: 0.12,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: panelRef.current,
-              start: 'top 88%',
-              once: true,
-            },
-          },
-        );
-
-        gsap.fromTo(
-          '[data-cta-copy] > *',
-          { autoAlpha: 0, y: 22 },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.82,
+            duration: 0.9,
             stagger: 0.12,
             ease: 'power3.out',
             scrollTrigger: {
-              trigger: panelRef.current,
-              start: 'top 82%',
-              once: true,
-            },
-          },
-        );
-
-        gsap.fromTo(
-          '[data-cta-actions] > *',
-          { autoAlpha: 0, y: 18 },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.7,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: panelRef.current,
-              start: 'top 78%',
+              trigger: sectionRef.current,
+              start: 'top 80%',
               once: true,
             },
           },
@@ -96,25 +40,52 @@ export const CallToAction: React.FC = () => {
   );
 
   return (
-    <section ref={sectionRef} id="cta-final" className="px-4 md:px-10 lg:px-16 mt-24 pb-20">
-      <div ref={panelRef} className="max-w-[1160px] mx-auto rounded-[2.2rem] border border-[#cfbb95] bg-[#1a3a5c] text-[#faf6ef] p-10 md:p-16 text-center glopet-grain overflow-hidden">
-        <div data-cta-orb className="pointer-events-none absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(232,213,176,0.34),rgba(232,213,176,0))] blur-2xl" />
-        <div data-cta-orb className="pointer-events-none absolute right-[-2.5rem] top-8 h-44 w-44 rounded-full bg-[radial-gradient(circle_at_center,rgba(196,118,58,0.4),rgba(196,118,58,0))] blur-2xl" />
-        <div data-cta-copy>
-        <p className="uppercase text-xs tracking-[0.24em] text-[#e8d5b0]">Glopet</p>
-        <h2 className="mt-5 glopet-title text-4xl md:text-6xl leading-tight">Tu proxima sobremesa empieza aqui.</h2>
-        <p className="mt-5 text-[#f5ead9] max-w-[45ch] mx-auto text-lg leading-relaxed">
-          Elige tu bolsa o suscribete y recibe cafe fresco de costa en casa cada mes.
+    <section
+      ref={sectionRef}
+      id="cta-final"
+      className="relative overflow-hidden py-28 sm:py-36 lg:py-44"
+      style={{
+        background: [
+          'radial-gradient(ellipse at 20% 80%, rgba(123,88,0,0.20) 0%, transparent 50%)',
+          'radial-gradient(ellipse at 78% 18%, rgba(196,245,219,0.08) 0%, transparent 50%)',
+          'linear-gradient(150deg, var(--ds-primary) 0%, var(--ds-primary-container) 60%, #2a6452 100%)',
+        ].join(', '),
+      }}
+    >
+      {/* Grain texture */}
+      <div className="glopet-grain absolute inset-0 pointer-events-none" />
+
+      <div className="relative z-10 mx-auto max-w-[800px] px-6 md:px-12 text-center">
+        <p
+          data-cta-el
+          className="text-[0.68rem] uppercase tracking-[0.3em] font-medium mb-6"
+          style={{ color: '#e8c88a', fontFamily: 'var(--font-body)' }}
+        >
+          Glopet
         </p>
-        </div>
-        <div data-cta-actions className="mt-8 flex flex-wrap gap-3 justify-center">
+        <h2
+          data-cta-el
+          className="glopet-title text-[2.6rem] sm:text-[3.5rem] lg:text-[4.5rem] leading-[0.95] text-white"
+        >
+          Tu próxima sobremesa
+          <br />
+          empieza aquí.
+        </h2>
+        <p
+          data-cta-el
+          className="mt-6 md:mt-8 text-[1.05rem] md:text-[1.15rem] leading-relaxed mx-auto max-w-[42ch]"
+          style={{ color: 'rgba(250,246,239,0.7)', fontFamily: 'var(--font-body)' }}
+        >
+          Elige tu bolsa o suscríbete y recibe café fresco de costa en casa cada mes.
+        </p>
+        <div data-cta-el className="mt-10 flex flex-wrap gap-4 justify-center">
           <Button
             as={RouterLink}
             to="/shop"
-            color="secondary"
             size="lg"
             radius="full"
-            className="glopet-tactile-btn font-semibold px-9"
+            className="font-bold px-10 py-6 text-[0.85rem] tracking-wide text-[#1c1410] bg-white hover:bg-[#f5ead9] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+            endContent={<ArrowRight size={16} />}
           >
             Comprar ahora
           </Button>
@@ -124,12 +95,12 @@ export const CallToAction: React.FC = () => {
             variant="bordered"
             size="lg"
             radius="full"
-            className="border-[#e8d5b0] text-[#faf6ef]"
+            className="px-8 py-6 text-[0.85rem] border-white/30 text-white hover:bg-white/10 hover:border-white/60 transition-all duration-300 tracking-wide"
           >
-            Encontrar mi suscripcion
+            Ver suscripciones
           </Button>
         </div>
       </div>
     </section>
   );
-};
+});

@@ -1,14 +1,10 @@
 import React from 'react';
 import { Hero } from '../components/glopet/Hero';
-import { WhyGlopet } from '../components/glopet/WhyGlopet';
-import { GlopetFAQSection } from '../components/glopet/GlopetFAQSection.tsx';
-import { Manifesto } from '../components/glopet/Manifesto';
 import { TrustBar } from '../components/glopet/TrustBar';
+import { GlopetFAQSection } from '../components/glopet/GlopetFAQSection.tsx';
 import { CoffeePaths } from '../components/glopet/CoffeePaths';
 import { Product } from '../components/glopet/Product';
 import { CoffeeComparison } from '../components/glopet/CoffeeComparison';
-import { OriginTraceability } from '../components/glopet/OriginTraceability';
-import { SubscriptionHowItWorks } from '../components/glopet/SubscriptionHowItWorks';
 import { Testimonials } from '../components/glopet/Testimonials';
 import { CallToAction } from '../components/glopet/CallToAction';
 import CoffeeLandingProducts from '../components/glopet/CoffeeLandingProducts';
@@ -29,17 +25,34 @@ export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
   }, [focusSectionId]);
 
   return (
-    <div className="glopet-page min-h-screen pb-6">
+    <div className="glopet-page min-h-screen">
+      {/* 1. Full-viewport cinematic hero */}
       <Hero />
-      {/* <TrustBar /> */}
+
+      {/* 2. Scrolling trust/value marquee */}
+      <TrustBar />
+
+      {/* 3. Product carousel showcase */}
       <CoffeeLandingProducts />
+
+      {/* 4. Three paths to enter */}
       <CoffeePaths />
-      <CoffeeComparison />
+
+
+
+      {/* 6. Product editorial (café de verdad) */}
       <Product />
- 
-            <section className="mt-10 px-4 py-10 sm:hidden" style={{ background: 'var(--bg-surface)' }}>
-        <div className="mx-auto max-w-[1160px] overflow-hidden rounded-[1.75rem] border border-[#aec1d3] bg-gradient-to-br from-[#f8efe1]/96 via-[#f4f0ea]/94 to-[#dbe8f0]/88 shadow-[0_18px_55px_rgba(26,58,92,0.12)] ring-1 ring-white/45">
-          <div className="h-[3px] bg-gradient-to-r from-[#ca7f46] via-[#1a7ab5] to-[#e0b07c]" />
+
+      {/* 7. FAQ — mobile only */}
+      <section className="px-4 py-10 sm:hidden" style={{ background: 'var(--ds-surface-container-low)' }}>
+        <div
+          className="mx-auto max-w-[1160px] overflow-hidden rounded-[1.75rem]"
+          style={{
+            background: 'var(--ds-surface-container-lowest)',
+            boxShadow: 'var(--ds-shadow-float)',
+          }}
+        >
+          <div className="h-[3px]" style={{ background: 'linear-gradient(to right, var(--ds-primary), var(--ds-secondary), var(--color-caramel))' }} />
           <GlopetFAQSection
             className="max-w-none"
             itemClassName="border-[#c7d5e1]/95"
@@ -48,8 +61,11 @@ export const HomePage: React.FC<HomePageProps> = ({ focusSectionId }) => {
           />
         </div>
       </section>
+
+      {/* 8. Social proof */}
       <Testimonials />
 
+      {/* 9. Final CTA */}
       <CallToAction />
 
       <ChatFloatingContactUs />

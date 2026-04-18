@@ -47,7 +47,13 @@ function calculateGap(width: number) {
   );
 }
 
-export const CircularTestimonials = ({
+const quoteVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
+
+export const CircularTestimonials = React.memo(({
   testimonials,
   autoplay = true,
   colors = {},
@@ -71,21 +77,19 @@ export const CircularTestimonials = ({
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const autoplayIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const testimonialsLength = useMemo(() => testimonials.length, [testimonials]);
-  const activeTestimonial = useMemo(
-    () => testimonials[activeIndex],
-    [activeIndex, testimonials]
-  );
+  const testimonialsLength = testimonials.length;
+  const activeTestimonial = testimonials[activeIndex];
 
+  // ResizeObserver instead of raw resize listener
   useEffect(() => {
-    function handleResize() {
-      if (imageContainerRef.current) {
-        setContainerWidth(imageContainerRef.current.offsetWidth);
-      }
-    }
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const el = imageContainerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) setContainerWidth(entry.contentRect.width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const handleNext = useCallback(() => {
@@ -112,6 +116,7 @@ export const CircularTestimonials = ({
     };
   }, [autoplay, testimonialsLength]);
 
+  // Keyboard listener — only uses stable callbacks, no activeIndex dep
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") handlePrev();
@@ -119,10 +124,9 @@ export const CircularTestimonials = ({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex, testimonialsLength]);
+  }, [handlePrev, handleNext]);
 
-  function getImageStyle(index: number): React.CSSProperties {
+  const getImageStyle = useCallback((index: number): React.CSSProperties => {
     const gap = calculateGap(containerWidth);
     const maxStickUp = gap * 0.8;
     const isActive = index === activeIndex;
@@ -163,13 +167,7 @@ export const CircularTestimonials = ({
       pointerEvents: "none",
       transition: "all 0.8s cubic-bezier(.4,2,.3,1)",
     };
-  }
-
-  const quoteVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  };
+  }, [activeIndex, containerWidth, testimonialsLength]);
 
   return (
     <div className="ct-container">
@@ -182,6 +180,7 @@ export const CircularTestimonials = ({
               src={testimonial.src}
               alt={testimonial.name}
               className="ct-image"
+              loading="lazy"
               data-index={index}
               style={getImageStyle(index)}
             />
@@ -214,26 +213,12 @@ export const CircularTestimonials = ({
               >
                 {activeTestimonial.designation}
               </p>
-              <motion.p
+              <p
                 className="ct-quote"
                 style={{ color: colorTestimony, fontSize: fontSizeQuote }}
               >
-                {activeTestimonial.quote.split(" ").map((word, i) => (
-                  <motion.span
-                    key={i}
-                    initial={{ filter: "blur(10px)", opacity: 0, y: 5 }}
-                    animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.22,
-                      ease: "easeInOut",
-                      delay: 0.025 * i,
-                    }}
-                    style={{ display: "inline-block" }}
-                  >
-                    {word}&nbsp;
-                  </motion.span>
-                ))}
-              </motion.p>
+                {activeTestimonial.quote}
+              </p>
             </motion.div>
           </AnimatePresence>
 
@@ -265,79 +250,8 @@ export const CircularTestimonials = ({
           </div>
         </div>
       </div>
-
-      <style>{`
-        .ct-container {
-          width: 100%;
-          max-width: 56rem;
-          padding: 2rem;
-        }
-        .ct-grid {
-          display: grid;
-          gap: 3rem;
-        }
-        .ct-image-container {
-          position: relative;
-          width: 100%;
-          height: 22rem;
-          perspective: 1000px;
-        }
-        .ct-image {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          border-radius: 1.5rem;
-          box-shadow: 0 10px 30px rgba(28, 20, 16, 0.18);
-        }
-        .ct-content {
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        }
-        .ct-name {
-          font-weight: 700;
-          margin-bottom: 0.25rem;
-          font-family: var(--font-display, serif);
-        }
-        .ct-designation {
-          margin-bottom: 1.5rem;
-          font-family: var(--font-body, sans-serif);
-          letter-spacing: 0.02em;
-        }
-        .ct-quote {
-          line-height: 1.8;
-          font-family: var(--font-body, sans-serif);
-        }
-        .ct-arrows {
-          display: flex;
-          gap: 1rem;
-          padding-top: 2rem;
-        }
-        .ct-arrow-btn {
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: background-color 0.25s ease;
-          border: none;
-          outline: none;
-        }
-        @media (min-width: 768px) {
-          .ct-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-          }
-          .ct-arrows {
-            padding-top: 0;
-          }
-        }
-      `}</style>
     </div>
   );
-};
+});
 
 export default CircularTestimonials;

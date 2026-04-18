@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Home, ShoppingBag, Sparkles, Store, UserRound } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -23,24 +23,46 @@ export const Navbar: React.FC = () => {
   const mobileNavItemCount = isAuthenticated ? (isAdmin ? 3 : 2) : 3;
   const useCompactMobileNav = mobileNavItemCount > 2;
 
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isLandingRoute) return;
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isLandingRoute]);
+
   if (isLandingRoute) {
     return (
       <motion.nav
-        className="glopet-home-nav fixed top-0 left-0 right-0 z-navbar bg-transparent"
+        className="fixed top-0 left-0 right-0 z-navbar transition-all duration-500"
+        style={{
+          background: scrolled
+            ? 'rgba(250,246,239,0.95)'
+            : 'transparent',
+          backdropFilter: scrolled ? 'blur(16px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(215,196,161,0.4)' : '1px solid transparent',
+          boxShadow: scrolled ? '0 4px 24px rgba(28,20,16,0.06)' : 'none',
+        }}
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
         <Container size="xl">
-          <div className="glopet-home-nav__shell rounded-2xl glopet-soft-reveal h-[3.8rem] mt-4 px-4 md:px-6 flex items-center justify-between">
-            <Link to="/" className="glopet-home-nav__logo glopet-title text-2xl">
+          <div className="h-[var(--navbar-height-desktop)] px-4 md:px-6 flex items-center justify-between">
+            <Link
+              to="/"
+              className="glopet-title text-2xl transition-colors duration-500"
+              style={{ color: scrolled ? '#1a3a5c' : '#ffffff' }}
+            >
               {t('navbar.logo')}
             </Link>
 
-            <div className="glopet-home-nav__actions flex items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <NavLink
                 to="/contact"
-                className="glopet-home-nav__cta glopet-nav-cta glopet-nav-cta--contact hidden sm:inline-flex"
+                className={`hidden sm:inline-flex glopet-nav-cta glopet-nav-cta--contact ${scrolled ? 'is-scrolled' : ''}`}
               >
                 Contactar
               </NavLink>
@@ -49,15 +71,17 @@ export const Navbar: React.FC = () => {
                 size="sm"
                 as="link"
                 to="/shop"
-                className="glopet-home-nav__cta glopet-nav-cta glopet-nav-cta--shop"
+                className={`glopet-nav-cta glopet-nav-cta--shop ${scrolled ? 'is-scrolled' : ''}`}
               >
                 Comprar
               </Button>
               <Button
                 variant="primary"
                 size="sm"
-                className="glopet-home-nav__cta glopet-nav-cta glopet-nav-cta--account"
+                className={`hidden sm:inline-flex glopet-nav-cta glopet-nav-cta--account ${scrolled ? 'is-scrolled' : ''}`}
                 onClick={() => authActions.openAuth('login')}
+                whileHover={{ scale: 1 }}
+                whileTap={{ scale: 1 }}
               >
                 Área cliente
               </Button>

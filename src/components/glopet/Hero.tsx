@@ -1,62 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@heroui/react';
 import { Link as RouterLink } from 'react-router-dom';
-import { GlopetFAQSection } from './GlopetFAQSection.tsx';
-import hero2Webm from '../../../assets/videos/hero2.mp4';
-import { ensureGsapPlugins, gsap, useGSAP } from '../../lib/gsap';
-
-const HERO_VERTICAL_MASK_MOBILE =
-  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 1.5%, rgba(0,0,0,0.18) 3.5%, rgba(0,0,0,0.34) 6.5%, rgba(0,0,0,0.56) 10%, rgba(0,0,0,0.78) 14%, rgba(0,0,0,0.92) 18%, black 22%, black 97.5%, rgba(0,0,0,0.94) 99%, transparent 100%)';
-
-const HERO_VERTICAL_MASK_DESKTOP =
-  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.06) 1.2%, rgba(0,0,0,0.14) 2.8%, rgba(0,0,0,0.28) 5.2%, rgba(0,0,0,0.46) 8.5%, rgba(0,0,0,0.68) 12.5%, rgba(0,0,0,0.86) 16.5%, black 20%, black 95%, rgba(0,0,0,0.9) 97%, transparent 100%)';
+import hero4Image from '../../../assets/images/hero4.png';
+import { gsap, useGSAP } from '../../lib/gsap';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 
 export const Hero: React.FC = () => {
-  const [mobileHeroHeight, setMobileHeroHeight] = useState<number | null>(null);
   const rootRef = useRef<HTMLElement | null>(null);
-  const heroContainerRef = useRef<HTMLDivElement | null>(null);
   const mediaRef = useRef<HTMLDivElement | null>(null);
   const copyRef = useRef<HTMLDivElement | null>(null);
-  const faqPanelRef = useRef<HTMLDivElement | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
-  const isMobileViewport = mobileHeroHeight !== null;
-
-  ensureGsapPlugins();
-
-  useEffect(() => {
-    const updateMobileHeroHeight = () => {
-      if (window.innerWidth >= 640) {
-        setMobileHeroHeight(null);
-        return;
-      }
-
-      const heroContainer = heroContainerRef.current;
-
-      if (!heroContainer) {
-        return;
-      }
-
-      const { top } = heroContainer.getBoundingClientRect();
-      const availableHeight = window.innerHeight - top - 16;
-      const widthBasedHeight = Math.round(window.innerWidth * 1.08);
-      const viewportBasedHeight = Math.round(window.innerHeight * 0.74);
-      const nextHeight = Math.max(
-        420,
-        Math.min(640, Math.min(Math.round(availableHeight), widthBasedHeight, viewportBasedHeight)),
-      );
-
-      setMobileHeroHeight(nextHeight);
-    };
-
-    updateMobileHeroHeight();
-    window.addEventListener('resize', updateMobileHeroHeight);
-    window.addEventListener('orientationchange', updateMobileHeroHeight);
-
-    return () => {
-      window.removeEventListener('resize', updateMobileHeroHeight);
-      window.removeEventListener('orientationchange', updateMobileHeroHeight);
-    };
-  }, []);
+  const scrollHintRef = useRef<HTMLDivElement | null>(null);
 
   useGSAP(
     () => {
@@ -73,7 +27,7 @@ export const Hero: React.FC = () => {
           const actionItems = actionsRef.current ? Array.from(actionsRef.current.children) : [];
 
           if (reduceMotion) {
-            gsap.set([mediaRef.current, faqPanelRef.current, ...copyItems, ...actionItems], {
+            gsap.set([mediaRef.current, ...copyItems, ...actionItems, scrollHintRef.current], {
               clearProps: 'all',
               autoAlpha: 1,
             });
@@ -85,30 +39,41 @@ export const Hero: React.FC = () => {
           intro
             .fromTo(
               mediaRef.current,
-              { autoAlpha: 0, scale: isDesktop ? 1.08 : 1.04, yPercent: -2 },
-              { autoAlpha: 1, scale: 1, yPercent: 0, duration: 1.35 },
+              { autoAlpha: 0, scale: 1.12 },
+              { autoAlpha: 1, scale: 1, duration: 2, ease: 'power2.out' },
             )
             .fromTo(
               copyItems,
-              { autoAlpha: 0, y: 36 },
-              { autoAlpha: 1, y: 0, duration: 0.92, stagger: 0.12 },
-              0.2,
+              { autoAlpha: 0, y: 50 },
+              { autoAlpha: 1, y: 0, duration: 1.1, stagger: 0.15 },
+              0.5,
             )
             .fromTo(
               actionItems,
-              { autoAlpha: 0, y: 28 },
-              { autoAlpha: 1, y: 0, duration: 0.78, stagger: 0.1 },
-              0.42,
+              { autoAlpha: 0, y: 30 },
+              { autoAlpha: 1, y: 0, duration: 0.85, stagger: 0.12 },
+              0.9,
             )
             .fromTo(
-              faqPanelRef.current,
-              { autoAlpha: 0, x: 40, rotate: 1.5 },
-              { autoAlpha: 1, x: 0, rotate: 0, duration: 1 },
-              0.28,
+              scrollHintRef.current,
+              { autoAlpha: 0, y: -10 },
+              { autoAlpha: 1, y: 0, duration: 0.6 },
+              1.4,
             );
 
+          // Scroll hint bounce
+          gsap.to(scrollHintRef.current, {
+            y: 8,
+            duration: 1.2,
+            ease: 'power1.inOut',
+            yoyo: true,
+            repeat: -1,
+          });
+
+          // Parallax on scroll
           gsap.to(mediaRef.current, {
-            yPercent: isDesktop ? 10 : 6,
+            yPercent: isDesktop ? 18 : 10,
+            scale: 1.05,
             ease: 'none',
             scrollTrigger: {
               trigger: rootRef.current,
@@ -117,19 +82,6 @@ export const Hero: React.FC = () => {
               scrub: 1.1,
             },
           });
-
-          if (faqPanelRef.current && isDesktop) {
-            gsap.to(faqPanelRef.current, {
-              yPercent: -8,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: rootRef.current,
-                start: 'top top',
-                end: 'bottom top',
-                scrub: 1.4,
-              },
-            });
-          }
         },
       );
 
@@ -139,129 +91,106 @@ export const Hero: React.FC = () => {
   );
 
   return (
-    <header ref={rootRef} className="relative overflow-hidden px-4 pt-0 md:px-10 lg:px-16 -mt-6 md:-mt-8">
-     
-      {/* Hero stack: imagen de fondo + texto encima */}
+    <header
+      ref={rootRef}
+      className="relative overflow-hidden -mt-[var(--navbar-height-desktop)]"
+      style={{ height: '100dvh', minHeight: '600px', maxHeight: '1100px' }}
+    >
+      {/* Fullscreen image background */}
       <div
-        ref={heroContainerRef}
-        className="mt-10 sm:mt-6 md:mt-10 -mx-4 md:-mx-10 lg:-mx-16 relative h-[clamp(420px,118vw,640px)] sm:h-[clamp(560px,115vw,780px)] lg:h-[clamp(560px,60vw,700px)]"
-        style={mobileHeroHeight ? { height: `${mobileHeroHeight}px` } : undefined}
+        ref={mediaRef}
+        className="absolute inset-0"
       >
+        <img
+          src={hero4Image}
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-cover"
+        />
 
-        {/* Video de fondo con difuminado vertical */}
+        {/* Dark cinematic overlay */}
         <div
-          ref={mediaRef}
-          className="absolute inset-0 overflow-hidden"
+          className="absolute inset-0"
           style={{
-            maskImage: isMobileViewport
-              ? HERO_VERTICAL_MASK_MOBILE
-              : HERO_VERTICAL_MASK_DESKTOP,
-            WebkitMaskImage: isMobileViewport
-              ? HERO_VERTICAL_MASK_MOBILE
-              : HERO_VERTICAL_MASK_DESKTOP,
+            background: [
+              'linear-gradient(to bottom, rgba(28,20,16,0.56) 0%, rgba(28,20,16,0.32) 40%, rgba(28,20,16,0.44) 70%, rgba(28,20,16,0.8) 100%)',
+              'radial-gradient(ellipse at 30% 50%, rgba(196,118,58,0.08) 0%, transparent 60%)',
+            ].join(', '),
           }}
-        >
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="h-full w-full object-cover object-[center_22%] sm:object-center"
-          >
-            <source src={hero2Webm} type="video/webm" />
-          </video>
-          {/* Velo dorado suave para difuminar ligeramente el video */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(232,192,122,0.52) 0%, rgba(250,246,239,0.58) 50%, rgba(202,127,70,0.38) 100%)' }} />
-          {/* Gradiente superior suavizado para legibilidad del texto (difuminado más amplio) */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: [
-                'linear-gradient(to bottom, rgba(250,246,239,0.96) 0%, rgba(250,246,239,0.82) 5%, rgba(250,246,239,0.56) 11%, rgba(250,246,239,0.24) 18%, rgba(250,246,239,0.08) 26%, rgba(250,246,239,0) 36%)',
-                'radial-gradient(120% 48% at 50% 0%, rgba(250,246,239,0.3) 0%, rgba(250,246,239,0) 68%)',
-                'linear-gradient(to bottom, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.3) 14%, rgba(0,0,0,0.14) 30%, rgba(0,0,0,0.04) 56%, rgba(0,0,0,0) 76%)',
-              ].join(', '),
-              pointerEvents: 'none',
-            }}
-          />
-          <div className="absolute inset-0 bg-[#07111a]/18 sm:bg-transparent" />
-          {/* Difuminado inferior para suavizar el corte con el fondo de la página */}
-          <div className="absolute inset-x-0 bottom-0 h-24 sm:h-36 bg-gradient-to-b from-transparent via-[#faf6ef]/42 sm:via-[#faf6ef]/70 to-[#faf6ef]" />
-        </div>
+        />
+      </div>
 
-        {/* Contenido sobre la imagen */}
-        <div className="absolute inset-0 z-20 flex flex-col px-4 md:px-10 lg:px-16 py-8">
-
-          {/* Texto — entra desde arriba, queda centrado verticalmente */}
-          <div
-            ref={copyRef}
-            className="flex-1 flex flex-col justify-center max-w-[1280px] mx-auto w-full"
-          >
-            <p className="uppercase tracking-[0.24em] text-xs text-white/90 mb-6">
+      {/* Content overlay */}
+      <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-12 lg:px-20 pb-16 md:pb-20 lg:pb-24">
+        <div className="max-w-[1280px] mx-auto w-full">
+          {/* Copy block */}
+          <div ref={copyRef} className="max-w-[680px]">
+            <p className="uppercase tracking-[0.3em] text-[0.7rem] text-white/70 mb-5 font-medium"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
               Café mediterráneo de especialidad
             </p>
             <h1
-              className="glopet-title text-[2.7rem] leading-[0.95] sm:text-[3.5rem] lg:text-[5.2rem] text-white max-w-[20ch]"
-              style={{ textShadow: '0 8px 30px rgba(0,0,0,0.6)' }}
+              className="glopet-title text-[2.8rem] leading-[0.92] sm:text-[3.8rem] lg:text-[5.5rem] text-white"
             >
-              Nacido entre el mar y la sobremesa.
+              Nacido entre
+              <br />
+              el mar y la
+              <br />
+              <span className="text-[#e8c88a]">sobremesa.</span>
             </h1>
             <p
-              className="mt-6 text-[1.05rem] text-white max-w-[44ch] leading-relaxed"
-              style={{ textShadow: '0 6px 18px rgba(0,0,0,0.55)' }}
+              className="mt-6 md:mt-8 text-[1rem] md:text-[1.1rem] text-white/80 max-w-[48ch] leading-relaxed"
+              style={{ fontFamily: 'var(--font-body)' }}
             >
-              Glopet nace en tardes salinas y sobremesas que se alargan. Es un café para detenerse: lento, cálido y honesto, que invita a respirar sin prisa.
+              Glopet nace en tardes salinas y sobremesas que se alargan. Café lento, cálido y honesto, tostado esta semana.
             </p>
           </div>
 
-          <div
-            ref={faqPanelRef}
-            className="absolute bottom-4 z-30 hidden sm:block sm:left-6 sm:right-6 sm:bottom-6 lg:left-auto lg:right-4 xl:right-8 lg:top-8 lg:bottom-auto lg:w-[min(42vw,540px)]"
-          >
-            <div className="rounded-[28px] overflow-hidden border border-[#aec1d3] bg-gradient-to-br from-[#f8efe1]/94 via-[#f4f0ea]/92 to-[#dbe8f0]/88 backdrop-blur-[6px] shadow-[0_18px_55px_rgba(26,58,92,0.22)] ring-1 ring-white/45">
-              <div className="h-[3px] bg-gradient-to-r from-[#ca7f46] via-[#1a7ab5] to-[#e0b07c]" />
-             
-
-              <div className="max-h-[52vh] overflow-y-auto border-t border-[#b9cad9]/90 pr-1">
-                <GlopetFAQSection
-                  className="max-w-none"
-                  itemClassName="border-[#c7d5e1]/95"
-                  triggerClassName="px-4 md:px-6 py-4 md:py-5 hover:bg-[#fff9f1]/60"
-                  contentClassName="px-4 md:px-6 pb-5 md:pb-6 pl-10 md:pl-14"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Botones — entran desde abajo, quedan en el fondo */}
+          {/* CTA Buttons */}
           <div
             ref={actionsRef}
-            className="hidden max-w-[1280px] flex-wrap gap-3 absolute left-4 right-4 bottom-4 z-30 sm:flex sm:static sm:mx-auto sm:w-full sm:left-auto sm:right-auto sm:bottom-auto"
+            className="mt-8 md:mt-10 flex flex-wrap gap-3 sm:gap-4"
           >
             <Button
               as={RouterLink}
               to="/shop"
               size="lg"
-              color="secondary"
               radius="full"
-              className="glopet-tactile-btn font-bold px-10 text-white tracking-wide hover:scale-[1.04] active:scale-[0.98] transition-all duration-200"
+              className="font-bold px-10 py-6 text-[0.85rem] tracking-wide text-[#1c1410] bg-white hover:bg-[#f5ead9] transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
+              endContent={<ArrowRight size={16} />}
             >
-              Comenzar
+              Descubrir café
             </Button>
             <Button
               as={RouterLink}
-              to="/manifiesto"
+              to="/subscriptions"
               variant="bordered"
               size="lg"
               radius="full"
-              className="border-[#1a3a5c] text-[#1a3a5c] bg-transparent"
+              className="px-8 py-6 text-[0.85rem] border-white/40 text-white hover:bg-white/10 hover:border-white/70 transition-all duration-300 tracking-wide"
             >
-              Personaliza tu pack
+              Suscripciones
             </Button>
           </div>
-
         </div>
       </div>
+
+      {/* Scroll hint */}
+      <div
+        ref={scrollHintRef}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1"
+      >
+        <span className="text-white/50 text-[0.6rem] uppercase tracking-[0.2em]"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          Scroll
+        </span>
+        <ChevronDown size={16} className="text-white/40" />
+      </div>
+
+      {/* Bottom gradient into page */}
+      <div className="absolute inset-x-0 bottom-0 h-32 z-[5] bg-gradient-to-t from-[#faf6ef] to-transparent" />
     </header>
   );
 };
